@@ -22,11 +22,11 @@ include_directories(include ${catkin_INCLUDE_DIRS})
 ##   Build   ##
 ###############
 
-#add_library(${PROJECT_NAME} src/pal_carmen_reader.cpp)
-
-#target_link_libraries(${PROJECT_NAME}
-#   ${catkin_LIBRARIES}
-#)
+add_library(${PROJECT_NAME}
+    src/laser_odometry_core.cpp
+    src/laser_odometry_utils.cpp
+)
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 
 ################
 ##  Install   ##
