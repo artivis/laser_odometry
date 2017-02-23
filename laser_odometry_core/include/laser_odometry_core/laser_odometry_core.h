@@ -13,8 +13,7 @@ namespace laser_odometry
 
   public:
 
-    LaserOdometryBase();
-
+    LaserOdometryBase()          = default;
     virtual ~LaserOdometryBase() = default;
 
     virtual bool configure(const property_bag::PropertyBag &/*parameters*/) = 0;
@@ -22,8 +21,8 @@ namespace laser_odometry
     virtual bool process(const sensor_msgs::LaserScan& /*scan*/,
                          geometry_msgs::Pose2DPtr /*pose*/) = 0;
 
-    virtual bool process(const sensor_msgs::LaserScan& /*scan*/,
-                         geometry_msgs::PoseWithCovarianceStampedPtr /*pose*/) = 0;
+    virtual bool process(const sensor_msgs::LaserScan& scan,
+                         geometry_msgs::PoseWithCovarianceStampedPtr pose);
 
     virtual void clear(){
       /* @todo */
