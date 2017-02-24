@@ -3,17 +3,17 @@ project(laser_odometry_core)
 
 find_package(catkin REQUIRED COMPONENTS
     roscpp
+    tf
     sensor_msgs
     pluginlib
-    property_bag
 )
 
 set(CMAKE_CXX_FLAGS "-std=c++0x ${CMAKE_CXX_FLAGS}")
 
 catkin_package(
   INCLUDE_DIRS include
-#  LIBRARIES ${PROJECT_NAME}
-  CATKIN_DEPENDS roscpp sensor_msgs pluginlib property_bag
+  LIBRARIES ${PROJECT_NAME}
+  CATKIN_DEPENDS roscpp tf sensor_msgs pluginlib
 )
 
 include_directories(include ${catkin_INCLUDE_DIRS})
