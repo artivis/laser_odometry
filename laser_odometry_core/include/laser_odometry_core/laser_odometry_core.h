@@ -22,29 +22,40 @@ namespace laser_odometry
     LaserOdometryBase()          = default;
     virtual ~LaserOdometryBase() = default;
 
-    virtual bool configure(const property_bag::PropertyBag &parameters);
+    virtual bool process(const sensor_msgs::LaserScanPtr /*scan_ptr*/,
+                         geometry_msgs::Pose2DPtr /*pose_ptr*/) = 0;
 
-    virtual bool getOrigin();
+    virtual bool process(const sensor_msgs::LaserScanPtr scan_ptr,
+                         geometry_msgs::PosePtr pose_ptr);
 
-    virtual bool process(const sensor_msgs::LaserScan& /*scan*/,
-                         geometry_msgs::Pose2DPtr /*pose*/) = 0;
+    virtual bool process(const sensor_msgs::LaserScanPtr scan_ptr,
+                         geometry_msgs::PoseWithCovariancePtr pose_ptr);
 
-    virtual bool process(const sensor_msgs::LaserScan& scan,
-                         geometry_msgs::PoseWithCovarianceStampedPtr pose);
+    virtual bool process(const sensor_msgs::LaserScanPtr scan_ptr,
+                         geometry_msgs::PoseWithCovarianceStampedPtr pose_ptr);
 
-    virtual void clear(){
-      /* @todo */
-      configured_ = false;
-    }
+    bool configure();
+
+    bool configured() const noexcept;
+
+    tf::Transform& getOrigin();
+    const tf::Transform& getOrigin() const;
+
+    void setOrigin(const tf::Transform& origin);
 
   protected:
 
-    bool configured_ = false;
-    bool publish_tf_ = false;
+    bool configured_   = false;
+    bool broadcast_tf_ = false;
 
-    std::string base_frame_;
-    std::string laser_frame_;
-    std::string world_frame_;
+    std::vector<double> default_covariance_;
+
+    ros::NodeHandle private_nh_ = ros::NodeHandle("~");
+
+    std::string base_frame_  = "base_link";
+    std::string laser_frame_ = "base_laser_link";
+    std::string world_frame_ = "world";
+    std::string laser_odom_frame_ = "laser_odom";
 
     tf::Transform base_to_laser_; // static, cached
     tf::Transform laser_to_base_; // static, cached, calculated from base_to_laser_
@@ -57,10 +68,11 @@ namespace laser_odometry
 
     ros::Time current_time_;
 
-    tf::TransformBroadcaster tf_broadcaster_;
-
+    virtual bool configureImpl() = 0;
     virtual tf::Transform predict(const tf::Transform& tf);
-    virtual void broadcastTf();
+
+    using Covariance = geometry_msgs::PoseWithCovariance::_covariance_type;
+    void fillCovariance(Covariance& covariance);
   };
 
   typedef boost::shared_ptr<LaserOdometryBase> LaserOdometryBasePtr;
