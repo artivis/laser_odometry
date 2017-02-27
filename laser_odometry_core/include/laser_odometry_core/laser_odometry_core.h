@@ -1,18 +1,22 @@
-#ifndef _LASER_ODOMETRY_CORE_LASER_ODOMETRY_H_
-#define _LASER_ODOMETRY_CORE_LASER_ODOMETRY_H_
+#ifndef _LASER_ODOMETRY_CORE_LASER_ODOMETRY_CORE_H_
+#define _LASER_ODOMETRY_CORE_LASER_ODOMETRY_CORE_H_
 
 #include <sensor_msgs/LaserScan.h>
 #include <geometry_msgs/Pose2D.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
-#include <property_bag/property_bag.h>
 #include <tf/tf.h>
 #include <tf/transform_broadcaster.h>
 
 namespace laser_odometry
 {
 
+  //Forward declaration
+  class LaserOdometry;
+
   class LaserOdometryBase
   {
+    friend class LaserOdometry;
+
   public:
 
     LaserOdometryBase()          = default;
@@ -63,4 +67,4 @@ namespace laser_odometry
 
 } /* namespace laser_odometry */
 
-#endif /* _LASER_ODOMETRY_CORE_LASER_ODOMETRY_H_ */
+#endif /* _LASER_ODOMETRY_CORE_LASER_ODOMETRY_CORE_H_ */
