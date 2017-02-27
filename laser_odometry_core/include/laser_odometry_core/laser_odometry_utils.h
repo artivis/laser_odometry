@@ -9,7 +9,8 @@ namespace laser_odometry
 namespace utils
 {
 
-void tfFromXYTheta(const double x, const double y, const double theta, tf::Transform& t);
+void tfFromXYTheta(const double x, const double y,
+                   const double theta, tf::Transform& t);
 
 bool getTf(const std::string& source_frame,
            const std::string& target_frame,
