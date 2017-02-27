@@ -30,6 +30,7 @@ bool getTf(const std::string& source_frame,
   catch (tf::TransformException ex)
   {
     ROS_WARN("Could not get initial transform from base to laser frame, %s", ex.what());
+    tf.setIdentity();
     return false;
   }
 
