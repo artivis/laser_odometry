@@ -21,7 +21,8 @@ namespace laser_odometry
 
     template <typename PoseMsgPtr>
     bool process(const sensor_msgs::LaserScanPtr scan,
-                 PoseMsgPtr pose_msg_ptr)
+                 PoseMsgPtr pose_msg_ptr,
+                 PoseMsgPtr relative_pose_msg_ptr = nullptr)
     {
       if (!loaded_)
       {
@@ -35,14 +36,18 @@ namespace laser_odometry
 
 //      std::cout << "LaserOdometry::process " << std::endl;
 
-      bool processed = laser_odom_ptr_->process(scan, pose_msg_ptr);
+      bool processed = laser_odom_ptr_->process(scan, pose_msg_ptr, relative_pose_msg_ptr);
 
-//      std::cout << "LaserOdometry::process "<< processed << std::endl;
+      std::cout << "LaserOdometry::process "<< processed << std::endl;
 
       sendTransform();
 
+      std::cout << "LaserOdometry::sendTransform " << std::endl;
+
       return processed;
     }
+
+    void setInitialGuess(const tf::Transform& guess);
 
     bool loadLaserOdometer(const std::string& laser_odometry_type);
 

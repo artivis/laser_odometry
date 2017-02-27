@@ -23,16 +23,20 @@ namespace laser_odometry
     virtual ~LaserOdometryBase() = default;
 
     virtual bool process(const sensor_msgs::LaserScanPtr /*scan_ptr*/,
-                         geometry_msgs::Pose2DPtr /*pose_ptr*/) = 0;
+                         geometry_msgs::Pose2DPtr /*pose_ptr*/,
+                         geometry_msgs::Pose2DPtr relative_pose_ptr = nullptr) = 0;
 
     virtual bool process(const sensor_msgs::LaserScanPtr scan_ptr,
-                         geometry_msgs::PosePtr pose_ptr);
+                         geometry_msgs::PosePtr pose_ptr,
+                         geometry_msgs::PosePtr relative_pose_ptr = nullptr);
 
     virtual bool process(const sensor_msgs::LaserScanPtr scan_ptr,
-                         geometry_msgs::PoseWithCovariancePtr pose_ptr);
+                         geometry_msgs::PoseWithCovariancePtr pose_ptr,
+                         geometry_msgs::PoseWithCovariancePtr relative_pose_ptr = nullptr);
 
     virtual bool process(const sensor_msgs::LaserScanPtr scan_ptr,
-                         geometry_msgs::PoseWithCovarianceStampedPtr pose_ptr);
+                         geometry_msgs::PoseWithCovarianceStampedPtr pose_ptr,
+                         geometry_msgs::PoseWithCovarianceStampedPtr relative_pose_ptr = nullptr);
 
     bool configure();
 
@@ -42,6 +46,11 @@ namespace laser_odometry
     const tf::Transform& getOrigin() const;
 
     void setOrigin(const tf::Transform& origin);
+
+    tf::Transform& getInitialGuess();
+    const tf::Transform& getInitialGuess() const;
+
+    void setInitialGuess(const tf::Transform& guess);
 
   protected:
 
@@ -60,9 +69,10 @@ namespace laser_odometry
     tf::Transform base_to_laser_; // static, cached
     tf::Transform laser_to_base_; // static, cached, calculated from base_to_laser_
 
-    tf::Transform relative_tf_;   // last_scan-to-curent_scan tf
-    tf::Transform world_origin_;  // world-origin tf
-    tf::Transform world_to_base_; // world-to-base tf, integrated odom
+    tf::Transform relative_tf_;       // last_scan-to-curent_scan tf
+    tf::Transform guess_relative_tf_; // initial guess last_scan-to-curent_scan tf
+    tf::Transform world_origin_;      // world-origin tf
+    tf::Transform world_to_base_;     // world-to-base tf, integrated odom
 
     sensor_msgs::LaserScan last_scan_;
 

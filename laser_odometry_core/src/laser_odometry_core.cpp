@@ -9,12 +9,20 @@ namespace laser_odometry
 
 bool LaserOdometryBase::configure()
 {
+  /// @todo use rosparam_handler
   private_nh_.param("laser_frame", laser_frame_, std::string("base_laser_link"));
   private_nh_.param("base_frame",  base_frame_,  std::string("base_link"));
   private_nh_.param("world_frame", world_frame_, std::string("world"));
   private_nh_.param("laser_odom_frame", laser_odom_frame_, std::string("laser_odom"));
 
-  // Default diag :
+  // Init all tf to I
+  base_to_laser_.setIdentity();
+  laser_to_base_.setIdentity();
+  relative_tf_.setIdentity();
+  world_origin_.setIdentity();
+  world_to_base_.setIdentity();
+
+  // Default covariance diag :
   std::vector<double> default_covariance;
   private_nh_.param("covariance_diag", default_covariance, default_covariance);
 
@@ -29,12 +37,8 @@ bool LaserOdometryBase::configure()
     std::fill_n(default_covariance_.begin(), 6, 1e-9);
   }
 
-  base_to_laser_.setIdentity();
   utils::getTf(laser_frame_, base_frame_, base_to_laser_);
   laser_to_base_ = base_to_laser_.inverse();
-
-  world_origin_.setIdentity();
-  world_to_base_.setIdentity();
 
   // Configure derived class
   configured_ = configureImpl();
@@ -57,8 +61,24 @@ void LaserOdometryBase::setOrigin(const tf::Transform& origin)
   world_origin_ = origin;
 }
 
+tf::Transform& LaserOdometryBase::getInitialGuess()
+{
+  return guess_relative_tf_;
+}
+
+const tf::Transform& LaserOdometryBase::getInitialGuess() const
+{
+  return guess_relative_tf_;
+}
+
+void LaserOdometryBase::setInitialGuess(const tf::Transform& guess)
+{
+  guess_relative_tf_ = guess;
+}
+
 bool LaserOdometryBase::process(const sensor_msgs::LaserScanPtr scan_ptr,
-                                geometry_msgs::PosePtr pose_ptr)
+                                geometry_msgs::PosePtr pose_ptr,
+                                geometry_msgs::PosePtr /*relative_pose_ptr*/)
 {
   //if (scan_ptr == nullptr || pose_ptr == nullptr) return false;
   assert(scan_ptr != nullptr);
@@ -67,9 +87,6 @@ bool LaserOdometryBase::process(const sensor_msgs::LaserScanPtr scan_ptr,
   geometry_msgs::Pose2DPtr pose_2d_ptr = boost::make_shared<geometry_msgs::Pose2D>();
 
   bool processed = process(scan_ptr, pose_2d_ptr);
-
-//  std::cout << "LaserOdometryBase::process PosePtr "
-//            << processed << std::endl;
 
   pose_ptr->position.x = pose_2d_ptr->x;
   pose_ptr->position.y = pose_2d_ptr->y;
@@ -80,7 +97,8 @@ bool LaserOdometryBase::process(const sensor_msgs::LaserScanPtr scan_ptr,
 }
 
 bool LaserOdometryBase::process(const sensor_msgs::LaserScanPtr scan_ptr,
-                                geometry_msgs::PoseWithCovariancePtr pose_ptr)
+                                geometry_msgs::PoseWithCovariancePtr pose_ptr,
+                                geometry_msgs::PoseWithCovariancePtr /*relative_pose_ptr*/)
 {
   //if (scan_ptr == nullptr || pose_ptr == nullptr) return false;
   assert(scan_ptr != nullptr);
@@ -89,9 +107,6 @@ bool LaserOdometryBase::process(const sensor_msgs::LaserScanPtr scan_ptr,
   geometry_msgs::Pose2DPtr pose_2d_ptr = boost::make_shared<geometry_msgs::Pose2D>();
 
   bool processed = process(scan_ptr, pose_2d_ptr);
-
-//  std::cout << "LaserOdometryBase::process PoseWithCovariancePtr "
-//            << processed << std::endl;
 
   pose_ptr->pose.position.x = pose_2d_ptr->x;
   pose_ptr->pose.position.y = pose_2d_ptr->y;
@@ -105,7 +120,8 @@ bool LaserOdometryBase::process(const sensor_msgs::LaserScanPtr scan_ptr,
 }
 
 bool LaserOdometryBase::process(const sensor_msgs::LaserScanPtr scan_ptr,
-                                geometry_msgs::PoseWithCovarianceStampedPtr pose_ptr)
+                                geometry_msgs::PoseWithCovarianceStampedPtr pose_ptr,
+                                geometry_msgs::PoseWithCovarianceStampedPtr /*relative_pose_ptr*/)
 {
   //if (scan_ptr == nullptr || pose_ptr == nullptr) return false;
   assert(scan_ptr != nullptr);
@@ -113,17 +129,13 @@ bool LaserOdometryBase::process(const sensor_msgs::LaserScanPtr scan_ptr,
 
   current_time_ = scan_ptr->header.stamp;
 
-  geometry_msgs::PoseWithCovariancePtr tmp_pose_ptr = boost::make_shared<geometry_msgs::PoseWithCovariance>();
+  geometry_msgs::PoseWithCovariancePtr tmp_pose_ptr =
+      boost::make_shared<geometry_msgs::PoseWithCovariance>();
 
   bool processed = process(scan_ptr, tmp_pose_ptr);
 
-//  std::cout << "LaserOdometryBase::process PoseWithCovarianceStampedPtr "
-//            << processed << std::endl;
-
   pose_ptr->pose.pose = tmp_pose_ptr->pose;
   pose_ptr->pose.covariance = tmp_pose_ptr->covariance;
-
-//  fillCovariance(pose->pose.covariance);
 
   pose_ptr->header.frame_id = world_frame_;
   pose_ptr->header.stamp = scan_ptr->header.stamp;
@@ -138,8 +150,7 @@ bool LaserOdometryBase::configured() const noexcept
 
 tf::Transform LaserOdometryBase::predict(const tf::Transform& /*tf*/)
 {
-  tf::Transform tmp_tf; tmp_tf.setIdentity();
-  return tmp_tf;
+  return tf::Transform::getIdentity();
 }
 
 void LaserOdometryBase::fillCovariance(Covariance& covariance)
