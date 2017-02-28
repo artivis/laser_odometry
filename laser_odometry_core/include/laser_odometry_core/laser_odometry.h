@@ -34,20 +34,16 @@ namespace laser_odometry
 
       assert(laser_odom_ptr_ != nullptr);
 
-//      std::cout << "LaserOdometry::process " << std::endl;
-
       bool processed = laser_odom_ptr_->process(scan, pose_msg_ptr, relative_pose_msg_ptr);
 
-//      std::cout << "LaserOdometry::process "<< processed << std::endl;
-
       sendTransform();
-
-//      std::cout << "LaserOdometry::sendTransform " << std::endl;
 
       return processed;
     }
 
     void setInitialGuess(const tf::Transform& guess);
+
+    void setLaserPose(const tf::Transform& base_to_laser);
 
     bool loadLaserOdometer(const std::string& laser_odometry_type);
 

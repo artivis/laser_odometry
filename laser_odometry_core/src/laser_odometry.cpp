@@ -46,10 +46,14 @@ bool LaserOdometry::loadLaserOdometer(const std::string& laser_odometry_type)
   return loaded_;
 }
 
+void LaserOdometry::setLaserPose(const tf::Transform& base_to_laser)
+{
+  if (laser_odom_ptr_ != nullptr) laser_odom_ptr_->setLaserPose(base_to_laser);
+}
+
 void LaserOdometry::setInitialGuess(const tf::Transform& guess)
 {
-  if (laser_odom_ptr_ != nullptr)
-    laser_odom_ptr_->setInitialGuess(guess);
+  if (laser_odom_ptr_ != nullptr) laser_odom_ptr_->setInitialGuess(guess);
 }
 
 bool LaserOdometry::broadcastTf() const noexcept
@@ -68,8 +72,8 @@ void LaserOdometry::sendTransform()
   {
     tf::StampedTransform transform_msg(laser_odom_ptr_->world_to_base_,
                                        laser_odom_ptr_->current_time_,
-                                       laser_odom_ptr_->world_frame_,
-                                       laser_odom_ptr_->laser_odom_frame_);
+                                       laser_odom_ptr_->laser_odom_frame_,
+                                       laser_odom_ptr_->base_frame_);
 
     transform_msg.stamp_ = laser_odom_ptr_->current_time_;
 
