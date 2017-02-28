@@ -20,6 +20,13 @@ bool getTf(const std::string& source_frame,
            const std::string& target_frame,
            tf::Transform& tf);
 
+bool getTf(const tf::tfMessagePtr tf_msg,
+           const std::string& source_frame,
+           const std::string& target_frame,
+           tf::Transform& tf);
+
+void print(const tf::Transform& tf, const std::string& h = "");
+
 } /* namespace utils */
 } /* namespace laser_odometry */
 
