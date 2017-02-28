@@ -16,11 +16,12 @@ bool LaserOdometryBase::configure()
   private_nh_.param("laser_odom_frame", laser_odom_frame_, std::string("laser_odom"));
 
   // Init all tf to I
-  base_to_laser_.setIdentity();
-  laser_to_base_.setIdentity();
-  relative_tf_.setIdentity();
-  world_origin_.setIdentity();
-  world_to_base_.setIdentity();
+  base_to_laser_     = tf::Transform::getIdentity();
+  laser_to_base_     = tf::Transform::getIdentity();
+  relative_tf_       = tf::Transform::getIdentity();
+  world_origin_      = tf::Transform::getIdentity();
+  world_to_base_     = tf::Transform::getIdentity();
+  guess_relative_tf_ = tf::Transform::getIdentity();
 
   // Default covariance diag :
   std::vector<double> default_covariance;
