@@ -77,69 +77,44 @@ void LaserOdometryBase::setInitialGuess(const tf::Transform& guess)
   guess_relative_tf_ = guess;
 }
 
+tf::Transform& LaserOdometryBase::getLaserPose()
+{
+  return base_to_laser_;
+}
+
+const tf::Transform& LaserOdometryBase::getLaserPose() const
+{
+  return base_to_laser_;
+}
+
+void LaserOdometryBase::setLaserPose(const tf::Transform& base_to_laser)
+{
+  base_to_laser_ = base_to_laser;
+  laser_to_base_ = base_to_laser.inverse();
+}
+
 bool LaserOdometryBase::process(const sensor_msgs::LaserScanPtr scan_ptr,
-                                geometry_msgs::PosePtr pose_ptr,
-                                geometry_msgs::PosePtr /*relative_pose_ptr*/)
+                                nav_msgs::OdometryPtr odom_ptr,
+                                nav_msgs::OdometryPtr /*relative_odom_ptr*/)
 {
   //if (scan_ptr == nullptr || pose_ptr == nullptr) return false;
   assert(scan_ptr != nullptr);
-  assert(pose_ptr != nullptr);
+  assert(odom_ptr != nullptr);
 
   geometry_msgs::Pose2DPtr pose_2d_ptr = boost::make_shared<geometry_msgs::Pose2D>();
 
   bool processed = process(scan_ptr, pose_2d_ptr);
 
-  pose_ptr->position.x = pose_2d_ptr->x;
-  pose_ptr->position.y = pose_2d_ptr->y;
-  pose_ptr->position.z = 0;
+  odom_ptr->header.stamp = scan_ptr->header.stamp;
+  odom_ptr->header.frame_id = laser_odom_frame_;
+
+  odom_ptr->pose.pose.position.x = pose_2d_ptr->x;
+  odom_ptr->pose.pose.position.y = pose_2d_ptr->y;
+  odom_ptr->pose.pose.position.z = 0;
   tf::quaternionTFToMsg(tf::createQuaternionFromYaw(pose_2d_ptr->theta),
-                        pose_ptr->orientation);
-  return processed;
-}
+                        odom_ptr->pose.pose.orientation);
 
-bool LaserOdometryBase::process(const sensor_msgs::LaserScanPtr scan_ptr,
-                                geometry_msgs::PoseWithCovariancePtr pose_ptr,
-                                geometry_msgs::PoseWithCovariancePtr /*relative_pose_ptr*/)
-{
-  //if (scan_ptr == nullptr || pose_ptr == nullptr) return false;
-  assert(scan_ptr != nullptr);
-  assert(pose_ptr != nullptr);
-
-  geometry_msgs::Pose2DPtr pose_2d_ptr = boost::make_shared<geometry_msgs::Pose2D>();
-
-  bool processed = process(scan_ptr, pose_2d_ptr);
-
-  pose_ptr->pose.position.x = pose_2d_ptr->x;
-  pose_ptr->pose.position.y = pose_2d_ptr->y;
-  pose_ptr->pose.position.z = 0;
-  tf::quaternionTFToMsg(tf::createQuaternionFromYaw(pose_2d_ptr->theta),
-                        pose_ptr->pose.orientation);
-
-  fillCovariance(pose_ptr->covariance);
-
-  return processed;
-}
-
-bool LaserOdometryBase::process(const sensor_msgs::LaserScanPtr scan_ptr,
-                                geometry_msgs::PoseWithCovarianceStampedPtr pose_ptr,
-                                geometry_msgs::PoseWithCovarianceStampedPtr /*relative_pose_ptr*/)
-{
-  //if (scan_ptr == nullptr || pose_ptr == nullptr) return false;
-  assert(scan_ptr != nullptr);
-  assert(pose_ptr != nullptr);
-
-  current_time_ = scan_ptr->header.stamp;
-
-  geometry_msgs::PoseWithCovariancePtr tmp_pose_ptr =
-      boost::make_shared<geometry_msgs::PoseWithCovariance>();
-
-  bool processed = process(scan_ptr, tmp_pose_ptr);
-
-  pose_ptr->pose.pose = tmp_pose_ptr->pose;
-  pose_ptr->pose.covariance = tmp_pose_ptr->covariance;
-
-  pose_ptr->header.frame_id = world_frame_;
-  pose_ptr->header.stamp = scan_ptr->header.stamp;
+  fillCovariance(odom_ptr->pose.covariance);
 
   return processed;
 }

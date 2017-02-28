@@ -3,6 +3,7 @@
 
 #include <sensor_msgs/LaserScan.h>
 #include <geometry_msgs/Pose2D.h>
+#include <nav_msgs/Odometry.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <tf/tf.h>
 #include <tf/transform_broadcaster.h>
@@ -26,18 +27,9 @@ namespace laser_odometry
                          geometry_msgs::Pose2DPtr /*pose_ptr*/,
                          geometry_msgs::Pose2DPtr relative_pose_ptr = nullptr) = 0;
 
-    virtual bool process(const sensor_msgs::LaserScanPtr scan_ptr,
-                         geometry_msgs::PosePtr pose_ptr,
-                         geometry_msgs::PosePtr relative_pose_ptr = nullptr);
-
-    virtual bool process(const sensor_msgs::LaserScanPtr scan_ptr,
-                         geometry_msgs::PoseWithCovariancePtr pose_ptr,
-                         geometry_msgs::PoseWithCovariancePtr relative_pose_ptr = nullptr);
-
-    virtual bool process(const sensor_msgs::LaserScanPtr scan_ptr,
-                         geometry_msgs::PoseWithCovarianceStampedPtr pose_ptr,
-                         geometry_msgs::PoseWithCovarianceStampedPtr relative_pose_ptr = nullptr);
-
+    virtual bool process(const sensor_msgs::LaserScanPtr /*scan_ptr*/,
+                         nav_msgs::OdometryPtr /*odom_ptr*/,
+                         nav_msgs::OdometryPtr relative_odom_ptr = nullptr);
     bool configure();
 
     bool configured() const noexcept;
@@ -51,6 +43,11 @@ namespace laser_odometry
     const tf::Transform& getInitialGuess() const;
 
     void setInitialGuess(const tf::Transform& guess);
+
+    tf::Transform& getLaserPose();
+    const tf::Transform& getLaserPose() const;
+
+    void setLaserPose(const tf::Transform& base_to_laser);
 
   protected:
 
