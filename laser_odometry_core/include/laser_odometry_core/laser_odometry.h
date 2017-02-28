@@ -38,11 +38,11 @@ namespace laser_odometry
 
       bool processed = laser_odom_ptr_->process(scan, pose_msg_ptr, relative_pose_msg_ptr);
 
-      std::cout << "LaserOdometry::process "<< processed << std::endl;
+//      std::cout << "LaserOdometry::process "<< processed << std::endl;
 
       sendTransform();
 
-      std::cout << "LaserOdometry::sendTransform " << std::endl;
+//      std::cout << "LaserOdometry::sendTransform " << std::endl;
 
       return processed;
     }
