@@ -1,0 +1,26 @@
+<launch>
+
+  <!-- The laser odometry plugin type. -->
+  <arg name="laser_odometry_type" default="laser_odometry::LaserOdometryCanonical"/>
+<!--  <arg name="laser_odometry_type" default="laser_odometry::LaserOdometryGpar"/>-->
+
+  <!-- A config file for the laser odometry plugin. -->
+  <arg name="config_file" default="$(find scan_gpar_odometry)/config/default_param.yaml"/>
+
+  <!-- Whether or not to broadcast the estimated odometry on tf. -->
+  <arg name="broadcast_tf" default="True"/>
+
+  <!-- Whether to use a nav_msgs::Odometry message or a
+       geometry_msgs::Pose2D message. -->
+  <arg name="publish_odom" default="True"/>
+
+  <node pkg="laser_odometry_core" type="laser_odometry_node" name="laser_odometry_node" output="screen">
+    <param name="laser_odometry_type" value="$(arg laser_odometry_type)" />
+    <rosparam file="$(arg config_file)" command="load" />
+    <param name="broadcast_tf" value="$(arg broadcast_tf)" />
+    <param name="publish_odom" value="$(arg publish_odom)" />
+    <param name="publish_odom" value="$(arg publish_odom)" />
+    <param name="publish_odom" value="$(arg publish_odom)" />
+  </node>
+
+</launch>
