@@ -11,13 +11,8 @@
 namespace laser_odometry
 {
 
-  //Forward declaration
-  class LaserOdometry;
-
   class LaserOdometryBase
   {
-    friend class LaserOdometry;
-
   public:
 
     LaserOdometryBase()          = default;
@@ -30,6 +25,11 @@ namespace laser_odometry
     virtual bool process(const sensor_msgs::LaserScanPtr /*scan_ptr*/,
                          nav_msgs::OdometryPtr /*odom_ptr*/,
                          nav_msgs::OdometryPtr relative_odom_ptr = nullptr);
+
+    tf::Transform getEstimatedPose() const noexcept;
+
+    virtual void reset();
+
     bool configure();
 
     bool configured() const noexcept;
@@ -49,6 +49,18 @@ namespace laser_odometry
 
     void setLaserPose(const tf::Transform& base_to_laser);
 
+    std::string getFrameBase()  const noexcept;
+    std::string getFrameLaser() const noexcept;
+    std::string getFrameWorld() const noexcept;
+    std::string getFrameOdom()  const noexcept;
+
+    void setFrameBase(const std::string& frame);
+    void setFrameLaser(const std::string& frame);
+    void setFrameWorld(const std::string& frame);
+    void setFrameOdom(const std::string& frame);
+
+    ros::Time getCurrentTime() const noexcept;
+
   protected:
 
     bool configured_   = false;
@@ -61,28 +73,34 @@ namespace laser_odometry
     std::string base_frame_  = "base_link";
     std::string laser_frame_ = "base_laser_link";
     std::string world_frame_ = "world";
-    std::string laser_odom_frame_ = "laser_odom";
+    std::string laser_odom_frame_ = "odom";
 
     tf::Transform base_to_laser_; // static, cached
     tf::Transform laser_to_base_; // static, cached, calculated from base_to_laser_
 
-    tf::Transform relative_tf_;       // last_scan-to-curent_scan tf
-    tf::Transform guess_relative_tf_; // initial guess last_scan-to-curent_scan tf
-    tf::Transform world_origin_;      // world-origin tf
-    tf::Transform world_to_base_;     // world-to-base tf, integrated odom
+    tf::Transform relative_tf_;          // last_scan-to-curent_scan tf
+    tf::Transform guess_relative_tf_;    // initial guess last_scan-to-curent_scan tf
+    tf::Transform world_to_base_;        // world-to-base tf, integrated odom
+    tf::Transform world_origin_;         // world-origin tf
+    tf::Transform world_origin_to_base_; // world-origin-to-base tf, integrated odom
 
-    sensor_msgs::LaserScan last_scan_;
+    sensor_msgs::LaserScan reference_scan_;
 
     ros::Time current_time_;
 
     virtual bool configureImpl() = 0;
     virtual tf::Transform predict(const tf::Transform& tf);
 
+    virtual void fillOdomMsg(const sensor_msgs::LaserScanPtr current_scan_ptr,
+                             nav_msgs::OdometryPtr odom_ptr);
+
+    virtual void fillPose2DMsg(geometry_msgs::Pose2DPtr pose_ptr);
+
     using Covariance = geometry_msgs::PoseWithCovariance::_covariance_type;
     void fillCovariance(Covariance& covariance);
   };
 
-  typedef boost::shared_ptr<LaserOdometryBase> LaserOdometryBasePtr;
+  typedef boost::shared_ptr<LaserOdometryBase> LaserOdometryPtr;
 
 } /* namespace laser_odometry */
 
