@@ -43,7 +43,7 @@ bool getTf(const std::string& source_frame,
 
   bool ok = getTf(source_frame, target_frame, stamped_tf);
 
-  if (ok) tf = stamped_tf;
+  tf = stamped_tf;
 
   return ok;
 }
