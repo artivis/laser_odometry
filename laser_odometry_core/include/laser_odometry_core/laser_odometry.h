@@ -3,69 +3,76 @@
 
 #include <pluginlib/class_loader.h>
 
+#include <laser_odometry_core/singleton.h>
 #include <laser_odometry_core/laser_odometry_core.h>
 
 namespace laser_odometry
 {
 
-  class LaserOdometry
+class LaserOdometryInstantiater final : details::Singleton<LaserOdometryInstantiater>
+{
+protected:
+
+  friend class details::Singleton<LaserOdometryInstantiater>;
+
+  LaserOdometryInstantiater()  = default;
+  ~LaserOdometryInstantiater() = default;
+
+public:
+
+  LaserOdometryInstantiater(LaserOdometryInstantiater&) = delete;
+  void operator=(LaserOdometryInstantiater&)            = delete;
+
+  static LaserOdometryPtr instantiate(const std::string& laser_odometry_type)
   {
-    using LaserOdometerLoader = pluginlib::ClassLoader<LaserOdometryBase>;
+    return LaserOdometryInstantiater::get().instantiate_impl(laser_odometry_type);
+  }
 
-  public:
+protected:
 
-    LaserOdometry()          = default;
-    virtual ~LaserOdometry() = default;
+  LaserOdometryPtr instantiate_impl(const std::string& laser_odometry_type)
+  {
+    bool loaded = false;
+    LaserOdometryPtr laser_odom_ptr;
 
-    LaserOdometry(const std::string& laser_odometry_type);
-
-    template <typename PoseMsgPtr>
-    bool process(const sensor_msgs::LaserScanPtr scan,
-                 PoseMsgPtr pose_msg_ptr,
-                 PoseMsgPtr relative_pose_msg_ptr = nullptr)
-    {
-      if (!loaded_)
-      {
-        ROS_ERROR("No laser odometry plugin loaded!");
-        return false;
-      }
-
-      if (pose_msg_ptr == nullptr) return false;
-
-      assert(laser_odom_ptr_ != nullptr);
-
-      bool processed = laser_odom_ptr_->process(scan, pose_msg_ptr, relative_pose_msg_ptr);
-
-      sendTransform();
-
-      return processed;
+    try {
+      laser_odom_ptr = loader.createInstance(laser_odometry_type);
+    }
+    catch (pluginlib::PluginlibException& ex){
+      ROS_ERROR("The plugin failed to load for some reason.\n\tError: %s", ex.what());
+      loaded = false;
     }
 
-    void setInitialGuess(const tf::Transform& guess);
+    if (laser_odom_ptr == nullptr){
+      ROS_ERROR_STREAM("Error creating laser odometry: "
+                       << laser_odometry_type);
+      loaded = false;
+    }
+    else
+    {
+      ROS_DEBUG_STREAM("Succes creating laser odometry: "
+                       << laser_odometry_type);
 
-    void setLaserPose(const tf::Transform& base_to_laser);
+      bool configured = laser_odom_ptr->configure();
 
-    bool loadLaserOdometer(const std::string& laser_odometry_type);
+      if (!configured)
+      {
+        ROS_ERROR_STREAM("Something went wrong while configuring pluging : "
+                         << laser_odometry_type);
+        loaded = false;
+      }
+      else
+        loaded = true;
+    }
 
-    bool broadcastTf() const noexcept;
-    void broadcastTf(const bool broadcast) noexcept;
+    return laser_odom_ptr;
+  }
 
-  protected:
+protected:
 
-    bool loaded_       = false;
-    bool configured_   = false;
-    bool broadcast_tf_ = true;
-
-    // @todo metafactory should also work with shared ptr
-    std::shared_ptr<LaserOdometerLoader> loader_ptr_;
-    LaserOdometryBasePtr laser_odom_ptr_;
-
-    tf::TransformBroadcaster tf_broadcaster_;
-
-    void sendTransform();
-  };
-
-  using LaserOdometryPtr = std::shared_ptr<LaserOdometry>;
+  pluginlib::ClassLoader<LaserOdometryBase> loader = {"laser_odometry_core",
+                                                      "laser_odometry::LaserOdometryBase"};
+};
 
 } /* namespace laser_odometry */
 
