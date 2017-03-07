@@ -7,10 +7,8 @@ namespace utils
 
 void tfFromXYTheta(const double x, const double y, const double theta, tf::Transform& t)
 {
-  t.setOrigin(tf::Vector3(x, y, 0.0));
-  tf::Quaternion q;
-  q.setRPY(0.0, 0.0, theta);
-  t.setRotation(q);
+  t = tf::Transform(tf::createQuaternionFromYaw(theta),
+                    {x, y, 0});
 }
 
 bool getTf(const std::string& source_frame,
