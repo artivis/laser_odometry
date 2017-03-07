@@ -29,6 +29,12 @@ add_library(${PROJECT_NAME}
 )
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 
+add_executable(laser_odometry_node src/laser_odometry_node.cpp)
+target_link_libraries(laser_odometry_node
+  ${catkin_LIBRARIES} ${PROJECT_NAME}
+)
+
+
 ################
 ##  Install   ##
 ################
