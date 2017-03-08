@@ -51,12 +51,12 @@ namespace laser_odometry
 
     std::string getFrameBase()  const noexcept;
     std::string getFrameLaser() const noexcept;
-    std::string getFrameWorld() const noexcept;
+    std::string getFrameFixed() const noexcept;
     std::string getFrameOdom()  const noexcept;
 
     void setFrameBase(const std::string& frame);
     void setFrameLaser(const std::string& frame);
-    void setFrameWorld(const std::string& frame);
+    void setFrameFixed(const std::string& frame);
     void setFrameOdom(const std::string& frame);
 
     ros::Time getCurrentTime() const noexcept;

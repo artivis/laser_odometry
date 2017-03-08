@@ -174,7 +174,7 @@ std::string LaserOdometryBase::getFrameLaser() const noexcept
 {
   return laser_frame_;
 }
-std::string LaserOdometryBase::getFrameWorld() const noexcept
+std::string LaserOdometryBase::getFrameFixed() const noexcept
 {
   return world_frame_;
 }
@@ -190,7 +190,7 @@ void LaserOdometryBase::setFrameLaser(const std::string& frame)
 {
   laser_frame_ = frame;
 }
-void LaserOdometryBase::setFrameWorld(const std::string& frame)
+void LaserOdometryBase::setFrameFixed(const std::string& frame)
 {
   world_frame_ = frame;
 }
