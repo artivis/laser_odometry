@@ -26,6 +26,7 @@ protected:
 
   bool configured_   = false;
   bool broadcast_tf_ = true;
+  bool init_origin_  = false;
   bool new_scan_     = false;
   bool publish_odom_ = false;
 

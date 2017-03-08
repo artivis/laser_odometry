@@ -23,6 +23,7 @@ void LaserOdometryNode::initialize()
   }
 
   private_nh_.param("broadcast_tf", broadcast_tf_, broadcast_tf_);
+  private_nh_.param("init_origin",  init_origin_,  init_origin_);
   private_nh_.param("publish_odom", publish_odom_, publish_odom_);
 
   laser_odom_ptr_ = LaserOdometryInstantiater::instantiate(laser_odometry_type);
@@ -42,8 +43,15 @@ void LaserOdometryNode::initialize()
 
   laser_odom_ptr_->setLaserPose(base_to_laser);
 
-  /// @todo
-  //laser_odom_ptr_->setOrigin();
+  if (init_origin_)
+  {
+    tf::Transform origin_to_base = tf::Transform::getIdentity();
+    utils::getTf(laser_odom_ptr_->getFrameFixed(),
+                 laser_odom_ptr_->getFrameBase(),
+                 origin_to_base);
+
+    laser_odom_ptr_->setOrigin(origin_to_base);
+  }
 
   ros::NodeHandle nh("");
   laser_sub_ = nh.subscribe("scan_in", 1,

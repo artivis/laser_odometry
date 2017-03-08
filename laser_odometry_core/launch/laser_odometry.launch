@@ -10,6 +10,9 @@
   <!-- Whether or not to broadcast the estimated odometry on tf. -->
   <arg name="broadcast_tf" default="True"/>
 
+  <!-- Whether or not the retrieve the origin pose from tf. -->
+  <arg name="init_origin" default="False"/>
+
   <!-- Whether to use a nav_msgs::Odometry message or a
        geometry_msgs::Pose2D message. -->
   <arg name="publish_odom" default="True"/>
@@ -18,8 +21,7 @@
     <param name="laser_odometry_type" value="$(arg laser_odometry_type)" />
     <rosparam file="$(arg config_file)" command="load" />
     <param name="broadcast_tf" value="$(arg broadcast_tf)" />
-    <param name="publish_odom" value="$(arg publish_odom)" />
-    <param name="publish_odom" value="$(arg publish_odom)" />
+    <param name="init_origin"  value="$(arg init_origin)"  />
     <param name="publish_odom" value="$(arg publish_odom)" />
   </node>
 
