@@ -2,6 +2,7 @@
 #define _LASER_ODOMETRY_CORE_LASER_ODOMETRY_CORE_H_
 
 #include <sensor_msgs/LaserScan.h>
+#include <sensor_msgs/PointCloud2.h>
 #include <geometry_msgs/Pose2D.h>
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
@@ -20,9 +21,17 @@ namespace laser_odometry
 
     virtual bool process(const sensor_msgs::LaserScanPtr /*scan_ptr*/,
                          geometry_msgs::Pose2DPtr /*pose_ptr*/,
-                         geometry_msgs::Pose2DPtr relative_pose_ptr = nullptr) = 0;
+                         geometry_msgs::Pose2DPtr relative_pose_ptr = nullptr);
 
     virtual bool process(const sensor_msgs::LaserScanPtr /*scan_ptr*/,
+                         nav_msgs::OdometryPtr /*odom_ptr*/,
+                         nav_msgs::OdometryPtr relative_odom_ptr = nullptr);
+
+    virtual bool process(const sensor_msgs::PointCloud2ConstPtr /*cloud_ptr*/,
+                         geometry_msgs::Pose2DPtr /*pose_ptr*/,
+                         geometry_msgs::Pose2DPtr relative_pose_ptr = nullptr);
+
+    virtual bool process(const sensor_msgs::PointCloud2ConstPtr /*cloud_ptr*/,
                          nav_msgs::OdometryPtr /*odom_ptr*/,
                          nav_msgs::OdometryPtr relative_odom_ptr = nullptr);
 
