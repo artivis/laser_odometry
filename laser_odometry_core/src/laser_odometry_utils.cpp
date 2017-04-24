@@ -13,11 +13,11 @@ void tfFromXYTheta(const double x, const double y, const double theta, tf::Trans
 
 bool getTf(const std::string& source_frame,
            const std::string& target_frame,
-           tf::StampedTransform& tf)
+           tf::StampedTransform& tf,
+           const ros::Time& t)
 {
   tf::TransformListener tf_listener;
 
-  ros::Time t = ros::Time::now();
   try
   {
     tf_listener.waitForTransform(
@@ -37,11 +37,12 @@ bool getTf(const std::string& source_frame,
 
 bool getTf(const std::string& source_frame,
            const std::string& target_frame,
-           tf::Transform& tf)
+           tf::Transform& tf,
+           const ros::Time& t)
 {
   tf::StampedTransform stamped_tf;
 
-  bool ok = getTf(source_frame, target_frame, stamped_tf);
+  bool ok = getTf(source_frame, target_frame, stamped_tf, t);
 
   tf = stamped_tf;
 
