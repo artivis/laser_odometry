@@ -25,6 +25,7 @@ void LaserOdometryNode::initialize()
   private_nh_.param("broadcast_tf", broadcast_tf_, broadcast_tf_);
   private_nh_.param("init_origin",  init_origin_,  init_origin_);
   private_nh_.param("publish_odom", publish_odom_, publish_odom_);
+  private_nh_.param("fixed_sensor", fixed_sensor_, fixed_sensor_);
 
   laser_odom_ptr_ = LaserOdometryInstantiater::instantiate(laser_odometry_type);
 
@@ -36,12 +37,7 @@ void LaserOdometryNode::initialize()
     throw std::runtime_error("Something went wrong.");
   }
 
-  tf::Transform base_to_laser = tf::Transform::getIdentity();
-  utils::getTf(laser_odom_ptr_->getFrameLaser(),
-               laser_odom_ptr_->getFrameBase(),
-               base_to_laser);
-
-  laser_odom_ptr_->setLaserPose(base_to_laser);
+  setLaserFromTf();
 
   if (init_origin_)
   {
@@ -78,9 +74,21 @@ void LaserOdometryNode::CloudCallback(const sensor_msgs::PointCloud2ConstPtr new
   ROS_WARN_STREAM("Header " << new_cloud->header);
 }
 
+void LaserOdometryNode::setLaserFromTf()
+{
+  tf::Transform base_to_laser = tf::Transform::getIdentity();
+  utils::getTf(laser_odom_ptr_->getFrameLaser(),
+               laser_odom_ptr_->getFrameBase(),
+               base_to_laser);
+
+  laser_odom_ptr_->setLaserPose(base_to_laser);
+}
+
 void LaserOdometryNode::process()
 {
   if (!new_scan_ || !new_cloud_ || !configured_) return;
+
+  if (!fixed_sensor_) setLaserFromTf();
 
   if (publish_odom_)
   {

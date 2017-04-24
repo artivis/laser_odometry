@@ -23,11 +23,14 @@ public:
   bool broadcastTf() const noexcept;
   void broadcastTf(const bool broadcast) noexcept;
 
+  void setLaserFromTf();
+
   void process();
 
 protected:
 
   bool configured_   = false;
+  bool fixed_sensor_ = true;
   bool broadcast_tf_ = true;
   bool init_origin_  = false;
   bool new_scan_     = false;
