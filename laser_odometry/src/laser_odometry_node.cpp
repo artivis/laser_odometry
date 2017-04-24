@@ -19,7 +19,7 @@ void LaserOdometryNode::initialize()
   if (!private_nh_.getParam("laser_odometry_type", laser_odometry_type))
   {
     ROS_ERROR("No laser odometry type specified !");
-    return;
+    throw std::runtime_error("No laser odometry type specified !");
   }
 
   private_nh_.param("broadcast_tf", broadcast_tf_, broadcast_tf_);
@@ -33,7 +33,7 @@ void LaserOdometryNode::initialize()
     configured_ = true;
   else
   {
-    ROS_ERROR("Something went wrong, exiting.");
+    ROS_ERROR("Something went wrong.");
     throw std::runtime_error("Something went wrong.");
   }
 
