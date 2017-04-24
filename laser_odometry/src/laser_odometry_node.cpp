@@ -27,7 +27,7 @@ void LaserOdometryNode::initialize()
   private_nh_.param("publish_odom", publish_odom_, publish_odom_);
   private_nh_.param("fixed_sensor", fixed_sensor_, fixed_sensor_);
 
-  laser_odom_ptr_ = LaserOdometryInstantiater::instantiate(laser_odometry_type);
+  laser_odom_ptr_ = make_laser_odometry(laser_odometry_type);
 
   if (laser_odom_ptr_ != nullptr)
     configured_ = true;

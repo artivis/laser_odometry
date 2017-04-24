@@ -6,34 +6,24 @@
 #include <laser_odometry_core/singleton.h>
 #include <laser_odometry_core/laser_odometry_core.h>
 
-namespace laser_odometry
+namespace
 {
 
-class LaserOdometryInstantiater final : details::Singleton<LaserOdometryInstantiater>
+class LaserOdometryInstantiater final
 {
-protected:
-
-  friend class details::Singleton<LaserOdometryInstantiater>;
+public:
 
   LaserOdometryInstantiater()  = default;
   ~LaserOdometryInstantiater() = default;
 
-public:
-
+  // Not copyable
   LaserOdometryInstantiater(LaserOdometryInstantiater&) = delete;
   void operator=(LaserOdometryInstantiater&)            = delete;
 
-  static LaserOdometryPtr instantiate(const std::string& laser_odometry_type)
-  {
-    return LaserOdometryInstantiater::get().instantiate_impl(laser_odometry_type);
-  }
-
-protected:
-
-  LaserOdometryPtr instantiate_impl(const std::string& laser_odometry_type)
+  laser_odometry::LaserOdometryPtr instantiate_impl(const std::string& laser_odometry_type)
   {
     bool loaded = false;
-    LaserOdometryPtr laser_odom_ptr;
+    laser_odometry::LaserOdometryPtr laser_odom_ptr;
 
     try {
       laser_odom_ptr = loader.createInstance(laser_odometry_type);
@@ -70,9 +60,24 @@ protected:
 
 protected:
 
-  pluginlib::ClassLoader<LaserOdometryBase> loader = {"laser_odometry_core",
-                                                      "laser_odometry::LaserOdometryBase"};
+  pluginlib::ClassLoader<laser_odometry::LaserOdometryBase> loader =
+    {"laser_odometry_core","laser_odometry::LaserOdometryBase"};
 };
+
+} /* namespace */
+
+namespace laser_odometry
+{
+
+namespace detail
+{
+using Instantiater = details::Singleton<LaserOdometryInstantiater>;
+}
+
+LaserOdometryPtr make_laser_odometry(const std::string& laser_odometry_type)
+{
+  return detail::Instantiater::get().instantiate_impl(laser_odometry_type);
+}
 
 } /* namespace laser_odometry */
 
