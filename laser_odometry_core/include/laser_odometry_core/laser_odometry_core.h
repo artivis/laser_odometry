@@ -79,9 +79,9 @@ namespace laser_odometry
 
     ros::NodeHandle private_nh_ = ros::NodeHandle("~");
 
-    std::string base_frame_  = "base_link";
-    std::string laser_frame_ = "base_laser_link";
-    std::string world_frame_ = "world";
+    std::string base_frame_       = "base_link";
+    std::string laser_frame_      = "base_laser_link";
+    std::string world_frame_      = "world";
     std::string laser_odom_frame_ = "odom";
 
     tf::Transform base_to_laser_; // static, cached
@@ -93,7 +93,7 @@ namespace laser_odometry
     tf::Transform world_origin_;         // world-origin tf
     tf::Transform world_origin_to_base_; // world-origin-to-base tf, integrated odom
 
-    sensor_msgs::LaserScan reference_scan_;
+    //sensor_msgs::LaserScan reference_scan_;
 
     ros::Time current_time_;
 

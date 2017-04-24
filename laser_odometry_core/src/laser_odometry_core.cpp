@@ -15,6 +15,16 @@ tf::Transform LaserOdometryBase::getEstimatedPose() const noexcept
 void LaserOdometryBase::reset()
 {
   /// @note to be implemented in the derived class.
+
+  base_to_laser_     = tf::Transform::getIdentity();
+  laser_to_base_     = tf::Transform::getIdentity();
+  relative_tf_       = tf::Transform::getIdentity();
+  world_origin_      = tf::Transform::getIdentity();
+  world_to_base_     = tf::Transform::getIdentity();
+  guess_relative_tf_ = tf::Transform::getIdentity();
+
+  default_covariance_.resize(6);
+  std::fill_n(default_covariance_.begin(), 6, 1e-9);
 }
 
 bool LaserOdometryBase::configure()
