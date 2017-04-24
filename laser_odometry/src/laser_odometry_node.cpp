@@ -62,24 +62,25 @@ void LaserOdometryNode::initialize()
 
 void LaserOdometryNode::LaserCallback(sensor_msgs::LaserScanPtr new_scan)
 {
-  latest_scan_ = new_scan;
-  new_scan_ = true;
+  latest_scan_   = new_scan;
+  current_stamp_ = latest_scan_->header.stamp;
+  new_scan_      = true;
 }
 
 void LaserOdometryNode::CloudCallback(const sensor_msgs::PointCloud2ConstPtr new_cloud)
 {
-  latest_cloud_ = new_cloud;
-  new_cloud_ = true;
-
-  ROS_WARN_STREAM("Header " << new_cloud->header);
+  latest_cloud_  = new_cloud;
+  current_stamp_ = latest_cloud_->header.stamp;
+  new_cloud_     = true;
 }
 
-void LaserOdometryNode::setLaserFromTf()
+void LaserOdometryNode::setLaserFromTf(const ros::Time &t)
 {
   tf::Transform base_to_laser = tf::Transform::getIdentity();
+
   utils::getTf(laser_odom_ptr_->getFrameLaser(),
                laser_odom_ptr_->getFrameBase(),
-               base_to_laser);
+               base_to_laser, t);
 
   laser_odom_ptr_->setLaserPose(base_to_laser);
 }
@@ -88,7 +89,7 @@ void LaserOdometryNode::process()
 {
   if (!new_scan_ || !new_cloud_ || !configured_) return;
 
-  if (!fixed_sensor_) setLaserFromTf();
+  if (!fixed_sensor_) setLaserFromTf(current_stamp_);
 
   if (publish_odom_)
   {

@@ -23,7 +23,7 @@ public:
   bool broadcastTf() const noexcept;
   void broadcastTf(const bool broadcast) noexcept;
 
-  void setLaserFromTf();
+  void setLaserFromTf(const ros::Time& t = ros::Time(0));
 
   void process();
 
@@ -41,6 +41,7 @@ protected:
 
   sensor_msgs::LaserScanPtr latest_scan_;
   sensor_msgs::PointCloud2ConstPtr latest_cloud_;
+  std_msgs::Header::_stamp_type current_stamp_;
 
   LaserOdometryPtr laser_odom_ptr_;
 
