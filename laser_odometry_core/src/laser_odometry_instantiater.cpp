@@ -1,4 +1,4 @@
-#include <laser_odometry_core/laser_odometry.h>
+#include <laser_odometry_core/laser_odometry_instantiater.h>
 
 namespace laser_odometry
 {

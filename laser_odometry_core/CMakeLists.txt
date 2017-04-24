@@ -42,7 +42,7 @@ include_directories(include ${catkin_INCLUDE_DIRS})
 add_library(${PROJECT_NAME}
     src/laser_odometry_core.cpp
     src/laser_odometry_utils.cpp
-    src/laser_odometry.cpp
+    src/laser_odometry_instantiater.cpp
 )
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 

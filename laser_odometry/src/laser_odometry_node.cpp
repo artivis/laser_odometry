@@ -1,5 +1,5 @@
 #include <laser_odometry/laser_odometry_node.h>
-#include <laser_odometry_core/laser_odometry.h>
+#include <laser_odometry_core/laser_odometry_instantiater.h>
 #include <laser_odometry_core/laser_odometry_utils.h>
 
 namespace sm = sensor_msgs;
