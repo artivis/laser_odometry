@@ -15,14 +15,6 @@ public:
   LaserOdometryNode();
   virtual ~LaserOdometryNode() = default;
 
-  void initialize();
-
-  void LaserCallback(sensor_msgs::LaserScanPtr new_scan);
-  void CloudCallback(const sensor_msgs::PointCloud2ConstPtr new_cloud);
-
-  bool broadcastTf() const noexcept;
-  void broadcastTf(const bool broadcast) noexcept;
-
   void setLaserFromTf(const ros::Time& t = ros::Time(0));
 
   void process();
@@ -49,6 +41,14 @@ protected:
 
   ros::Subscriber laser_sub_;
   ros::Publisher  pub_;
+
+  void initialize();
+
+  void LaserCallback(sensor_msgs::LaserScanPtr new_scan);
+  void CloudCallback(const sensor_msgs::PointCloud2ConstPtr new_cloud);
+
+  bool broadcastTf() const noexcept;
+  void broadcastTf(const bool broadcast) noexcept;
 
   void resetListenerWithType(const topic_tools::ShapeShifter::Ptr &new_s);
 
