@@ -100,8 +100,9 @@ namespace laser_odometry
     virtual bool configureImpl() = 0;
     virtual tf::Transform predict(const tf::Transform& tf);
 
-    virtual void fillOdomMsg(const sensor_msgs::LaserScanPtr current_scan_ptr,
-                             nav_msgs::OdometryPtr odom_ptr);
+    virtual tf::Transform expressFromLaserToBase(const tf::Transform& tf_in_lf);
+
+    virtual void fillOdomMsg(nav_msgs::OdometryPtr odom_ptr);
 
     virtual void fillPose2DMsg(geometry_msgs::Pose2DPtr pose_ptr);
 

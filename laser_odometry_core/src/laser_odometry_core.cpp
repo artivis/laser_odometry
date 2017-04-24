@@ -183,10 +183,14 @@ tf::Transform LaserOdometryBase::predict(const tf::Transform& /*tf*/)
   return tf::Transform::getIdentity();
 }
 
-void LaserOdometryBase::fillOdomMsg(const sensor_msgs::LaserScanPtr current_scan_ptr,
-                                    nav_msgs::OdometryPtr odom_ptr)
+tf::Transform LaserOdometryBase::expressFromLaserToBase(const tf::Transform& tf_in_lf)
 {
-  odom_ptr->header.stamp    = current_scan_ptr->header.stamp;
+  return base_to_laser_ * tf_in_lf * laser_to_base_;
+}
+
+void LaserOdometryBase::fillOdomMsg(nav_msgs::OdometryPtr odom_ptr)
+{
+  odom_ptr->header.stamp    = current_time_;
   odom_ptr->header.frame_id = laser_odom_frame_;
 
   odom_ptr->pose.pose.position.x = world_origin_to_base_.getOrigin().getX();
