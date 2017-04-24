@@ -18,7 +18,7 @@
        geometry_msgs::Pose2D message. -->
   <arg name="publish_odom" default="True"/>
 
-  <node pkg="laser_odometry_core" type="laser_odometry_node" name="laser_odometry_node" output="screen">
+  <node pkg="laser_odometry" type="laser_odometry_node" name="laser_odometry_node" output="screen">
     <param name="laser_odometry_type" value="$(arg laser_odometry_type)" />
     <!--<rosparam file="$(arg config_file)" command="load" />-->
     <param name="broadcast_tf" value="$(arg broadcast_tf)" />
