@@ -26,12 +26,13 @@ find_package(catkin REQUIRED COMPONENTS
     sensor_msgs
     pluginlib
     laser_odometry_core
+    topic_tools
 )
 
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ${PROJECT_NAME}
-  CATKIN_DEPENDS roscpp tf sensor_msgs pluginlib laser_odometry_core
+  CATKIN_DEPENDS roscpp tf sensor_msgs pluginlib laser_odometry_core topic_tools
 )
 
 include_directories(include ${catkin_INCLUDE_DIRS})

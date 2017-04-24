@@ -1,4 +1,4 @@
-#include <laser_odometry_core/laser_odometry_node.h>
+#include <laser_odometry/laser_odometry_node.h>
 #include <laser_odometry_core/laser_odometry.h>
 #include <laser_odometry_core/laser_odometry_utils.h>
 
@@ -53,9 +53,10 @@ void LaserOdometryNode::initialize()
     laser_odom_ptr_->setOrigin(origin_to_base);
   }
 
-  ros::NodeHandle nh("");
-  laser_sub_ = nh.subscribe("scan_in", 1,
-                            &LaserOdometryNode::LaserCallback, this);
+  laser_sub_ = private_nh_.subscribe("scan_in", 1,
+                                     &LaserOdometryNode::resetListenerWithType, this);
+
+  ROS_INFO("Subscribed to %s", laser_sub_.getTopic().c_str());
 
   if (publish_odom_)
     pub_ = private_nh_.advertise<nav_msgs::Odometry>("laser_odom", 1);
@@ -69,16 +70,33 @@ void LaserOdometryNode::LaserCallback(sensor_msgs::LaserScanPtr new_scan)
   new_scan_ = true;
 }
 
+void LaserOdometryNode::CloudCallback(const sensor_msgs::PointCloud2ConstPtr new_cloud)
+{
+  latest_cloud_ = new_cloud;
+  new_cloud_ = true;
+
+  ROS_WARN_STREAM("Header " << new_cloud->header);
+}
+
 void LaserOdometryNode::process()
 {
-  if (!new_scan_ || !configured_) return;
+  if (!new_scan_ || !new_cloud_ || !configured_) return;
 
   if (publish_odom_)
   {
     nav_msgs::OdometryPtr odom_ptr = boost::make_shared<nav_msgs::Odometry>();
     //nav_msgs::OdometryPtr relative_odom_ptr;
 
-    laser_odom_ptr_->process(latest_scan_, odom_ptr);
+    if (new_scan_)
+    {
+      new_scan_ = false;
+      laser_odom_ptr_->process(latest_scan_, odom_ptr);
+    }
+    else if (new_cloud_)
+    {
+      new_cloud_ = false;
+      laser_odom_ptr_->process(latest_cloud_, odom_ptr);
+    }
 
     publish(odom_ptr);
 
@@ -89,7 +107,16 @@ void LaserOdometryNode::process()
     geometry_msgs::Pose2DPtr pose_2d_ptr = boost::make_shared<geometry_msgs::Pose2D>();
     //nav_msgs::OdometryPtr relative_odom_ptr;
 
-    laser_odom_ptr_->process(latest_scan_, pose_2d_ptr);
+    if (new_scan_)
+    {
+      new_scan_ = false;
+      laser_odom_ptr_->process(latest_scan_, pose_2d_ptr);
+    }
+    else if (new_cloud_)
+    {
+      new_cloud_ = false;
+      laser_odom_ptr_->process(latest_cloud_, pose_2d_ptr);
+    }
 
     publish(pose_2d_ptr);
 
@@ -107,6 +134,23 @@ bool LaserOdometryNode::broadcastTf() const noexcept
 void LaserOdometryNode::broadcastTf(const bool broadcast) noexcept
 {
   broadcast_tf_ = broadcast;
+}
+
+void LaserOdometryNode::resetListenerWithType(const topic_tools::ShapeShifter::Ptr& new_s)
+{
+  laser_sub_.shutdown();
+
+  if (new_s->getDataType() == "sensor_msgs/LaserScan") {
+    laser_sub_ = private_nh_.subscribe("scan_in", 1,
+                                      &LaserOdometryNode::LaserCallback, this);
+  }
+  else if(new_s->getDataType() == "sensor_msgs/PointCloud2") {
+    laser_sub_ = private_nh_.subscribe("scan_in", 1,
+                                      &LaserOdometryNode::CloudCallback, this);
+  }
+  else {
+    ROS_ERROR("Subscribed to topic of unknown type !");
+  }
 }
 
 void LaserOdometryNode::sendTransform()
@@ -145,10 +189,9 @@ int main(int argc, char **argv)
 
   laser_odometry::LaserOdometryNode node;
 
-  ros::Rate rate(25);
+  ros::Rate rate(40);
 
-//  int i=0;
-  while (ros::ok() /*&& (++i) > 10*/)
+  while (ros::ok())
   {
     node.process();
 

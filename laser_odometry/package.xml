@@ -14,6 +14,7 @@
   <depend>sensor_msgs</depend>
   <depend>pluginlib</depend>
   <depend>laser_odometry_core</depend>
+  <depend>topic_tools</depend>
 
   <test_depend>roslib</test_depend>
   <test_depend>rostest</test_depend>
