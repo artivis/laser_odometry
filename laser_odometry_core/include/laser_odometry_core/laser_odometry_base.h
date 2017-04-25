@@ -53,6 +53,18 @@ namespace laser_odometry
                                   nav_msgs::OdometryPtr /*pose_msg*/,
                                   nav_msgs::OdometryPtr relative_odom_msg = nullptr);
 
+  protected:
+
+    /* Those are the functions the derived class should overload */
+
+    virtual bool process_impl(const sensor_msgs::LaserScanConstPtr& laser_msg,
+                              const tf::Transform& prediction);
+
+    virtual bool process_impl(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
+                              const tf::Transform& prediction);
+
+  public:
+
     const tf::Transform& getEstimatedPose() const noexcept;
 
     virtual void reset();
@@ -110,7 +122,10 @@ namespace laser_odometry
     tf::Transform base_to_laser_; // static, cached
     tf::Transform laser_to_base_; // static, cached, calculated from base_to_laser_
 
-    tf::Transform correction;    // last_scan-to-curent_scan tf
+    /* This is the transform the derived class should fills */
+    /// @brief the relative transform in
+    /// the laser frame
+    tf::Transform correction_;
 
     tf::Transform relative_tf_;          // last_scan-to-curent_scan tf
     tf::Transform guess_relative_tf_;    // initial guess last_scan-to-curent_scan tf
@@ -134,15 +149,11 @@ namespace laser_odometry
 
     virtual void preProcessing();
 
-    virtual bool process_impl(const sensor_msgs::LaserScanConstPtr& laser_msg,
-                              const tf::Transform& prediction);
-
-    virtual bool process_impl(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
-                              const tf::Transform& prediction);
-
     virtual void postProcessing();
 
     virtual bool isKeyFrame(const tf::Transform& tf);
+
+    virtual void isKeyFrame();
 
     virtual tf::Transform expressFromLaserToBase(const tf::Transform& tf_in_lf);
 

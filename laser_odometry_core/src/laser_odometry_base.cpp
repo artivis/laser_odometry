@@ -92,7 +92,7 @@ LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_msg,
   if (processed)
   {
     // the correction of the base's position, in the base frame
-    relative_tf_ = base_to_laser_ * correction * laser_to_base_;
+    relative_tf_ = base_to_laser_ * correction_ * laser_to_base_;
 
     // update the pose in the world frame
     world_to_base_ = world_to_base_kf_ * relative_tf_;
@@ -181,7 +181,7 @@ LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
   if (processed)
   {
     // the correction of the base's position, in the base frame
-    relative_tf_ = base_to_laser_ * correction * laser_to_base_;
+    relative_tf_ = base_to_laser_ * correction_ * laser_to_base_;
 
     // update the pose in the world frame
     world_to_base_ = world_to_base_kf_ * relative_tf_;
@@ -206,6 +206,8 @@ LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
     world_to_base_kf_ = world_to_base_;
 
     reference_cloud_ = cloud_msg;
+
+    isKeyFrame();
   }
 
   postProcessing();
@@ -296,6 +298,11 @@ void LaserOdometryBase::postProcessing()
 bool LaserOdometryBase::isKeyFrame(const tf::Transform& /*tf*/)
 {
   return true;
+}
+
+void LaserOdometryBase::isKeyFrame()
+{
+
 }
 
 tf::Transform LaserOdometryBase::expressFromLaserToBase(const tf::Transform& tf_in_lf)
