@@ -1,11 +1,16 @@
 #ifndef _LASER_ODOMETRY_CORE_LASER_ODOMETRY_BASE_H_
 #define _LASER_ODOMETRY_CORE_LASER_ODOMETRY_BASE_H_
 
+// The input ROS messages supported
 #include <sensor_msgs/LaserScan.h>
 #include <sensor_msgs/PointCloud2.h>
+
+// The output ROS messages supported
 #include <geometry_msgs/Pose2D.h>
 #include <nav_msgs/Odometry.h>
-#include <geometry_msgs/PoseWithCovarianceStamped.h>
+//#include <geometry_msgs/PoseWithCovarianceStamped.h>
+
+// More ROS header
 #include <tf/tf.h>
 #include <tf/transform_broadcaster.h>
 
@@ -53,6 +58,8 @@ namespace laser_odometry
     bool configure();
 
     bool configured() const noexcept;
+
+    /* Guetter / Setter */
 
     tf::Transform& getOrigin();
     const tf::Transform& getOrigin() const;
@@ -112,6 +119,8 @@ namespace laser_odometry
 
     virtual bool configureImpl() = 0;
     virtual tf::Transform predict(const tf::Transform& tf);
+
+    virtual bool isKeyFrame(const tf::Transform& tf);
 
     virtual tf::Transform expressFromLaserToBase(const tf::Transform& tf_in_lf);
 

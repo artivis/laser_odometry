@@ -7,26 +7,6 @@
 namespace laser_odometry
 {
 
-const tf::Transform& LaserOdometryBase::getEstimatedPose() const noexcept
-{
-  return world_origin_to_base_;
-}
-
-void LaserOdometryBase::reset()
-{
-  /// @note to be implemented in the derived class.
-
-  base_to_laser_     = tf::Transform::getIdentity();
-  laser_to_base_     = tf::Transform::getIdentity();
-  relative_tf_       = tf::Transform::getIdentity();
-  world_origin_      = tf::Transform::getIdentity();
-  world_to_base_     = tf::Transform::getIdentity();
-  guess_relative_tf_ = tf::Transform::getIdentity();
-
-  default_covariance_.resize(6);
-  std::fill_n(default_covariance_.begin(), 6, 1e-9);
-}
-
 bool LaserOdometryBase::configure()
 {
   private_nh_.param("laser_frame", laser_frame_, std::string("base_laser_link"));
@@ -61,52 +41,6 @@ bool LaserOdometryBase::configure()
   configured_ = configureImpl();
 
   return configured_;
-}
-
-tf::Transform& LaserOdometryBase::getOrigin()
-{
-  return world_origin_;
-}
-
-const tf::Transform& LaserOdometryBase::getOrigin() const
-{
-  return world_origin_;
-}
-
-void LaserOdometryBase::setOrigin(const tf::Transform& origin)
-{
-  world_origin_ = origin;
-}
-
-tf::Transform& LaserOdometryBase::getInitialGuess()
-{
-  return guess_relative_tf_;
-}
-
-const tf::Transform& LaserOdometryBase::getInitialGuess() const
-{
-  return guess_relative_tf_;
-}
-
-void LaserOdometryBase::setInitialGuess(const tf::Transform& guess)
-{
-  guess_relative_tf_ = guess;
-}
-
-tf::Transform& LaserOdometryBase::getLaserPose()
-{
-  return base_to_laser_;
-}
-
-const tf::Transform& LaserOdometryBase::getLaserPose() const
-{
-  return base_to_laser_;
-}
-
-void LaserOdometryBase::setLaserPose(const tf::Transform& base_to_laser)
-{
-  base_to_laser_ = base_to_laser;
-  laser_to_base_ = base_to_laser.inverse();
 }
 
 LaserOdometryBase::ProcessReport
@@ -165,6 +99,26 @@ LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_ptr,
   return process_report;
 }
 
+const tf::Transform& LaserOdometryBase::getEstimatedPose() const noexcept
+{
+  return world_origin_to_base_;
+}
+
+void LaserOdometryBase::reset()
+{
+  /// @note to be implemented in the derived class.
+
+  base_to_laser_     = tf::Transform::getIdentity();
+  laser_to_base_     = tf::Transform::getIdentity();
+  relative_tf_       = tf::Transform::getIdentity();
+  world_origin_      = tf::Transform::getIdentity();
+  world_to_base_     = tf::Transform::getIdentity();
+  guess_relative_tf_ = tf::Transform::getIdentity();
+
+  default_covariance_.resize(6);
+  std::fill_n(default_covariance_.begin(), 6, 1e-9);
+}
+
 bool LaserOdometryBase::configured() const noexcept
 {
   return configured_;
@@ -173,6 +127,11 @@ bool LaserOdometryBase::configured() const noexcept
 tf::Transform LaserOdometryBase::predict(const tf::Transform& /*tf*/)
 {
   return tf::Transform::getIdentity();
+}
+
+bool LaserOdometryBase::isKeyFrame(const tf::Transform& /*tf*/)
+{
+  return true;
 }
 
 tf::Transform LaserOdometryBase::expressFromLaserToBase(const tf::Transform& tf_in_lf)
@@ -210,6 +169,63 @@ void LaserOdometryBase::fillCovariance(Covariance& covariance)
                (0)  (0)  (0)  (static_cast<double>(default_covariance_[3]))  (0) (0)
                (0)  (0)  (0)  (0)  (static_cast<double>(default_covariance_[4])) (0)
                (0)  (0)  (0)  (0)  (0)  (static_cast<double>(default_covariance_[5]));
+}
+
+OdomType LaserOdometryBase::odomType() const
+{
+  throw std::runtime_error("odomType() not implemented.");
+}
+
+////////////////////////
+///                  ///
+/// Guetter / Setter ///
+///                  ///
+////////////////////////
+
+tf::Transform& LaserOdometryBase::getOrigin()
+{
+  return world_origin_;
+}
+
+const tf::Transform& LaserOdometryBase::getOrigin() const
+{
+  return world_origin_;
+}
+
+void LaserOdometryBase::setOrigin(const tf::Transform& origin)
+{
+  world_origin_ = origin;
+}
+
+tf::Transform& LaserOdometryBase::getInitialGuess()
+{
+  return guess_relative_tf_;
+}
+
+const tf::Transform& LaserOdometryBase::getInitialGuess() const
+{
+  return guess_relative_tf_;
+}
+
+void LaserOdometryBase::setInitialGuess(const tf::Transform& guess)
+{
+  guess_relative_tf_ = guess;
+}
+
+tf::Transform& LaserOdometryBase::getLaserPose()
+{
+  return base_to_laser_;
+}
+
+const tf::Transform& LaserOdometryBase::getLaserPose() const
+{
+  return base_to_laser_;
+}
+
+void LaserOdometryBase::setLaserPose(const tf::Transform& base_to_laser)
+{
+  base_to_laser_ = base_to_laser;
+  laser_to_base_ = base_to_laser.inverse();
 }
 
 const std::string& LaserOdometryBase::getFrameBase()  const noexcept
@@ -255,11 +271,6 @@ void LaserOdometryBase::setFrameOdom(const std::string& frame)
 const ros::Time& LaserOdometryBase::getCurrentTime() const noexcept
 {
   return current_time_;
-}
-
-OdomType LaserOdometryBase::odomType() const
-{
-  throw std::runtime_error("odomType() not implemented.");
 }
 
 } /* namespace laser_odometry */
