@@ -110,20 +110,32 @@ namespace laser_odometry
     tf::Transform base_to_laser_; // static, cached
     tf::Transform laser_to_base_; // static, cached, calculated from base_to_laser_
 
+    tf::Transform correction;    // last_scan-to-curent_scan tf
+
     tf::Transform relative_tf_;          // last_scan-to-curent_scan tf
     tf::Transform guess_relative_tf_;    // initial guess last_scan-to-curent_scan tf
+
     tf::Transform world_to_base_;        // world-to-base tf, integrated odom
+    tf::Transform world_to_base_kf_;     // world-to-base in the last key-frame tf
     tf::Transform world_origin_;         // world-origin tf
     tf::Transform world_origin_to_base_; // world-origin-to-base tf, integrated odom
 
-    //sensor_msgs::LaserScan reference_scan_;
+    sensor_msgs::LaserScanConstPtr   reference_scan_;
+    sensor_msgs::PointCloud2ConstPtr reference_cloud_;
 
     ros::Time current_time_;
 
     virtual bool configureImpl() = 0;
+
+    virtual bool initialize(const sensor_msgs::LaserScanConstPtr&   scan_msg);
+    virtual bool initialize(const sensor_msgs::PointCloud2ConstPtr& cloud_msg);
+
     virtual tf::Transform predict(const tf::Transform& tf);
 
     virtual void preProcessing();
+
+    virtual bool process_impl(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
+                              const tf::Transform& prediction);
 
     virtual void postProcessing();
 
