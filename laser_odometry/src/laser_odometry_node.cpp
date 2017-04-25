@@ -180,16 +180,6 @@ void LaserOdometryNode::sendTransform()
   }
 }
 
-void LaserOdometryNode::publish(const nav_msgs::OdometryPtr odom_ptr) const
-{
-  pub_.publish(odom_ptr);
-}
-
-void LaserOdometryNode::publish(const geometry_msgs::Pose2DPtr pose_2d_ptr) const
-{
-  pub_.publish(pose_2d_ptr);
-}
-
 } /* namespace laser_odometry */
 
 int main(int argc, char **argv)

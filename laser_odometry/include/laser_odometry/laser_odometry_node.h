@@ -54,9 +54,17 @@ protected:
   void resetListenerWithType(const topic_tools::ShapeShifter::Ptr &new_s);
 
   void sendTransform();
-  void publish(const nav_msgs::OdometryPtr odom_ptr) const;
-  void publish(const geometry_msgs::Pose2DPtr odom_ptr) const;
+
+  template <typename T>
+  void publish(const T& msg) const;
 };
+
+template <typename T>
+void LaserOdometryNode::publish(const T& msg) const
+{
+  if (pub_.getNumSubscribers() > 0)
+    pub_.publish(msg);
+}
 
 } /* namespace laser_odometry */
 
