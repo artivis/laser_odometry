@@ -160,13 +160,7 @@ bool LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr cloud_ptr
 
   bool processed = process(cloud_ptr, pose_2d_ptr);
 
-  odom_ptr->header.stamp = cloud_ptr->header.stamp;
-  odom_ptr->header.frame_id = laser_odom_frame_;
-
-  odom_ptr->pose.pose.position.x  = pose_2d_ptr->x;
-  odom_ptr->pose.pose.position.y  = pose_2d_ptr->y;
-  odom_ptr->pose.pose.position.z  = 0;
-  odom_ptr->pose.pose.orientation = tf::createQuaternionMsgFromYaw(pose_2d_ptr->theta);
+  fillOdomMsg(odom_ptr);
 
   fillCovariance(odom_ptr->pose.covariance);
 
@@ -192,6 +186,7 @@ void LaserOdometryBase::fillOdomMsg(nav_msgs::OdometryPtr odom_ptr)
 {
   odom_ptr->header.stamp    = current_time_;
   odom_ptr->header.frame_id = laser_odom_frame_;
+  odom_ptr->child_frame_id  = base_frame_;
 
   odom_ptr->pose.pose.position.x = world_origin_to_base_.getOrigin().getX();
   odom_ptr->pose.pose.position.y = world_origin_to_base_.getOrigin().getY();
