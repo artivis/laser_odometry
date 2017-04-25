@@ -72,7 +72,7 @@ LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_ptr,
 
   const auto process_report = process(scan_ptr, pose_2d_ptr);
 
-  fillOdomMsg(odom_ptr);
+  fillMsg(odom_ptr);
 
   return process_report;
 }
@@ -93,7 +93,7 @@ LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
 
     world_origin_to_base_ = world_origin_ * world_to_base_;
 
-    fillPose2DMsg(pose_msg);
+    fillMsg(pose_msg);
 
     ROS_INFO_STREAM("LaserOdometryLibPointMatcher Initialized!");
 
@@ -132,7 +132,7 @@ LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
   }
 
   // Retrieve pose2D
-  fillPose2DMsg(pose_msg);
+  fillMsg(pose_msg);
 
   const bool is_key_frame = isKeyFrame(relative_tf_);
   if (is_key_frame)
@@ -231,29 +231,6 @@ bool LaserOdometryBase::isKeyFrame(const tf::Transform& /*tf*/)
 tf::Transform LaserOdometryBase::expressFromLaserToBase(const tf::Transform& tf_in_lf)
 {
   return base_to_laser_ * tf_in_lf * laser_to_base_;
-}
-
-void LaserOdometryBase::fillOdomMsg(nav_msgs::OdometryPtr odom_ptr)
-{
-  odom_ptr->header.stamp    = current_time_;
-  odom_ptr->header.frame_id = laser_odom_frame_;
-  odom_ptr->child_frame_id  = base_frame_;
-
-  odom_ptr->pose.pose.position.x = world_origin_to_base_.getOrigin().getX();
-  odom_ptr->pose.pose.position.y = world_origin_to_base_.getOrigin().getY();
-  odom_ptr->pose.pose.position.z = 0;
-
-  tf::quaternionTFToMsg(world_origin_to_base_.getRotation(),
-                        odom_ptr->pose.pose.orientation);
-
-  odom_ptr->pose.covariance = covariance_;
-}
-
-void LaserOdometryBase::fillPose2DMsg(geometry_msgs::Pose2DPtr pose_ptr)
-{
-  pose_ptr->x = world_origin_to_base_.getOrigin().getX();
-  pose_ptr->y = world_origin_to_base_.getOrigin().getY();
-  pose_ptr->theta = tf::getYaw(world_origin_to_base_.getRotation());
 }
 
 OdomType LaserOdometryBase::odomType() const

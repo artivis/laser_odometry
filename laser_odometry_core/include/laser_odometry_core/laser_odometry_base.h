@@ -143,12 +143,36 @@ namespace laser_odometry
 
     virtual tf::Transform expressFromLaserToBase(const tf::Transform& tf_in_lf);
 
-    virtual void fillOdomMsg(nav_msgs::OdometryPtr odom_ptr);
-
-    virtual void fillPose2DMsg(geometry_msgs::Pose2DPtr pose_ptr);
+    template <typename T>
+    void fillMsg(T& msg_ptr);
   };
 
   typedef boost::shared_ptr<LaserOdometryBase> LaserOdometryPtr;
+
+  template <>
+  inline void LaserOdometryBase::fillMsg<geometry_msgs::Pose2DPtr>(geometry_msgs::Pose2DPtr& msg_ptr)
+  {
+    msg_ptr->x = world_origin_to_base_.getOrigin().getX();
+    msg_ptr->y = world_origin_to_base_.getOrigin().getY();
+    msg_ptr->theta = tf::getYaw(world_origin_to_base_.getRotation());
+  }
+
+  template <>
+  inline void LaserOdometryBase::fillMsg<nav_msgs::OdometryPtr>(nav_msgs::OdometryPtr& msg_ptr)
+  {
+    msg_ptr->header.stamp    = current_time_;
+    msg_ptr->header.frame_id = laser_odom_frame_;
+    msg_ptr->child_frame_id  = base_frame_;
+
+    msg_ptr->pose.pose.position.x = world_origin_to_base_.getOrigin().getX();
+    msg_ptr->pose.pose.position.y = world_origin_to_base_.getOrigin().getY();
+    msg_ptr->pose.pose.position.z = 0;
+
+    tf::quaternionTFToMsg(world_origin_to_base_.getRotation(),
+                          msg_ptr->pose.pose.orientation);
+
+    msg_ptr->pose.covariance = covariance_;
+  }
 
 } /* namespace laser_odometry */
 
