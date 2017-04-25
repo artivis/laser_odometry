@@ -134,6 +134,9 @@ namespace laser_odometry
 
     virtual void preProcessing();
 
+    virtual bool process_impl(const sensor_msgs::LaserScanConstPtr& laser_msg,
+                              const tf::Transform& prediction);
+
     virtual bool process_impl(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
                               const tf::Transform& prediction);
 

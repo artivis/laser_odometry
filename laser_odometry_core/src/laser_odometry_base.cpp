@@ -53,11 +53,75 @@ bool LaserOdometryBase::configure()
 }
 
 LaserOdometryBase::ProcessReport
-LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& /*scan_msg*/,
-                           geometry_msgs::Pose2DPtr /*pose_msg*/,
+LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_msg,
+                           geometry_msgs::Pose2DPtr pose_msg,
                            geometry_msgs::Pose2DPtr /*relative_pose_msg*/)
 {
-  throw std::runtime_error("process(sensor_msgs::LaserScanPtr) not implemented.");
+  assert_not_null(scan_msg);
+  assert_not_null(pose_msg);
+
+  // first message
+  if (!initialized_)
+  {
+    current_time_ = scan_msg->header.stamp;
+    initialized_ = initialize(scan_msg);
+
+    world_origin_to_base_ = world_origin_ * world_to_base_;
+
+    fillMsg(pose_msg);
+
+    ROS_INFO_STREAM("LaserOdometryLibPointMatcher Initialized!");
+
+    return ProcessReport{true, true};
+  }
+
+  preProcessing();
+
+  tf::Transform guess_relative_tf_ = predict(relative_tf_);
+
+  // account for the change since the last kf, in the fixed frame
+  guess_relative_tf_ = guess_relative_tf_ * (world_to_base_ * world_to_base_kf_.inverse());
+
+  // the predicted change of the laser's position, in the laser frame
+  tf::Transform pred_rel_tf_in_ltf = laser_to_base_ * world_to_base_.inverse() *
+                                      guess_relative_tf_ * world_to_base_ * base_to_laser_ ;
+
+  // The actual computation
+  const bool processed = process_impl(scan_msg, pred_rel_tf_in_ltf);
+
+  if (processed)
+  {
+    // the correction of the base's position, in the base frame
+    relative_tf_ = base_to_laser_ * correction * laser_to_base_;
+
+    // update the pose in the world frame
+    world_to_base_ = world_to_base_kf_ * relative_tf_;
+
+    // update the pose in the world 'origin' frame
+    world_origin_to_base_ = world_origin_ * world_to_base_;
+  }
+  else
+  {
+    relative_tf_.setIdentity();
+    ROS_WARN("Error in laser matching");
+  }
+
+  // Retrieve pose2D
+  fillMsg(pose_msg);
+
+  const bool is_key_frame = isKeyFrame(relative_tf_);
+  if (is_key_frame)
+  {
+    // generate a keyframe
+
+    world_to_base_kf_ = world_to_base_;
+
+    reference_scan_ = scan_msg;
+  }
+
+  postProcessing();
+
+  return ProcessReport{true, is_key_frame};
 }
 
 LaserOdometryBase::ProcessReport
@@ -162,9 +226,15 @@ LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
 
   const auto process_report = process(cloud_msg, pose_2d_ptr);
 
-  fillOdomMsg(odom_ptr);
+  fillMsg(odom_ptr);
 
   return process_report;
+}
+
+bool LaserOdometryBase::process_impl(const sensor_msgs::LaserScanConstPtr& /*laser_msg*/,
+                                     const tf::Transform& /*prediction*/)
+{
+  throw std::runtime_error("process_impl(sensor_msgs::LaserScanConstPtr) not implemented.");
 }
 
 bool LaserOdometryBase::process_impl(const sensor_msgs::PointCloud2ConstPtr& /*cloud_msg*/,
