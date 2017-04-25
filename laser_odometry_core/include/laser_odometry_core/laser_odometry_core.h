@@ -30,21 +30,21 @@ namespace laser_odometry
     LaserOdometryBase()          = default;
     virtual ~LaserOdometryBase() = default;
 
-    virtual bool process(const sensor_msgs::LaserScanPtr /*scan_ptr*/,
-                         geometry_msgs::Pose2DPtr /*pose_ptr*/,
-                         geometry_msgs::Pose2DPtr relative_pose_ptr = nullptr);
+    virtual ProcessReport process(const sensor_msgs::LaserScanConstPtr& /*scan_ptr*/,
+                                  geometry_msgs::Pose2DPtr /*pose_ptr*/,
+                                  geometry_msgs::Pose2DPtr relative_pose_ptr = nullptr);
 
-    virtual bool process(const sensor_msgs::LaserScanPtr /*scan_ptr*/,
-                         nav_msgs::OdometryPtr /*odom_ptr*/,
-                         nav_msgs::OdometryPtr relative_odom_ptr = nullptr);
+    virtual ProcessReport process(const sensor_msgs::LaserScanConstPtr& /*scan_ptr*/,
+                                  nav_msgs::OdometryPtr /*odom_ptr*/,
+                                  nav_msgs::OdometryPtr relative_odom_ptr = nullptr);
 
-    virtual bool process(const sensor_msgs::PointCloud2ConstPtr /*cloud_ptr*/,
-                         geometry_msgs::Pose2DPtr /*pose_ptr*/,
-                         geometry_msgs::Pose2DPtr relative_pose_ptr = nullptr);
+    virtual ProcessReport process(const sensor_msgs::PointCloud2ConstPtr& /*cloud_ptr*/,
+                                  geometry_msgs::Pose2DPtr /*pose_ptr*/,
+                                  geometry_msgs::Pose2DPtr relative_pose_ptr = nullptr);
 
-    virtual bool process(const sensor_msgs::PointCloud2ConstPtr /*cloud_ptr*/,
-                         nav_msgs::OdometryPtr /*odom_ptr*/,
-                         nav_msgs::OdometryPtr relative_odom_ptr = nullptr);
+    virtual ProcessReport process(const sensor_msgs::PointCloud2ConstPtr& /*cloud_ptr*/,
+                                  nav_msgs::OdometryPtr /*odom_ptr*/,
+                                  nav_msgs::OdometryPtr relative_odom_ptr = nullptr);
 
     const tf::Transform& getEstimatedPose() const noexcept;
 

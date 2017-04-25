@@ -109,16 +109,18 @@ void LaserOdometryBase::setLaserPose(const tf::Transform& base_to_laser)
   laser_to_base_ = base_to_laser.inverse();
 }
 
-bool LaserOdometryBase::process(const sensor_msgs::LaserScanPtr /*scan_ptr*/,
-                                geometry_msgs::Pose2DPtr /*pose_ptr*/,
-                                geometry_msgs::Pose2DPtr /*relative_pose_ptr*/)
+LaserOdometryBase::ProcessReport
+LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& /*scan_ptr*/,
+                           geometry_msgs::Pose2DPtr /*pose_ptr*/,
+                           geometry_msgs::Pose2DPtr /*relative_pose_ptr*/)
 {
   throw std::runtime_error("process(sensor_msgs::LaserScanPtr) not implemented.");
 }
 
-bool LaserOdometryBase::process(const sensor_msgs::LaserScanPtr scan_ptr,
-                                nav_msgs::OdometryPtr odom_ptr,
-                                nav_msgs::OdometryPtr /*relative_odom_ptr*/)
+LaserOdometryBase::ProcessReport
+LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_ptr,
+                           nav_msgs::OdometryPtr odom_ptr,
+                           nav_msgs::OdometryPtr /*relative_odom_ptr*/)
 {
   //if (scan_ptr == nullptr || pose_ptr == nullptr) return false;
   assert(scan_ptr != nullptr);
@@ -126,31 +128,27 @@ bool LaserOdometryBase::process(const sensor_msgs::LaserScanPtr scan_ptr,
 
   geometry_msgs::Pose2DPtr pose_2d_ptr = boost::make_shared<geometry_msgs::Pose2D>();
 
-  bool processed = process(scan_ptr, pose_2d_ptr);
+  const auto process_report = process(scan_ptr, pose_2d_ptr);
 
-  odom_ptr->header.stamp = scan_ptr->header.stamp;
-  odom_ptr->header.frame_id = laser_odom_frame_;
-
-  odom_ptr->pose.pose.position.x  = pose_2d_ptr->x;
-  odom_ptr->pose.pose.position.y  = pose_2d_ptr->y;
-  odom_ptr->pose.pose.position.z  = 0;
-  odom_ptr->pose.pose.orientation = tf::createQuaternionMsgFromYaw(pose_2d_ptr->theta);
+  fillOdomMsg(odom_ptr);
 
   fillCovariance(odom_ptr->pose.covariance);
 
-  return processed;
+  return process_report;
 }
 
-bool LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr /*cloud_ptr*/,
-                                geometry_msgs::Pose2DPtr /*pose_ptr*/,
-                                geometry_msgs::Pose2DPtr /*relative_pose_ptr*/)
+LaserOdometryBase::ProcessReport
+LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& /*cloud_ptr*/,
+                           geometry_msgs::Pose2DPtr /*pose_ptr*/,
+                           geometry_msgs::Pose2DPtr /*relative_pose_ptr*/)
 {
   throw std::runtime_error("process(sensor_msgs::PointCloud2ConstPtr) not implemented.");
 }
 
-bool LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr cloud_ptr,
-                                nav_msgs::OdometryPtr odom_ptr,
-                                nav_msgs::OdometryPtr /*relative_odom_ptr*/)
+LaserOdometryBase::ProcessReport
+LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_ptr,
+                           nav_msgs::OdometryPtr odom_ptr,
+                           nav_msgs::OdometryPtr /*relative_odom_ptr*/)
 {
   //if (scan_ptr == nullptr || pose_ptr == nullptr) return false;
   assert(cloud_ptr != nullptr);
@@ -158,13 +156,13 @@ bool LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr cloud_ptr
 
   geometry_msgs::Pose2DPtr pose_2d_ptr = boost::make_shared<geometry_msgs::Pose2D>();
 
-  bool processed = process(cloud_ptr, pose_2d_ptr);
+  const auto process_report = process(cloud_ptr, pose_2d_ptr);
 
   fillOdomMsg(odom_ptr);
 
   fillCovariance(odom_ptr->pose.covariance);
 
-  return processed;
+  return process_report;
 }
 
 bool LaserOdometryBase::configured() const noexcept
