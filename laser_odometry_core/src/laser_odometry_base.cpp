@@ -126,9 +126,29 @@ bool LaserOdometryBase::configured() const noexcept
   return configured_;
 }
 
+bool LaserOdometryBase::initialize(const sensor_msgs::LaserScanConstPtr&   /*scan_msg*/)
+{
+  return true;
+}
+
+bool LaserOdometryBase::initialize(const sensor_msgs::PointCloud2ConstPtr& /*cloud_msg*/)
+{
+  return true;
+}
+
 tf::Transform LaserOdometryBase::predict(const tf::Transform& /*tf*/)
 {
   return tf::Transform::getIdentity();
+}
+
+void LaserOdometryBase::preProcessing()
+{
+
+}
+
+void LaserOdometryBase::postProcessing()
+{
+
 }
 
 bool LaserOdometryBase::isKeyFrame(const tf::Transform& /*tf*/)

@@ -123,6 +123,10 @@ namespace laser_odometry
     virtual bool configureImpl() = 0;
     virtual tf::Transform predict(const tf::Transform& tf);
 
+    virtual void preProcessing();
+
+    virtual void postProcessing();
+
     virtual bool isKeyFrame(const tf::Transform& tf);
 
     virtual tf::Transform expressFromLaserToBase(const tf::Transform& tf_in_lf);
