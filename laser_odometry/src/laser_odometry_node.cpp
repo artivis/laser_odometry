@@ -26,6 +26,7 @@ void LaserOdometryNode::initialize()
   private_nh_.param("init_origin",  init_origin_,  init_origin_);
   private_nh_.param("publish_odom", publish_odom_, publish_odom_);
   private_nh_.param("fixed_sensor", fixed_sensor_, fixed_sensor_);
+  private_nh_.param("throttle",     throttle_,     throttle_);
 
   laser_odom_ptr_ = make_laser_odometry(laser_odometry_type);
 
@@ -62,6 +63,8 @@ void LaserOdometryNode::initialize()
 
 void LaserOdometryNode::LaserCallback(const sensor_msgs::LaserScanConstPtr& new_scan)
 {
+  if (new_scan->header.seq % throttle_ != 0) return;
+
   latest_scan_   = new_scan;
   current_stamp_ = latest_scan_->header.stamp;
   new_scan_      = true;
@@ -69,6 +72,8 @@ void LaserOdometryNode::LaserCallback(const sensor_msgs::LaserScanConstPtr& new_
 
 void LaserOdometryNode::CloudCallback(const sensor_msgs::PointCloud2ConstPtr& new_cloud)
 {
+  if (new_cloud->header.seq % throttle_ != 0) return;
+
   latest_cloud_  = new_cloud;
   current_stamp_ = latest_cloud_->header.stamp;
   new_cloud_     = true;
@@ -174,7 +179,7 @@ void LaserOdometryNode::sendTransform()
     geometry_msgs::TransformStamped ttf;
     tf::transformStampedTFToMsg(transform_msg, ttf);
 
-    ROS_INFO_STREAM("Sending tf:\n" << ttf);
+    ROS_DEBUG_STREAM("Sending tf:\n" << ttf);
 
     tf_broadcaster_.sendTransform(transform_msg);
   }

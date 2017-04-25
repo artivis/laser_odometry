@@ -30,6 +30,8 @@ protected:
   bool new_cloud_    = false;
   bool publish_odom_ = false;
 
+  int throttle_ = 1;
+
   LaserOdometryPtr laser_odom_ptr_;
 
   std_msgs::Header::_stamp_type    current_stamp_;
