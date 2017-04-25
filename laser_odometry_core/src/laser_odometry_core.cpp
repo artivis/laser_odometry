@@ -7,7 +7,7 @@
 namespace laser_odometry
 {
 
-tf::Transform LaserOdometryBase::getEstimatedPose() const noexcept
+const tf::Transform& LaserOdometryBase::getEstimatedPose() const noexcept
 {
   return world_origin_to_base_;
 }
@@ -219,39 +219,47 @@ void LaserOdometryBase::fillCovariance(Covariance& covariance)
                (0)  (0)  (0)  (0)  (0)  (static_cast<double>(default_covariance_[5]));
 }
 
-std::string LaserOdometryBase::getFrameBase()  const noexcept
+const std::string& LaserOdometryBase::getFrameBase()  const noexcept
 {
   return base_frame_;
 }
-std::string LaserOdometryBase::getFrameLaser() const noexcept
+
+const std::string& LaserOdometryBase::getFrameLaser() const noexcept
 {
   return laser_frame_;
 }
-std::string LaserOdometryBase::getFrameFixed() const noexcept
+
+const std::string& LaserOdometryBase::getFrameFixed() const noexcept
 {
   return world_frame_;
 }
-std::string LaserOdometryBase::getFrameOdom()  const noexcept
+
+const std::string& LaserOdometryBase::getFrameOdom()  const noexcept
 {
   return laser_odom_frame_;
 }
+
 void LaserOdometryBase::setFrameBase(const std::string& frame)
 {
   base_frame_ = frame;
 }
+
 void LaserOdometryBase::setFrameLaser(const std::string& frame)
 {
   laser_frame_ = frame;
 }
+
 void LaserOdometryBase::setFrameFixed(const std::string& frame)
 {
   world_frame_ = frame;
 }
+
 void LaserOdometryBase::setFrameOdom(const std::string& frame)
 {
   laser_odom_frame_ = frame;
 }
-ros::Time LaserOdometryBase::getCurrentTime() const noexcept
+
+const ros::Time& LaserOdometryBase::getCurrentTime() const noexcept
 {
   return current_time_;
 }

@@ -42,7 +42,7 @@ namespace laser_odometry
                          nav_msgs::OdometryPtr /*odom_ptr*/,
                          nav_msgs::OdometryPtr relative_odom_ptr = nullptr);
 
-    tf::Transform getEstimatedPose() const noexcept;
+    const tf::Transform& getEstimatedPose() const noexcept;
 
     virtual void reset();
 
@@ -65,17 +65,17 @@ namespace laser_odometry
 
     void setLaserPose(const tf::Transform& base_to_laser);
 
-    std::string getFrameBase()  const noexcept;
-    std::string getFrameLaser() const noexcept;
-    std::string getFrameFixed() const noexcept;
-    std::string getFrameOdom()  const noexcept;
+    const std::string& getFrameBase()  const noexcept;
+    const std::string& getFrameLaser() const noexcept;
+    const std::string& getFrameFixed() const noexcept;
+    const std::string& getFrameOdom()  const noexcept;
 
     void setFrameBase(const std::string& frame);
     void setFrameLaser(const std::string& frame);
     void setFrameFixed(const std::string& frame);
     void setFrameOdom(const std::string& frame);
 
-    ros::Time getCurrentTime() const noexcept;
+    const ros::Time& getCurrentTime() const noexcept;
 
     virtual OdomType odomType() const;
 
