@@ -40,7 +40,7 @@ include_directories(include ${catkin_INCLUDE_DIRS})
 ###############
 
 add_library(${PROJECT_NAME}
-    src/laser_odometry_core.cpp
+    src/laser_odometry_base.cpp
     src/laser_odometry_utils.cpp
     src/laser_odometry_instantiater.cpp
 )
