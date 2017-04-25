@@ -49,10 +49,10 @@ void LaserOdometryNode::initialize()
     laser_odom_ptr_->setOrigin(origin_to_base);
   }
 
-  laser_sub_ = private_nh_.subscribe("scan_in", 1,
+  sub_ = private_nh_.subscribe("scan_in", 1,
                                      &LaserOdometryNode::resetListenerWithType, this);
 
-  ROS_INFO("Subscribed to %s", laser_sub_.getTopic().c_str());
+  ROS_INFO("Subscribed to %s", sub_.getTopic().c_str());
 
   if (publish_odom_)
     pub_ = private_nh_.advertise<nav_msgs::Odometry>("laser_odom", 1);
@@ -60,36 +60,36 @@ void LaserOdometryNode::initialize()
     pub_ = private_nh_.advertise<geometry_msgs::Pose2D>("laser_odom", 1);
 }
 
-void LaserOdometryNode::LaserCallback(sensor_msgs::LaserScanPtr new_scan)
+void LaserOdometryNode::LaserCallback(const sensor_msgs::LaserScanConstPtr& new_scan)
 {
   latest_scan_   = new_scan;
   current_stamp_ = latest_scan_->header.stamp;
   new_scan_      = true;
 }
 
-void LaserOdometryNode::CloudCallback(const sensor_msgs::PointCloud2ConstPtr new_cloud)
+void LaserOdometryNode::CloudCallback(const sensor_msgs::PointCloud2ConstPtr& new_cloud)
 {
   latest_cloud_  = new_cloud;
   current_stamp_ = latest_cloud_->header.stamp;
   new_cloud_     = true;
 }
 
-void LaserOdometryNode::setLaserFromTf(const ros::Time &t)
+void LaserOdometryNode::setLaserFromTf(const ros::Time &t, const ros::Duration &d)
 {
   tf::Transform base_to_laser = tf::Transform::getIdentity();
 
   utils::getTf(laser_odom_ptr_->getFrameLaser(),
                laser_odom_ptr_->getFrameBase(),
-               base_to_laser, t);
+               base_to_laser, t, d);
 
   laser_odom_ptr_->setLaserPose(base_to_laser);
 }
 
 void LaserOdometryNode::process()
 {
-  if (!new_scan_ || !new_cloud_ || !configured_) return;
+  if (!(new_scan_ || new_cloud_) || !configured_) return;
 
-  if (!fixed_sensor_) setLaserFromTf(current_stamp_);
+  if (!fixed_sensor_) setLaserFromTf(current_stamp_, ros::Duration(0.005));
 
   if (publish_odom_)
   {
@@ -109,7 +109,7 @@ void LaserOdometryNode::process()
 
     publish(odom_ptr);
 
-    ROS_INFO_STREAM("Estimated odom\n" << odom_ptr->pose.pose);
+    ROS_DEBUG_STREAM("Estimated odom\n" << odom_ptr->pose.pose);
   }
   else
   {
@@ -129,7 +129,7 @@ void LaserOdometryNode::process()
 
     publish(pose_2d_ptr);
 
-    ROS_INFO_STREAM("Estimated pose_2d\n" << *pose_2d_ptr);
+    ROS_DEBUG_STREAM("Estimated pose_2d\n" << *pose_2d_ptr);
   }
 
   if (broadcast_tf_) sendTransform();
@@ -147,15 +147,15 @@ void LaserOdometryNode::broadcastTf(const bool broadcast) noexcept
 
 void LaserOdometryNode::resetListenerWithType(const topic_tools::ShapeShifter::Ptr& new_s)
 {
-  laser_sub_.shutdown();
+  sub_.shutdown();
 
   if (new_s->getDataType() == "sensor_msgs/LaserScan") {
-    laser_sub_ = private_nh_.subscribe("scan_in", 1,
-                                      &LaserOdometryNode::LaserCallback, this);
+    sub_ = private_nh_.subscribe("scan_in", 1,
+                                 &LaserOdometryNode::LaserCallback, this);
   }
   else if(new_s->getDataType() == "sensor_msgs/PointCloud2") {
-    laser_sub_ = private_nh_.subscribe("scan_in", 1,
-                                      &LaserOdometryNode::CloudCallback, this);
+    sub_ = private_nh_.subscribe("scan_in", 1,
+                                 &LaserOdometryNode::CloudCallback, this);
   }
   else {
     ROS_ERROR("Subscribed to topic of unknown type !");
@@ -166,10 +166,10 @@ void LaserOdometryNode::sendTransform()
 {
   if (broadcast_tf_ && configured_)
   {
-    tf::StampedTransform transform_msg(laser_odom_ptr_->getEstimatedPose(),
-                                       laser_odom_ptr_->getCurrentTime(),
-                                       laser_odom_ptr_->getFrameOdom(),
-                                       laser_odom_ptr_->getFrameBase());
+    const tf::StampedTransform transform_msg(laser_odom_ptr_->getEstimatedPose(),
+                                             laser_odom_ptr_->getCurrentTime(),
+                                             laser_odom_ptr_->getFrameOdom(),
+                                             laser_odom_ptr_->getFrameBase());
 
     geometry_msgs::TransformStamped ttf;
     tf::transformStampedTFToMsg(transform_msg, ttf);
@@ -180,12 +180,12 @@ void LaserOdometryNode::sendTransform()
   }
 }
 
-void LaserOdometryNode::publish(const nav_msgs::OdometryPtr odom_ptr)
+void LaserOdometryNode::publish(const nav_msgs::OdometryPtr odom_ptr) const
 {
   pub_.publish(odom_ptr);
 }
 
-void LaserOdometryNode::publish(const geometry_msgs::Pose2DPtr pose_2d_ptr)
+void LaserOdometryNode::publish(const geometry_msgs::Pose2DPtr pose_2d_ptr) const
 {
   pub_.publish(pose_2d_ptr);
 }
