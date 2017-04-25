@@ -14,20 +14,22 @@ void tfFromXYTheta(const double x, const double y, const double theta, tf::Trans
 bool getTf(const std::string& source_frame,
            const std::string& target_frame,
            tf::StampedTransform& tf,
-           const ros::Time& t)
+           const ros::Time& t,
+           const ros::Duration& d)
 {
   tf::TransformListener tf_listener;
 
   try
   {
     tf_listener.waitForTransform(
-      target_frame, source_frame, t, ros::Duration(1.0));
+      target_frame, source_frame, t, d);
     tf_listener.lookupTransform (
       target_frame, source_frame, t, tf);
   }
   catch (tf::TransformException ex)
   {
-    ROS_WARN("Could not get initial transform from base to laser frame, %s", ex.what());
+    ROS_WARN("Could not get transform from %s to %s : %s",
+             source_frame.c_str(), target_frame.c_str(), ex.what());
     tf.setIdentity();
     return false;
   }
@@ -38,11 +40,12 @@ bool getTf(const std::string& source_frame,
 bool getTf(const std::string& source_frame,
            const std::string& target_frame,
            tf::Transform& tf,
-           const ros::Time& t)
+           const ros::Time& t,
+           const ros::Duration& d)
 {
   tf::StampedTransform stamped_tf;
 
-  bool ok = getTf(source_frame, target_frame, stamped_tf, t);
+  bool ok = getTf(source_frame, target_frame, stamped_tf, t, d);
 
   tf = stamped_tf;
 
