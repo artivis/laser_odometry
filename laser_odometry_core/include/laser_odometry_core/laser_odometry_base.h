@@ -28,6 +28,8 @@ namespace laser_odometry
   {
   public:
 
+    using covariance_t = geometry_msgs::PoseWithCovariance::_covariance_type;
+
     struct ProcessReport;
 
   public:
@@ -35,21 +37,21 @@ namespace laser_odometry
     LaserOdometryBase()          = default;
     virtual ~LaserOdometryBase() = default;
 
-    virtual ProcessReport process(const sensor_msgs::LaserScanConstPtr& /*scan_ptr*/,
-                                  geometry_msgs::Pose2DPtr /*pose_ptr*/,
-                                  geometry_msgs::Pose2DPtr relative_pose_ptr = nullptr);
+    virtual ProcessReport process(const sensor_msgs::LaserScanConstPtr& /*cloud_msg*/,
+                                  geometry_msgs::Pose2DPtr /*pose_msg*/,
+                                  geometry_msgs::Pose2DPtr relative_pose_msg = nullptr);
 
-    virtual ProcessReport process(const sensor_msgs::LaserScanConstPtr& /*scan_ptr*/,
-                                  nav_msgs::OdometryPtr /*odom_ptr*/,
-                                  nav_msgs::OdometryPtr relative_odom_ptr = nullptr);
+    virtual ProcessReport process(const sensor_msgs::LaserScanConstPtr& /*cloud_msg*/,
+                                  nav_msgs::OdometryPtr /*pose_msg*/,
+                                  nav_msgs::OdometryPtr relative_odom_msg = nullptr);
 
-    virtual ProcessReport process(const sensor_msgs::PointCloud2ConstPtr& /*cloud_ptr*/,
-                                  geometry_msgs::Pose2DPtr /*pose_ptr*/,
-                                  geometry_msgs::Pose2DPtr relative_pose_ptr = nullptr);
+    virtual ProcessReport process(const sensor_msgs::PointCloud2ConstPtr& /*cloud_msg*/,
+                                  geometry_msgs::Pose2DPtr /*pose_msg*/,
+                                  geometry_msgs::Pose2DPtr relative_pose_msg = nullptr);
 
-    virtual ProcessReport process(const sensor_msgs::PointCloud2ConstPtr& /*cloud_ptr*/,
-                                  nav_msgs::OdometryPtr /*odom_ptr*/,
-                                  nav_msgs::OdometryPtr relative_odom_ptr = nullptr);
+    virtual ProcessReport process(const sensor_msgs::PointCloud2ConstPtr& /*cloud_msg*/,
+                                  nav_msgs::OdometryPtr /*pose_msg*/,
+                                  nav_msgs::OdometryPtr relative_odom_msg = nullptr);
 
     const tf::Transform& getEstimatedPose() const noexcept;
 
@@ -93,9 +95,10 @@ namespace laser_odometry
   protected:
 
     bool configured_   = false;
+    bool initialized_  = false;
     bool broadcast_tf_ = false;
 
-    std::vector<double> default_covariance_;
+    covariance_t covariance_;
 
     ros::NodeHandle private_nh_ = ros::NodeHandle("~");
 
@@ -127,9 +130,6 @@ namespace laser_odometry
     virtual void fillOdomMsg(nav_msgs::OdometryPtr odom_ptr);
 
     virtual void fillPose2DMsg(geometry_msgs::Pose2DPtr pose_ptr);
-
-    using Covariance = geometry_msgs::PoseWithCovariance::_covariance_type;
-    void fillCovariance(Covariance& covariance);
   };
 
   typedef boost::shared_ptr<LaserOdometryBase> LaserOdometryPtr;

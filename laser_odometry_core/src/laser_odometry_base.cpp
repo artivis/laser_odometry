@@ -4,6 +4,9 @@
 
 #include <boost/assign/list_of.hpp>
 
+#define assert_not_null(x) \
+  assert(scan_ptr != nullptr && #x ' is nullptr at ' __LINE__);
+
 namespace laser_odometry
 {
 
@@ -26,16 +29,22 @@ bool LaserOdometryBase::configure()
   std::vector<double> default_covariance;
   private_nh_.param("covariance_diag", default_covariance, default_covariance);
 
-  if (default_covariance.size() == 6)
-    default_covariance_ = default_covariance;
-  else
+  if (default_covariance.size() != 6)
   {
-    ROS_WARN_STREAM("Retrieved " << default_covariance_.size()
+    ROS_WARN_STREAM("Retrieved " << default_covariance.size()
                     << " covariance coeff. Should be 6. Setting default.");
 
-    default_covariance_.resize(6);
-    std::fill_n(default_covariance_.begin(), 6, 1e-9);
+    default_covariance.resize(6);
+    std::fill_n(default_covariance.begin(), 6, 1e-5);
   }
+
+  covariance_ = boost::assign::list_of
+               (static_cast<double>(default_covariance[0]))  (0)  (0)  (0)  (0) (0)
+               (0)  (static_cast<double>(default_covariance[1]))  (0)  (0)  (0) (0)
+               (0)  (0)  (static_cast<double>(default_covariance[2]))  (0)  (0) (0)
+               (0)  (0)  (0)  (static_cast<double>(default_covariance[3]))  (0) (0)
+               (0)  (0)  (0)  (0)  (static_cast<double>(default_covariance[4])) (0)
+               (0)  (0)  (0)  (0)  (0)  (static_cast<double>(default_covariance[5]));
 
   // Configure derived class
   configured_ = configureImpl();
@@ -44,9 +53,9 @@ bool LaserOdometryBase::configure()
 }
 
 LaserOdometryBase::ProcessReport
-LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& /*scan_ptr*/,
-                           geometry_msgs::Pose2DPtr /*pose_ptr*/,
-                           geometry_msgs::Pose2DPtr /*relative_pose_ptr*/)
+LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& /*scan_msg*/,
+                           geometry_msgs::Pose2DPtr /*pose_msg*/,
+                           geometry_msgs::Pose2DPtr /*relative_pose_msg*/)
 {
   throw std::runtime_error("process(sensor_msgs::LaserScanPtr) not implemented.");
 }
@@ -56,9 +65,8 @@ LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_ptr,
                            nav_msgs::OdometryPtr odom_ptr,
                            nav_msgs::OdometryPtr /*relative_odom_ptr*/)
 {
-  //if (scan_ptr == nullptr || pose_ptr == nullptr) return false;
-  assert(scan_ptr != nullptr);
-  assert(odom_ptr != nullptr);
+  assert_not_null(scan_ptr);
+  assert_not_null(odom_ptr);
 
   geometry_msgs::Pose2DPtr pose_2d_ptr = boost::make_shared<geometry_msgs::Pose2D>();
 
@@ -66,35 +74,31 @@ LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_ptr,
 
   fillOdomMsg(odom_ptr);
 
-  fillCovariance(odom_ptr->pose.covariance);
-
   return process_report;
 }
 
 LaserOdometryBase::ProcessReport
-LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& /*cloud_ptr*/,
-                           geometry_msgs::Pose2DPtr /*pose_ptr*/,
+LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
+                           geometry_msgs::Pose2DPtr pose_msg,
                            geometry_msgs::Pose2DPtr /*relative_pose_ptr*/)
 {
   throw std::runtime_error("process(sensor_msgs::PointCloud2ConstPtr) not implemented.");
 }
 
 LaserOdometryBase::ProcessReport
-LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_ptr,
+LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
                            nav_msgs::OdometryPtr odom_ptr,
                            nav_msgs::OdometryPtr /*relative_odom_ptr*/)
 {
   //if (scan_ptr == nullptr || pose_ptr == nullptr) return false;
-  assert(cloud_ptr != nullptr);
+  assert(cloud_msg != nullptr);
   assert(odom_ptr  != nullptr);
 
   geometry_msgs::Pose2DPtr pose_2d_ptr = boost::make_shared<geometry_msgs::Pose2D>();
 
-  const auto process_report = process(cloud_ptr, pose_2d_ptr);
+  const auto process_report = process(cloud_msg, pose_2d_ptr);
 
   fillOdomMsg(odom_ptr);
-
-  fillCovariance(odom_ptr->pose.covariance);
 
   return process_report;
 }
@@ -115,8 +119,6 @@ void LaserOdometryBase::reset()
   world_to_base_     = tf::Transform::getIdentity();
   guess_relative_tf_ = tf::Transform::getIdentity();
 
-  default_covariance_.resize(6);
-  std::fill_n(default_covariance_.begin(), 6, 1e-9);
 }
 
 bool LaserOdometryBase::configured() const noexcept
@@ -151,6 +153,8 @@ void LaserOdometryBase::fillOdomMsg(nav_msgs::OdometryPtr odom_ptr)
 
   tf::quaternionTFToMsg(world_origin_to_base_.getRotation(),
                         odom_ptr->pose.pose.orientation);
+
+  odom_ptr->pose.covariance = covariance_;
 }
 
 void LaserOdometryBase::fillPose2DMsg(geometry_msgs::Pose2DPtr pose_ptr)
@@ -158,17 +162,6 @@ void LaserOdometryBase::fillPose2DMsg(geometry_msgs::Pose2DPtr pose_ptr)
   pose_ptr->x = world_origin_to_base_.getOrigin().getX();
   pose_ptr->y = world_origin_to_base_.getOrigin().getY();
   pose_ptr->theta = tf::getYaw(world_origin_to_base_.getRotation());
-}
-
-void LaserOdometryBase::fillCovariance(Covariance& covariance)
-{
-  covariance = boost::assign::list_of
-               (static_cast<double>(default_covariance_[0]))  (0)  (0)  (0)  (0) (0)
-               (0)  (static_cast<double>(default_covariance_[1]))  (0)  (0)  (0) (0)
-               (0)  (0)  (static_cast<double>(default_covariance_[2]))  (0)  (0) (0)
-               (0)  (0)  (0)  (static_cast<double>(default_covariance_[3]))  (0) (0)
-               (0)  (0)  (0)  (0)  (static_cast<double>(default_covariance_[4])) (0)
-               (0)  (0)  (0)  (0)  (0)  (static_cast<double>(default_covariance_[5]));
 }
 
 OdomType LaserOdometryBase::odomType() const
