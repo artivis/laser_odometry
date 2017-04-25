@@ -256,4 +256,9 @@ ros::Time LaserOdometryBase::getCurrentTime() const noexcept
   return current_time_;
 }
 
+OdomType LaserOdometryBase::odomType() const
+{
+  throw std::runtime_error("odomType() not implemented.");
+}
+
 } /* namespace laser_odometry */
