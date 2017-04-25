@@ -15,7 +15,7 @@ namespace laser_odometry
     const bool processed = false;
     const bool key_frame = true;
 
-    const bool operator()() const noexcept
+    bool operator()() const noexcept
     {
       return processed;
     }
