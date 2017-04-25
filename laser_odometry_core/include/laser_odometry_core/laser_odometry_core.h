@@ -23,6 +23,10 @@ namespace laser_odometry
   {
   public:
 
+    struct ProcessReport;
+
+  public:
+
     LaserOdometryBase()          = default;
     virtual ~LaserOdometryBase() = default;
 
