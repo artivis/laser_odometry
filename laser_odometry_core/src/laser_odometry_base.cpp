@@ -12,18 +12,12 @@ namespace laser_odometry
 
 bool LaserOdometryBase::configure()
 {
-  private_nh_.param("laser_frame", laser_frame_, std::string("base_laser_link"));
-  private_nh_.param("base_frame",  base_frame_,  std::string("base_link"));
-  private_nh_.param("world_frame", world_frame_, std::string("world"));
-  private_nh_.param("laser_odom_frame", laser_odom_frame_, std::string("odom"));
+  reset();
 
-  // Init all tf to I
-  base_to_laser_     = tf::Transform::getIdentity();
-  laser_to_base_     = tf::Transform::getIdentity();
-  relative_tf_       = tf::Transform::getIdentity();
-  world_origin_      = tf::Transform::getIdentity();
-  world_to_base_     = tf::Transform::getIdentity();
-  guess_relative_tf_ = tf::Transform::getIdentity();
+  private_nh_.param("laser_frame",      laser_frame_,      std::string("base_laser_link"));
+  private_nh_.param("base_frame",       base_frame_,       std::string("base_link"));
+  private_nh_.param("world_frame",      world_frame_,      std::string("world"));
+  private_nh_.param("laser_odom_frame", laser_odom_frame_, std::string("odom"));
 
   // Default covariance diag :
   std::vector<double> default_covariance;
@@ -70,7 +64,7 @@ LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_msg,
 
     fillMsg(pose_msg);
 
-    ROS_INFO_STREAM("LaserOdometryLibPointMatcher Initialized!");
+    ROS_INFO_STREAM_COND(initialized_, "LaserOdometry Initialized!");
 
     return ProcessReport{true, true};
   }
@@ -117,6 +111,8 @@ LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_msg,
     world_to_base_kf_ = world_to_base_;
 
     reference_scan_ = scan_msg;
+
+    isKeyFrame();
   }
 
   postProcessing();
@@ -149,17 +145,18 @@ LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
   assert_not_null(cloud_msg);
   assert_not_null(pose_msg);
 
+  current_time_ = cloud_msg->header.stamp;
+
   // first message
   if (!initialized_)
   {
-    current_time_ = cloud_msg->header.stamp;
     initialized_ = initialize(cloud_msg);
 
     world_origin_to_base_ = world_origin_ * world_to_base_;
 
     fillMsg(pose_msg);
 
-    ROS_INFO_STREAM("LaserOdometryLibPointMatcher Initialized!");
+    ROS_INFO_STREAM_COND(initialized_, "LaserOdometry Initialized!");
 
     return ProcessReport{true, true};
   }
@@ -198,11 +195,11 @@ LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
   // Retrieve pose2D
   fillMsg(pose_msg);
 
-  const bool is_key_frame = isKeyFrame(relative_tf_);
+  const bool is_key_frame = isKeyFrame(correction_);
+
   if (is_key_frame)
   {
     // generate a keyframe
-
     world_to_base_kf_ = world_to_base_;
 
     reference_cloud_ = cloud_msg;
@@ -220,9 +217,8 @@ LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
                            nav_msgs::OdometryPtr odom_ptr,
                            nav_msgs::OdometryPtr /*relative_odom_ptr*/)
 {
-  //if (scan_ptr == nullptr || pose_ptr == nullptr) return false;
-  assert(cloud_msg != nullptr);
-  assert(odom_ptr  != nullptr);
+  assert_not_null(cloud_msg);
+  assert_not_null(odom_ptr);
 
   geometry_msgs::Pose2DPtr pose_2d_ptr = boost::make_shared<geometry_msgs::Pose2D>();
 
@@ -268,6 +264,11 @@ void LaserOdometryBase::reset()
 bool LaserOdometryBase::configured() const noexcept
 {
   return configured_;
+}
+
+bool LaserOdometryBase::configureImpl()
+{
+  return true;
 }
 
 bool LaserOdometryBase::initialize(const sensor_msgs::LaserScanConstPtr&   /*scan_msg*/)

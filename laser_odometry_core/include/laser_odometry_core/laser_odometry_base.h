@@ -119,28 +119,68 @@ namespace laser_odometry
     std::string world_frame_      = "world";
     std::string laser_odom_frame_ = "odom";
 
-    tf::Transform base_to_laser_; // static, cached
-    tf::Transform laser_to_base_; // static, cached, calculated from base_to_laser_
+    /// \brief base_to_laser_
+    /// tranform from base_frame to laser_frame
+    tf::Transform base_to_laser_;
+
+    /// \brief laser_to_base_
+    /// tranform from laser_frame to base_frame
+    /// == base_to_laser_^-1
+    tf::Transform laser_to_base_;
 
     /* This is the transform the derived class should fills */
-    /// @brief the relative transform in
-    /// the laser frame
+    /// @brief correction_
+    /// the relative transform in the laser_frame.
+    /// This is the transform the derived class has to fills
     tf::Transform correction_;
 
-    tf::Transform relative_tf_;          // last_scan-to-curent_scan tf
-    tf::Transform guess_relative_tf_;    // initial guess last_scan-to-curent_scan tf
+    /// \brief relative_tf_
+    /// the relative transform in the base_frame
+    tf::Transform relative_tf_;
 
-    tf::Transform world_to_base_;        // world-to-base tf, integrated odom
-    tf::Transform world_to_base_kf_;     // world-to-base in the last key-frame tf
-    tf::Transform world_origin_;         // world-origin tf
-    tf::Transform world_origin_to_base_; // world-origin-to-base tf, integrated odom
+    /// \brief guess_relative_tf_
+    /// guessed/predicted tranform
+    /// from reference_'reading' to
+    /// current_'reading' in the base_frame
+    tf::Transform guess_relative_tf_;
+
+    /// \brief world_to_base_
+    /// tranform from wold_frame
+    /// to base_frame, where world_frame
+    /// is the origin of the integration.
+    /// == world_to_base_kf_ * relative_tf_
+    tf::Transform world_to_base_;
+
+    /// \brief world_to_base_kf_
+    /// tranform from world_frame to
+    /// the last keyfame frame.
+    /// == world_to_base * relative_tf_
+    tf::Transform world_to_base_kf_;
+
+    /// \brief world_origin_
+    /// An optional user defined
+    /// transform from that maps the
+    /// integration origin to another
+    /// reference than Identity
+    /// Default: Identity
+    tf::Transform world_origin_;
+
+    /// \brief world_origin_to_base_
+    /// tranform from the world_origin frame
+    /// to the base_frame.
+    /// It is the integrated robot odometry.
+    /// == world_origin_ * world_to_base_
+    tf::Transform world_origin_to_base_;
 
     sensor_msgs::LaserScanConstPtr   reference_scan_;
     sensor_msgs::PointCloud2ConstPtr reference_cloud_;
 
+    /// \brief current_time_
+    /// Current ROS time accordingly
+    /// to the last processed message.
     ros::Time current_time_;
 
-    virtual bool configureImpl() = 0;
+    virtual bool configureImpl();
 
     virtual bool initialize(const sensor_msgs::LaserScanConstPtr&   scan_msg);
     virtual bool initialize(const sensor_msgs::PointCloud2ConstPtr& cloud_msg);
