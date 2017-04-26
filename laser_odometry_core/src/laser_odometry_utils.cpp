@@ -28,9 +28,10 @@ bool getTf(const std::string& source_frame,
   }
   catch (tf::TransformException ex)
   {
-    ROS_WARN("Could not get transform from %s to %s : %s",
-             source_frame.c_str(), target_frame.c_str(), ex.what());
-    tf.setIdentity();
+    ROS_WARN("Could not get transform from %s to %s at %f after %f :\n %s",
+             source_frame.c_str(), target_frame.c_str(),
+             t.toSec(), d.toSec(), ex.what());
+
     return false;
   }
 
@@ -47,7 +48,7 @@ bool getTf(const std::string& source_frame,
 
   bool ok = getTf(source_frame, target_frame, stamped_tf, t, d);
 
-  tf = stamped_tf;
+  if (ok) tf = stamped_tf;
 
   return ok;
 }
@@ -70,12 +71,21 @@ bool getTf(const tf::tfMessagePtr tf_msg,
   return false;
 }
 
+std::string format(const tf::Transform& tf, const std::string& h)
+{
+  std::stringstream ss;
+
+  ss << h
+     << tf.getOrigin().getX()
+     << " " << tf.getOrigin().getX()
+     << " " << tf::getYaw(tf.getRotation());
+
+  return ss.str();
+}
+
 void print(const tf::Transform& tf, const std::string& h)
 {
-  std::cout << h
-            << tf.getOrigin().getX()
-            << " " << tf.getOrigin().getX()
-            << " " << tf::getYaw(tf.getRotation()) << std::endl;
+  std::cout << format(tf) << std::endl;
 }
 
 } /* namespace utils */
