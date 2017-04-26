@@ -51,7 +51,7 @@ void LaserOdometryNode::initialize()
   }
 
   sub_ = private_nh_.subscribe("scan_in", 1,
-                                     &LaserOdometryNode::resetListenerWithType, this);
+                               &LaserOdometryNode::resetListenerWithType, this);
 
   ROS_INFO("Subscribed to %s", sub_.getTopic().c_str());
 
@@ -81,13 +81,12 @@ void LaserOdometryNode::CloudCallback(const sensor_msgs::PointCloud2ConstPtr& ne
 
 void LaserOdometryNode::setLaserFromTf(const ros::Time &t, const ros::Duration &d)
 {
-  tf::Transform base_to_laser = tf::Transform::getIdentity();
+  tf::Transform& base_to_laser = laser_odom_ptr_->getLaserPose();
 
   utils::getTf(laser_odom_ptr_->getFrameLaser(),
                laser_odom_ptr_->getFrameBase(),
                base_to_laser, t, d);
 
-  laser_odom_ptr_->setLaserPose(base_to_laser);
 }
 
 void LaserOdometryNode::process()
@@ -197,9 +196,13 @@ int main(int argc, char **argv)
 
   while (ros::ok())
   {
-    node.process();
+    const auto start = ros::Time::now();
 
     ros::spinOnce();
+
+    node.process();
+
+    ROS_INFO_STREAM("Processing took : " << (ros::Time::now() - start));
 
     rate.sleep();
   }
