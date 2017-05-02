@@ -18,6 +18,7 @@ namespace laser_odometry
 {
   enum class OdomType : std::size_t
   {
+    Unknown,
     Odom2D,
     Odom2DCov,
     Odom3D,
@@ -102,7 +103,7 @@ namespace laser_odometry
 
     const ros::Time& getCurrentTime() const noexcept;
 
-    virtual OdomType odomType() const;
+    virtual OdomType odomType() const noexcept;
 
   protected:
 
