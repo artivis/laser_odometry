@@ -54,10 +54,11 @@ LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_msg,
   assert_not_null(scan_msg);
   assert_not_null(pose_msg);
 
+  current_time_ = scan_msg->header.stamp;
+
   // first message
   if (!initialized_)
   {
-    current_time_ = scan_msg->header.stamp;
     initialized_ = initialize(scan_msg);
 
     world_origin_to_base_ = world_origin_ * world_to_base_;
@@ -114,10 +115,12 @@ LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_msg,
 
     isKeyFrame();
   }
+  else
+    isNotKeyFrame();
 
   postProcessing();
 
-  return ProcessReport{true, is_key_frame};
+  return ProcessReport{processed, is_key_frame};
 }
 
 LaserOdometryBase::ProcessReport
@@ -206,10 +209,12 @@ LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
 
     isKeyFrame();
   }
+  else
+    isNotKeyFrame();
 
   postProcessing();
 
-  return ProcessReport{true, is_key_frame};
+  return ProcessReport{processed, is_key_frame};
 }
 
 LaserOdometryBase::ProcessReport

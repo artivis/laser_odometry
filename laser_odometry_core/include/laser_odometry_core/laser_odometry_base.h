@@ -195,6 +195,7 @@ namespace laser_odometry
     virtual bool isKeyFrame(const tf::Transform& tf);
 
     virtual void isKeyFrame();
+    virtual void isNotKeyFrame();
 
     virtual tf::Transform expressFromLaserToBase(const tf::Transform& tf_in_lf);
 
