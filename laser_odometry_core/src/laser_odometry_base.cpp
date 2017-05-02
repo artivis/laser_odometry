@@ -248,7 +248,7 @@ const tf::Transform& LaserOdometryBase::getEstimatedPose() const noexcept
 
 void LaserOdometryBase::reset()
 {
-  /// @note to be implemented in the derived class.
+  correction_        = tf::Transform::getIdentity();
 
   base_to_laser_     = tf::Transform::getIdentity();
   laser_to_base_     = tf::Transform::getIdentity();
