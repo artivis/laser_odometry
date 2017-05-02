@@ -2,13 +2,13 @@ cmake_minimum_required(VERSION 2.8.3)
 project(laser_odometry_core)
 
 if(NOT CMAKE_BUILD_TYPE)
-    set (CMAKE_BUILD_TYPE Release)
-endif(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release)
+endif()
 
 #Set compiler according C++11 support
 include(CheckCXXCompilerFlag)
-CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
-CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
+check_cxx_compiler_flag("-std=c++11" COMPILER_SUPPORTS_CXX11)
+check_cxx_compiler_flag("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
 if(COMPILER_SUPPORTS_CXX11)
     message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has C++11 support.")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
@@ -50,15 +50,15 @@ target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 ##  Install   ##
 ################
 
-#install(TARGETS ${PROJECT_NAME}
-##   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#    #   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-#)
+install(TARGETS ${PROJECT_NAME}
+#    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+#    RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
 
-#install(DIRECTORY include/
-#        DESTINATION ${CATKIN_GLOBAL_INCLUDE_DESTINATION}
-#)
+install(DIRECTORY include/${PROJECT_NAME}/
+    DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+)
 
 ################
 ##    Test    ##

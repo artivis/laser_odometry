@@ -2,9 +2,15 @@
 <package format="2">
   <name>laser_odometry_core</name>
   <version>0.0.0</version>
-  <description>The laser_odometry_core package</description>
+  <description>
+    Core library for the laser_odometry package.
+    It contains the base class from which laser scan matcher wrappers
+    should inherit from.
+  </description>
 
+  <author email="jeremie.deray@pal-robotics.com">Jeremie Deray</author>
   <maintainer email="jeremie.deray@pal-robotics.com">Jeremie Deray</maintainer>
+
   <license>TODO</license>
 
   <buildtool_depend>catkin</buildtool_depend>
@@ -17,9 +23,7 @@
   <test_depend>roslib</test_depend>
   <test_depend>rostest</test_depend>
 
-  <!-- The export tag contains other, unspecified, tags -->
   <export>
-    <!-- Other tools can request additional information be placed here -->
-
+    <!-- -->
   </export>
 </package>
