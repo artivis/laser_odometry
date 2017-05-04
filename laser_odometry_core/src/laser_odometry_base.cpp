@@ -54,6 +54,7 @@ LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_msg,
   assert_not_null(scan_msg);
   assert_not_null(pose_msg);
 
+  has_new_kf_   = false;
   current_time_ = scan_msg->header.stamp;
 
   // first message
@@ -104,8 +105,8 @@ LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_msg,
   // Retrieve pose2D
   fillMsg(pose_msg);
 
-  const bool is_key_frame = isKeyFrame(relative_tf_);
-  if (is_key_frame)
+  has_new_kf_ = isKeyFrame(relative_tf_);
+  if (has_new_kf_)
   {
     // generate a keyframe
 
@@ -120,7 +121,7 @@ LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_msg,
 
   postProcessing();
 
-  return ProcessReport{processed, is_key_frame};
+  return ProcessReport{processed, has_new_kf_};
 }
 
 LaserOdometryBase::ProcessReport
@@ -148,6 +149,7 @@ LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
   assert_not_null(cloud_msg);
   assert_not_null(pose_msg);
 
+  has_new_kf_   = false;
   current_time_ = cloud_msg->header.stamp;
 
   // first message
@@ -198,9 +200,9 @@ LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
   // Retrieve pose2D
   fillMsg(pose_msg);
 
-  const bool is_key_frame = isKeyFrame(correction_);
+  has_new_kf_ = isKeyFrame(correction_);
 
-  if (is_key_frame)
+  if (has_new_kf_)
   {
     // generate a keyframe
     world_to_base_kf_ = world_to_base_;
@@ -214,7 +216,7 @@ LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
 
   postProcessing();
 
-  return ProcessReport{processed, is_key_frame};
+  return ProcessReport{processed, has_new_kf_};
 }
 
 LaserOdometryBase::ProcessReport
@@ -325,6 +327,11 @@ OdomType LaserOdometryBase::odomType() const noexcept
 {
   ROS_WARN("odomType() function called but not overloaded!");
   return OdomType::Unknown;
+}
+
+bool LaserOdometryBase::hasNewKeyFrame() const noexcept
+{
+  return has_new_kf_;
 }
 
 ////////////////////////

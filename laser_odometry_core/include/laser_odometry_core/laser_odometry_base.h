@@ -105,11 +105,14 @@ namespace laser_odometry
 
     virtual OdomType odomType() const noexcept;
 
+    bool hasNewKeyFrame() const noexcept;
+
   protected:
 
     bool configured_   = false;
     bool initialized_  = false;
     bool broadcast_tf_ = false;
+    bool has_new_kf_   = false;
 
     covariance_t covariance_;
 
