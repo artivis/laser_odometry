@@ -38,21 +38,21 @@ namespace laser_odometry
     LaserOdometryBase()          = default;
     virtual ~LaserOdometryBase() = default;
 
-    virtual ProcessReport process(const sensor_msgs::LaserScanConstPtr& /*cloud_msg*/,
-                                  geometry_msgs::Pose2DPtr /*pose_msg*/,
-                                  geometry_msgs::Pose2DPtr relative_pose_msg = nullptr);
+    ProcessReport process(const sensor_msgs::LaserScanConstPtr& cloud_msg,
+                          geometry_msgs::Pose2DPtr pose_msg,
+                          geometry_msgs::Pose2DPtr relative_pose_msg = nullptr);
 
-    virtual ProcessReport process(const sensor_msgs::LaserScanConstPtr& /*cloud_msg*/,
-                                  nav_msgs::OdometryPtr /*pose_msg*/,
-                                  nav_msgs::OdometryPtr relative_odom_msg = nullptr);
+    ProcessReport process(const sensor_msgs::LaserScanConstPtr& cloud_msg,
+                          nav_msgs::OdometryPtr pose_msg,
+                          nav_msgs::OdometryPtr relative_odom_msg = nullptr);
 
-    virtual ProcessReport process(const sensor_msgs::PointCloud2ConstPtr& /*cloud_msg*/,
-                                  geometry_msgs::Pose2DPtr /*pose_msg*/,
-                                  geometry_msgs::Pose2DPtr relative_pose_msg = nullptr);
+    ProcessReport process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
+                          geometry_msgs::Pose2DPtr pose_msg,
+                          geometry_msgs::Pose2DPtr relative_pose_msg = nullptr);
 
-    virtual ProcessReport process(const sensor_msgs::PointCloud2ConstPtr& /*cloud_msg*/,
-                                  nav_msgs::OdometryPtr /*pose_msg*/,
-                                  nav_msgs::OdometryPtr relative_odom_msg = nullptr);
+    ProcessReport process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
+                          nav_msgs::OdometryPtr pose_msg,
+                          nav_msgs::OdometryPtr relative_odom_msg = nullptr);
 
   protected:
 
