@@ -334,6 +334,16 @@ bool LaserOdometryBase::hasNewKeyFrame() const noexcept
   return has_new_kf_;
 }
 
+void LaserOdometryBase::getKeyFrame(sensor_msgs::LaserScanConstPtr& kframe) const noexcept
+{
+  kframe = reference_scan_;
+}
+
+void LaserOdometryBase::getKeyFrame(sensor_msgs::PointCloud2ConstPtr& kframe) const noexcept
+{
+  kframe = reference_cloud_;
+}
+
 ////////////////////////
 ///                  ///
 /// Guetter / Setter ///

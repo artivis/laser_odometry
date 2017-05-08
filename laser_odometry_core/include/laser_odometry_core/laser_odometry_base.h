@@ -107,6 +107,9 @@ namespace laser_odometry
 
     bool hasNewKeyFrame() const noexcept;
 
+    void getKeyFrame(sensor_msgs::LaserScanConstPtr& kframe) const noexcept;
+    void getKeyFrame(sensor_msgs::PointCloud2ConstPtr& kframe) const noexcept;
+
   protected:
 
     bool configured_   = false;
