@@ -43,7 +43,8 @@ protected:
   tf::TransformBroadcaster tf_broadcaster_;
 
   ros::Subscriber sub_;
-  ros::Publisher  pub_;
+  ros::Publisher  pub_odom_;
+  ros::Publisher  pub_kframe_;
 
   void initialize();
 
@@ -64,8 +65,26 @@ protected:
 template <typename T>
 void LaserOdometryNode::publish(const T& msg) const
 {
-  if (pub_.getNumSubscribers() > 0)
-    pub_.publish(msg);
+  if (pub_odom_.getNumSubscribers() > 0)
+    pub_odom_.publish(msg);
+}
+
+template <>
+void LaserOdometryNode::publish(const sensor_msgs::LaserScanConstPtr& msg) const
+{
+  if (msg == nullptr) return;
+
+  if (pub_kframe_.getNumSubscribers() > 0)
+    pub_kframe_.publish(msg);
+}
+
+template <>
+void LaserOdometryNode::publish(const sensor_msgs::PointCloud2ConstPtr& msg) const
+{
+  if (msg == nullptr) return;
+
+  if (pub_kframe_.getNumSubscribers() > 0)
+    pub_kframe_.publish(msg);
 }
 
 } /* namespace laser_odometry */

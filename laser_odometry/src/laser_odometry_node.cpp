@@ -56,9 +56,9 @@ void LaserOdometryNode::initialize()
   ROS_INFO("Subscribed to %s", sub_.getTopic().c_str());
 
   if (publish_odom_)
-    pub_ = private_nh_.advertise<nav_msgs::Odometry>("laser_odom", 1);
+    pub_odom_ = private_nh_.advertise<nav_msgs::Odometry>("laser_odom", 1);
   else
-    pub_ = private_nh_.advertise<geometry_msgs::Pose2D>("laser_odom", 1);
+    pub_odom_ = private_nh_.advertise<geometry_msgs::Pose2D>("laser_odom", 1);
 }
 
 void LaserOdometryNode::LaserCallback(const sensor_msgs::LaserScanConstPtr& new_scan)
@@ -104,11 +104,25 @@ void LaserOdometryNode::process()
     {
       new_scan_ = false;
       laser_odom_ptr_->process(latest_scan_, odom_ptr);
+
+      if (laser_odom_ptr_->hasNewKeyFrame())
+      {
+        sensor_msgs::LaserScanConstPtr kframe;
+        laser_odom_ptr_->getKeyFrame(kframe);
+        publish(kframe);
+      }
     }
     else if (new_cloud_)
     {
       new_cloud_ = false;
       laser_odom_ptr_->process(latest_cloud_, odom_ptr);
+
+      if (laser_odom_ptr_->hasNewKeyFrame())
+      {
+        sensor_msgs::PointCloud2ConstPtr kframe;
+        laser_odom_ptr_->getKeyFrame(kframe);
+        publish(kframe);
+      }
     }
 
     publish(odom_ptr);
@@ -156,10 +170,14 @@ void LaserOdometryNode::resetListenerWithType(const topic_tools::ShapeShifter::P
   if (new_s->getDataType() == "sensor_msgs/LaserScan") {
     sub_ = private_nh_.subscribe("scan_in", 1,
                                  &LaserOdometryNode::LaserCallback, this);
+
+    pub_kframe_ = private_nh_.advertise<sensor_msgs::LaserScan>("key_frame", 1);
   }
   else if(new_s->getDataType() == "sensor_msgs/PointCloud2") {
     sub_ = private_nh_.subscribe("scan_in", 1,
                                  &LaserOdometryNode::CloudCallback, this);
+
+    pub_kframe_ = private_nh_.advertise<sensor_msgs::PointCloud>("key_frame", 1);
   }
   else {
     ROS_ERROR("Subscribed to topic of unknown type !");
