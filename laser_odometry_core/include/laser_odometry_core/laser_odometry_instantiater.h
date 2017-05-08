@@ -22,21 +22,21 @@ public:
 
   laser_odometry::LaserOdometryPtr instantiate_impl(const std::string& laser_odometry_type)
   {
-    bool loaded = false;
     laser_odometry::LaserOdometryPtr laser_odom_ptr;
 
-    try {
+    try
+    {
       laser_odom_ptr = loader.createInstance(laser_odometry_type);
     }
-    catch (pluginlib::PluginlibException& ex){
+    catch (pluginlib::PluginlibException& ex)
+    {
       ROS_ERROR("The plugin failed to load for some reason.\n\tError: %s", ex.what());
-      loaded = false;
     }
 
-    if (laser_odom_ptr == nullptr){
+    if (laser_odom_ptr == nullptr)
+    {
       ROS_ERROR_STREAM("Error creating laser odometry: "
                        << laser_odometry_type);
-      loaded = false;
     }
     else
     {
@@ -49,10 +49,7 @@ public:
       {
         ROS_ERROR_STREAM("Something went wrong while configuring pluging : "
                          << laser_odometry_type);
-        loaded = false;
       }
-      else
-        loaded = true;
     }
 
     return laser_odom_ptr;
