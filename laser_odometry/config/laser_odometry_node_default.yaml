@@ -1,0 +1,14 @@
+# Default parameters of the laser_odometry base class
+laser_frame:      base_laser_link
+base_frame:       base_link
+world_frame:      world
+laser_odom_frame: odom
+
+#covariance_diag todo
+
+# Default parameters of the laser_odometry node
+broadcast_tf: False
+init_origin:  True
+publish_odom: True
+fixed_sensor: True
+throttle:     False
