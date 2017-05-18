@@ -1,14 +1,30 @@
-# Default parameters of the laser_odometry base class
+##########################################################
+## Default parameters of the laser_odometry base class. ##
+##########################################################
+
 laser_frame:      base_laser_link
 base_frame:       base_link
 world_frame:      world
 laser_odom_frame: odom
 
-#covariance_diag todo
+####################################################
+## Default parameters of the laser_odometry node. ##
+####################################################
 
-# Default parameters of the laser_odometry node
+# Whether or not to broadcast the estimated odometry on tf.
 broadcast_tf: False
+
+# Whether or not the retrieve the origin pose from tf.
 init_origin:  True
+
+# Whether to use a nav_msgs/Odometry message or a geometry_msgs/Pose2D message.
 publish_odom: True
+
+# Whether or not the sensor is fixed wrt the base_frame.
 fixed_sensor: True
-throttle:     False
+
+# Throttling messages.
+throttle:     1
+
+# The default twist covariance diagonal.
+#covariance_diag todo
