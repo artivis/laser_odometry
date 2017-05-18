@@ -24,11 +24,11 @@ protected:
 
   bool configured_   = false;
   bool fixed_sensor_ = true;
-  bool broadcast_tf_ = true;
+  bool broadcast_tf_ = false;
   bool init_origin_  = false;
   bool new_scan_     = false;
   bool new_cloud_    = false;
-  bool publish_odom_ = false;
+  bool publish_odom_ = true;
 
   int throttle_ = 1;
 

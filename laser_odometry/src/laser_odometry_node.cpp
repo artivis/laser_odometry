@@ -50,7 +50,7 @@ void LaserOdometryNode::initialize()
     laser_odom_ptr_->setOrigin(origin_to_base);
   }
 
-  sub_ = private_nh_.subscribe("scan_in", 1,
+  sub_ = private_nh_.subscribe("topic_in", 1,
                                &LaserOdometryNode::resetListenerWithType, this);
 
   ROS_INFO("Subscribed to %s", sub_.getTopic().c_str());
