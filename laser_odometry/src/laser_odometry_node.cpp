@@ -174,19 +174,19 @@ void LaserOdometryNode::resetListenerWithType(const topic_tools::ShapeShifter::P
   sub_.shutdown();
 
   if (new_s->getDataType() == "sensor_msgs/LaserScan") {
-    sub_ = private_nh_.subscribe("scan_in", 1,
+    sub_ = private_nh_.subscribe("topic_in", 1,
                                  &LaserOdometryNode::LaserCallback, this);
 
     pub_kframe_ = private_nh_.advertise<sensor_msgs::LaserScan>("key_frame", 1);
   }
   else if(new_s->getDataType() == "sensor_msgs/PointCloud2") {
-    sub_ = private_nh_.subscribe("scan_in", 1,
+    sub_ = private_nh_.subscribe("topic_in", 1,
                                  &LaserOdometryNode::CloudCallback, this);
 
     pub_kframe_ = private_nh_.advertise<sensor_msgs::PointCloud>("key_frame", 1);
   }
   else {
-    ROS_ERROR("Subscribed to topic of unknown type !");
+    ROS_ERROR("Subscribed to topic of type %s !", new_s->getDataType().c_str());
   }
 }
 

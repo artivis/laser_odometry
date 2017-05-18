@@ -123,7 +123,7 @@ namespace laser_odometry
 
     std::string base_frame_       = "base_link";
     std::string laser_frame_      = "base_laser_link";
-    std::string world_frame_      = "world";
+    std::string world_frame_      = "map";
     std::string laser_odom_frame_ = "odom";
 
     /// \brief base_to_laser_
