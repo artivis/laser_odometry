@@ -48,6 +48,11 @@ void LaserOdometryNode::initialize()
                  origin_to_base);
 
     laser_odom_ptr_->setOrigin(origin_to_base);
+
+    geometry_msgs::Transform msg;
+    tf::transformTFToMsg(origin_to_base, msg);
+
+    ROS_INFO_STREAM("Initializing origin :\n" << msg);
   }
 
   sub_ = private_nh_.subscribe("topic_in", 1,
