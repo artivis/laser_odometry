@@ -81,12 +81,13 @@ void LaserOdometryNode::CloudCallback(const sensor_msgs::PointCloud2ConstPtr& ne
 
 void LaserOdometryNode::setLaserFromTf(const ros::Time &t, const ros::Duration &d)
 {
-  tf::Transform& base_to_laser = laser_odom_ptr_->getLaserPose();
+  tf::Transform base_to_laser = tf::Transform::getIdentity();
 
   utils::getTf(laser_odom_ptr_->getFrameLaser(),
                laser_odom_ptr_->getFrameBase(),
                base_to_laser, t, d);
 
+  laser_odom_ptr_->setLaserPose(base_to_laser);
 }
 
 void LaserOdometryNode::process()
@@ -220,7 +221,7 @@ int main(int argc, char **argv)
 
     node.process();
 
-    ROS_INFO_STREAM("Processing took : " << (ros::Time::now() - start));
+    ROS_DEBUG_STREAM("Processing took : " << (ros::Time::now() - start));
 
     rate.sleep();
   }
