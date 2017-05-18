@@ -43,8 +43,8 @@ void LaserOdometryNode::initialize()
   if (init_origin_)
   {
     tf::Transform origin_to_base = tf::Transform::getIdentity();
-    utils::getTf(laser_odom_ptr_->getFrameFixed(),
-                 laser_odom_ptr_->getFrameBase(),
+    utils::getTf(laser_odom_ptr_->getFrameBase(),
+                 laser_odom_ptr_->getFrameFixed(),
                  origin_to_base);
 
     laser_odom_ptr_->setOrigin(origin_to_base);
