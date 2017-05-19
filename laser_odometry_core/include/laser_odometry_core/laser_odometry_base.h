@@ -302,7 +302,6 @@ namespace laser_odometry
 
     bool configured_   = false; /*!< Whether the matcher is configured. */
     bool initialized_  = false; /*!< Whether the matcher is initialized. */
-    bool broadcast_tf_ = false; /*!< Whether the matcher should publish on tf. */
     bool has_new_kf_   = false; /*!< Whether the matcher has a new referent reading. */
 
     covariance_msg_t pose_covariance_;  /*!< The estimated pose covariance. */
