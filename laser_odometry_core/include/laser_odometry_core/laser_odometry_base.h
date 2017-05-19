@@ -332,12 +332,10 @@ namespace laser_odometry
     /// This frame name is only used in the published message.
     std::string laser_odom_frame_ = "odom";
 
-    /// \brief base_to_laser_
-    /// tranform from base_frame to laser_frame
+    /// \brief Tranform from base_frame to laser_frame
     tf::Transform base_to_laser_;
 
-    /// \brief laser_to_base_
-    /// tranform from laser_frame to base_frame
+    /// \brief Tranform from laser_frame to base_frame
     /// == base_to_laser_^-1
     tf::Transform laser_to_base_;
 
