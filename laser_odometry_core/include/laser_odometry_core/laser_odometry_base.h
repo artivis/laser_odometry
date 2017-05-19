@@ -455,7 +455,6 @@ namespace laser_odometry
      * currently evaluated reading is \b NOT the new referent.
      */
     virtual void isNotKeyFrame();
-    virtual tf::Transform expressFromLaserToBase(const tf::Transform& tf_in_lf);
 
     /**
      * @brief Fills the published message with the estimated pose increment.

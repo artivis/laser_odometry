@@ -318,11 +318,6 @@ void LaserOdometryBase::isNotKeyFrame()
 
 }
 
-tf::Transform LaserOdometryBase::expressFromLaserToBase(const tf::Transform& tf_in_lf)
-{
-  return base_to_laser_ * tf_in_lf * laser_to_base_;
-}
-
 OdomType LaserOdometryBase::odomType() const noexcept
 {
   ROS_WARN("odomType() function called but not overloaded!");
