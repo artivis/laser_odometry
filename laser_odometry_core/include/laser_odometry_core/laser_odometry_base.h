@@ -377,8 +377,7 @@ namespace laser_odometry
     /// \brief  The referent PointCloud2.
     sensor_msgs::PointCloud2ConstPtr reference_cloud_;
 
-    /// \brief current_time_
-    /// Current ROS time accordingly
+    /// \brief Current ROS time accordingly
     /// to the last processed message.
     ros::Time current_time_;
 
