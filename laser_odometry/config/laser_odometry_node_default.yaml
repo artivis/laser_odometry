@@ -6,6 +6,7 @@ laser_frame:      base_laser_link
 base_frame:       base_link
 fixed_frame:      odom
 laser_odom_frame: odom
+global_frame:     map
 
 ####################################################
 ## Default parameters of the laser_odometry node. ##

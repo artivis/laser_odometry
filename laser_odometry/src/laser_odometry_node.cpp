@@ -27,6 +27,7 @@ void LaserOdometryNode::initialize()
   private_nh_.param("publish_odom", publish_odom_, publish_odom_);
   private_nh_.param("fixed_sensor", fixed_sensor_, fixed_sensor_);
   private_nh_.param("throttle",     throttle_,     throttle_);
+  private_nh_.param("global_frame", global_frame_, std::string("map"));
 
   laser_odom_ptr_ = make_laser_odometry(laser_odometry_type);
 
@@ -44,8 +45,7 @@ void LaserOdometryNode::initialize()
   {
     tf::Transform origin_to_base = tf::Transform::getIdentity();
     utils::getTf(laser_odom_ptr_->getFrameBase(),
-                 laser_odom_ptr_->getFrameFixed(),
-                 origin_to_base);
+                 global_frame_, origin_to_base);
 
     laser_odom_ptr_->setOrigin(origin_to_base);
 
