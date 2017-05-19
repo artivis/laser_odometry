@@ -58,7 +58,7 @@ namespace laser_odometry
    *
    *       - predict                                [O]
    *
-   *       - process_impl                           [M]
+   *       - process_impl                           [X]
    *
    *       - is_keyframe = isKeyFrame               [O]
    *
@@ -72,7 +72,7 @@ namespace laser_odometry
    *
    *       - postProcessing                         [O]
    *
-   * [M] Symbol marks the necessity for the base class to override the function.<br>
+   * [X] Symbol marks the necessity for the base class to override the function.<br>
    * [O] Symbol marks optionality for the base class to override the function.
    *
    */
@@ -153,8 +153,6 @@ namespace laser_odometry
 
   protected:
 
-    /* Those are the functions the derived class should overload */
-
     /**
      * @brief Function to be implemented by the derived plugin.
      * It is the core (implementation) of the LaserOdometryBase::process function.
@@ -209,12 +207,14 @@ namespace laser_odometry
     bool configure();
 
     /**
+     * @brief Whether the class is configured or not.
      * @return Whether the class is configured or not.
      */
     bool configured() const noexcept;
 
     /* Guetter / Setter */
 
+    /// \brief Reference to the origin frame.
     /// \return Reference to the origin frame.
     tf::Transform& getOrigin();
     /// \return Const-reference to the origin frame.
@@ -226,8 +226,11 @@ namespace laser_odometry
      */
     void setOrigin(const tf::Transform& origin);
 
+    /// \brief Reference to the initial prediction transform of the upcoming matching.
     /// \return Reference to the initial prediction transform of the upcoming matching.
     tf::Transform& getInitialGuess();
+
+    /// \brief Const-reference to the initial prediction transform of the upcoming matching.
     /// \return Const-reference to the initial prediction transform of the upcoming matching.
     const tf::Transform& getInitialGuess() const;
 
@@ -237,8 +240,11 @@ namespace laser_odometry
      */
     void setInitialGuess(const tf::Transform& guess);
 
+    /// \brief Reference to the laser pose wrt the robot base frame.
     /// \return Reference to the laser pose wrt the robot base frame.
     tf::Transform& getLaserPose();
+
+    /// \brief Const-reference to the laser pose wrt the robot base frame.
     /// \return Const-reference to the laser pose wrt the robot base frame.
     const tf::Transform& getLaserPose() const;
 
@@ -248,12 +254,19 @@ namespace laser_odometry
      */
     void setLaserPose(const tf::Transform& base_to_laser);
 
+    /// \brief the robot base frame name.
     /// \return the robot base frame name.
     const std::string& getFrameBase()  const noexcept;
+
+    /// \brief the robot laser frame name.
     /// \return the robot laser frame name.
     const std::string& getFrameLaser() const noexcept;
+
+    /// \brief the global fixed frame name.
     /// \return the global fixed frame name.
     const std::string& getFrameFixed() const noexcept;
+
+    /// \brief the global odometry frame name.
     /// \return the global odometry frame name.
     const std::string& getFrameOdom()  const noexcept;
 
@@ -276,12 +289,14 @@ namespace laser_odometry
      */
     const ros::Time& getCurrentTime() const noexcept;
 
+    /// @brief The type of odometry computed by the plugin.
     /// @return The type of odometry computed by the plugin.
     /// If not overrided, default is OdomType::Unknown
     /// @see OdomType
     virtual OdomType odomType() const noexcept;
 
     /**
+     * @brief Whether the reference reading has been updated or not.
      * @return Whether the reference reading has been updated or not.
      */
     bool hasNewKeyFrame() const noexcept;
@@ -300,20 +315,20 @@ namespace laser_odometry
 
   protected:
 
-    bool configured_   = false; /*!< Whether the matcher is configured. */
-    bool initialized_  = false; /*!< Whether the matcher is initialized. */
-    bool has_new_kf_   = false; /*!< Whether the matcher has a new referent reading. */
+    bool configured_   = false; /*!< @brief Whether the matcher is configured. */
+    bool initialized_  = false; /*!< @brief Whether the matcher is initialized. */
+    bool has_new_kf_   = false; /*!< @brief Whether the matcher has a new referent reading. */
 
-    covariance_msg_t pose_covariance_;  /*!< The estimated pose covariance. */
-    covariance_msg_t twist_covariance_; /*!< The estimated pose increment covariance. */
+    covariance_msg_t pose_covariance_;  /*!< @brief The estimated pose covariance. */
+    covariance_msg_t twist_covariance_; /*!< @brief The estimated pose increment covariance. */
 
     ros::NodeHandle private_nh_ = ros::NodeHandle("~");
 
-    std::string base_frame_       = "base_link";        /*!< The robot base frame name. */
-    std::string laser_frame_      = "base_laser_link";  /*!< The robot laser frame name. */
-    std::string world_frame_      = "map";              /*!< The global fixed frame name. */
+    std::string base_frame_       = "base_link";        /*!< @brief The robot base frame name. */
+    std::string laser_frame_      = "base_laser_link";  /*!< @brief The robot laser frame name. */
+    std::string fixed_frame_      = "map";              /*!< @brief The global fixed frame name. */
 
-    /// @brief The global odometry frame name.
+    /// \brief The global odometry frame name.
     /// This frame name is only used in the published message.
     std::string laser_odom_frame_ = "odom";
 
@@ -326,49 +341,41 @@ namespace laser_odometry
     /// == base_to_laser_^-1
     tf::Transform laser_to_base_;
 
-    /* This is the transform the derived class should fills */
-    /// @brief correction_
-    /// the relative transform in the laser_frame.
-    /// This is the transform the derived class has to fills
+    /// @brief The relative transform in the laser_frame.
+    /// @note This is the transform the derived class should fills.
     tf::Transform correction_;
 
-    /// \brief relative_tf_
-    /// the relative transform in the base_frame
+    /// \brief The relative transform in the base_frame.
     tf::Transform relative_tf_;
 
-    /// \brief guess_relative_tf_
-    /// guessed/predicted tranform
+    /// \brief Guessed/predicted tranform
     /// from reference_'reading' to
-    /// current_'reading' in the base_frame
+    /// current_'reading' in the base_frame.
     tf::Transform guess_relative_tf_;
 
-    /// \brief world_to_base_
-    /// tranform from wold_frame
-    /// to base_frame, where world_frame
+    /// \brief Tranform from fixed_frame
+    /// to base_frame, where fixed_frame
     /// is the origin of the integration.
-    /// == world_to_base_kf_ * relative_tf_
-    tf::Transform world_to_base_;
+    /// == fixed_to_base_kf_ * relative_tf_.
+    tf::Transform fixed_to_base_;
 
-    /// \brief world_to_base_kf_
-    /// tranform from world_frame to
+    /// \brief Tranform from fixed_frame to
     /// the last keyfame frame.
-    /// == world_to_base * relative_tf_
-    tf::Transform world_to_base_kf_;
+    /// == fixed_to_base * relative_tf_.
+    tf::Transform fixed_to_base_kf_;
 
-    /// \brief world_origin_
-    /// An optional user defined
+    /// \brief An optional user defined
     /// transform from that maps the
     /// integration origin to another
     /// reference than Identity
     /// Default: Identity
-    tf::Transform world_origin_;
+    tf::Transform fixed_origin_;
 
-    /// \brief world_origin_to_base_
-    /// tranform from the world_origin frame
+    /// \brief Tranform from the fixed_origin frame
     /// to the base_frame.
     /// It is the integrated robot odometry.
-    /// == world_origin_ * world_to_base_
-    tf::Transform world_origin_to_base_;
+    /// == fixed_origin_ * fixed_to_base_.
+    tf::Transform fixed_origin_to_base_;
 
     /// \brief  The referent LaserScan.
     sensor_msgs::LaserScanConstPtr   reference_scan_;
@@ -376,7 +383,7 @@ namespace laser_odometry
     /// \brief  The referent PointCloud2.
     sensor_msgs::PointCloud2ConstPtr reference_cloud_;
 
-    /// \brief Current ROS time accordingly
+    /// \brief Current ros::Time accordingly
     /// to the last processed message.
     ros::Time current_time_;
 
@@ -469,9 +476,9 @@ namespace laser_odometry
   template <>
   inline void LaserOdometryBase::fillMsg<geometry_msgs::Pose2DPtr>(geometry_msgs::Pose2DPtr& msg_ptr)
   {
-    msg_ptr->x = world_origin_to_base_.getOrigin().getX();
-    msg_ptr->y = world_origin_to_base_.getOrigin().getY();
-    msg_ptr->theta = tf::getYaw(world_origin_to_base_.getRotation());
+    msg_ptr->x = fixed_origin_to_base_.getOrigin().getX();
+    msg_ptr->y = fixed_origin_to_base_.getOrigin().getY();
+    msg_ptr->theta = tf::getYaw(fixed_origin_to_base_.getRotation());
   }
 
   template <>
@@ -481,11 +488,11 @@ namespace laser_odometry
     msg_ptr->header.frame_id = laser_odom_frame_;
     msg_ptr->child_frame_id  = base_frame_;
 
-    msg_ptr->pose.pose.position.x = world_origin_to_base_.getOrigin().getX();
-    msg_ptr->pose.pose.position.y = world_origin_to_base_.getOrigin().getY();
+    msg_ptr->pose.pose.position.x = fixed_origin_to_base_.getOrigin().getX();
+    msg_ptr->pose.pose.position.y = fixed_origin_to_base_.getOrigin().getY();
     msg_ptr->pose.pose.position.z = 0;
 
-    tf::quaternionTFToMsg(world_origin_to_base_.getRotation(),
+    tf::quaternionTFToMsg(fixed_origin_to_base_.getRotation(),
                           msg_ptr->pose.pose.orientation);
 
     msg_ptr->pose.covariance = pose_covariance_;

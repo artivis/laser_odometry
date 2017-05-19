@@ -4,7 +4,7 @@
 
 laser_frame:      base_laser_link
 base_frame:       base_link
-world_frame:      map
+fixed_frame:      odom
 laser_odom_frame: odom
 
 ####################################################

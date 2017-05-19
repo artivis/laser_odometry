@@ -16,7 +16,7 @@ bool LaserOdometryBase::configure()
 
   private_nh_.param("laser_frame",      laser_frame_,      std::string("base_laser_link"));
   private_nh_.param("base_frame",       base_frame_,       std::string("base_link"));
-  private_nh_.param("world_frame",      world_frame_,      std::string("world"));
+  private_nh_.param("odom_frame",       fixed_frame_,      std::string("odom"));
   private_nh_.param("laser_odom_frame", laser_odom_frame_, std::string("odom"));
 
   // Default covariance diag :
@@ -62,7 +62,7 @@ LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_msg,
   {
     initialized_ = initialize(scan_msg);
 
-    world_origin_to_base_ = world_origin_ * world_to_base_;
+    fixed_origin_to_base_ = fixed_origin_ * fixed_to_base_;
 
     fillMsg(pose_msg);
 
@@ -76,11 +76,11 @@ LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_msg,
   tf::Transform guess_relative_tf_ = predict(relative_tf_);
 
   // account for the change since the last kf, in the fixed frame
-  guess_relative_tf_ = guess_relative_tf_ * (world_to_base_ * world_to_base_kf_.inverse());
+  guess_relative_tf_ = guess_relative_tf_ * (fixed_to_base_ * fixed_to_base_kf_.inverse());
 
   // the predicted change of the laser's position, in the laser frame
-  tf::Transform pred_rel_tf_in_ltf = laser_to_base_ * world_to_base_.inverse() *
-                                      guess_relative_tf_ * world_to_base_ * base_to_laser_ ;
+  tf::Transform pred_rel_tf_in_ltf = laser_to_base_ * fixed_to_base_.inverse() *
+                                      guess_relative_tf_ * fixed_to_base_ * base_to_laser_ ;
 
   // The actual computation
   const bool processed = process_impl(scan_msg, pred_rel_tf_in_ltf);
@@ -90,11 +90,11 @@ LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_msg,
     // the correction of the base's position, in the base frame
     relative_tf_ = base_to_laser_ * correction_ * laser_to_base_;
 
-    // update the pose in the world frame
-    world_to_base_ = world_to_base_kf_ * relative_tf_;
+    // update the pose in the fixed frame
+    fixed_to_base_ = fixed_to_base_kf_ * relative_tf_;
 
-    // update the pose in the world 'origin' frame
-    world_origin_to_base_ = world_origin_ * world_to_base_;
+    // update the pose in the fixed 'origin' frame
+    fixed_origin_to_base_ = fixed_origin_ * fixed_to_base_;
   }
   else
   {
@@ -110,7 +110,7 @@ LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_msg,
   {
     // generate a keyframe
 
-    world_to_base_kf_ = world_to_base_;
+    fixed_to_base_kf_ = fixed_to_base_;
 
     reference_scan_ = scan_msg;
 
@@ -157,7 +157,7 @@ LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
   {
     initialized_ = initialize(cloud_msg);
 
-    world_origin_to_base_ = world_origin_ * world_to_base_;
+    fixed_origin_to_base_ = fixed_origin_ * fixed_to_base_;
 
     fillMsg(pose_msg);
 
@@ -171,11 +171,11 @@ LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
   tf::Transform guess_relative_tf_ = predict(relative_tf_);
 
   // account for the change since the last kf, in the fixed frame
-  guess_relative_tf_ = guess_relative_tf_ * (world_to_base_ * world_to_base_kf_.inverse());
+  guess_relative_tf_ = guess_relative_tf_ * (fixed_to_base_ * fixed_to_base_kf_.inverse());
 
   // the predicted change of the laser's position, in the laser frame
-  tf::Transform pred_rel_tf_in_ltf = laser_to_base_ * world_to_base_.inverse() *
-                                      guess_relative_tf_ * world_to_base_ * base_to_laser_ ;
+  tf::Transform pred_rel_tf_in_ltf = laser_to_base_ * fixed_to_base_.inverse() *
+                                      guess_relative_tf_ * fixed_to_base_ * base_to_laser_ ;
 
   // The actual computation
   const bool processed = process_impl(cloud_msg, pred_rel_tf_in_ltf);
@@ -185,11 +185,11 @@ LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
     // the correction of the base's position, in the base frame
     relative_tf_ = base_to_laser_ * correction_ * laser_to_base_;
 
-    // update the pose in the world frame
-    world_to_base_ = world_to_base_kf_ * relative_tf_;
+    // update the pose in the fixed frame
+    fixed_to_base_ = fixed_to_base_kf_ * relative_tf_;
 
-    // update the pose in the world 'origin' frame
-    world_origin_to_base_ = world_origin_ * world_to_base_;
+    // update the pose in the fixed 'origin' frame
+    fixed_origin_to_base_ = fixed_origin_ * fixed_to_base_;
   }
   else
   {
@@ -205,7 +205,7 @@ LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
   if (has_new_kf_)
   {
     // generate a keyframe
-    world_to_base_kf_ = world_to_base_;
+    fixed_to_base_kf_ = fixed_to_base_;
 
     reference_cloud_ = cloud_msg;
 
@@ -250,7 +250,7 @@ bool LaserOdometryBase::process_impl(const sensor_msgs::PointCloud2ConstPtr& /*c
 
 const tf::Transform& LaserOdometryBase::getEstimatedPose() const noexcept
 {
-  return world_origin_to_base_;
+  return fixed_origin_to_base_;
 }
 
 void LaserOdometryBase::reset()
@@ -260,9 +260,10 @@ void LaserOdometryBase::reset()
   base_to_laser_     = tf::Transform::getIdentity();
   laser_to_base_     = tf::Transform::getIdentity();
   relative_tf_       = tf::Transform::getIdentity();
-  world_origin_      = tf::Transform::getIdentity();
-  world_to_base_     = tf::Transform::getIdentity();
+  fixed_origin_      = tf::Transform::getIdentity();
+  fixed_to_base_     = tf::Transform::getIdentity();
   guess_relative_tf_ = tf::Transform::getIdentity();
+  fixed_to_base_kf_  = tf::Transform::getIdentity();
 
   reference_scan_  = nullptr;
   reference_cloud_ = nullptr;
@@ -347,17 +348,17 @@ void LaserOdometryBase::getKeyFrame(sensor_msgs::PointCloud2ConstPtr& kframe) co
 
 tf::Transform& LaserOdometryBase::getOrigin()
 {
-  return world_origin_;
+  return fixed_origin_;
 }
 
 const tf::Transform& LaserOdometryBase::getOrigin() const
 {
-  return world_origin_;
+  return fixed_origin_;
 }
 
 void LaserOdometryBase::setOrigin(const tf::Transform& origin)
 {
-  world_origin_ = origin;
+  fixed_origin_ = origin;
 }
 
 tf::Transform& LaserOdometryBase::getInitialGuess()
@@ -403,7 +404,7 @@ const std::string& LaserOdometryBase::getFrameLaser() const noexcept
 
 const std::string& LaserOdometryBase::getFrameFixed() const noexcept
 {
-  return world_frame_;
+  return fixed_frame_;
 }
 
 const std::string& LaserOdometryBase::getFrameOdom()  const noexcept
@@ -423,7 +424,7 @@ void LaserOdometryBase::setFrameLaser(const std::string& frame)
 
 void LaserOdometryBase::setFrameFixed(const std::string& frame)
 {
-  world_frame_ = frame;
+  fixed_frame_ = frame;
 }
 
 void LaserOdometryBase::setFrameOdom(const std::string& frame)
