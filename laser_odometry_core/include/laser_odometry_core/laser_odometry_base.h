@@ -80,7 +80,8 @@ namespace laser_odometry
   {
   public:
 
-    using covariance_t = geometry_msgs::PoseWithCovariance::_covariance_type;
+    /// @brief The covariance message type. @see geometry_msgs::PoseWithCovariance::_covariance_type.
+    using covariance_msg_t = geometry_msgs::PoseWithCovariance::_covariance_type;
 
     /// @brief A brief report of the matching.
     struct ProcessReport;
@@ -303,8 +304,8 @@ namespace laser_odometry
     bool broadcast_tf_ = false; /*!< Whether the matcher should publish on tf. */
     bool has_new_kf_   = false; /*!< Whether the matcher has a new referent reading. */
 
-    covariance_t covariance_;  /*!< The estimated pose covariance. */
-
+    covariance_msg_t pose_covariance_;  /*!< The estimated pose covariance. */
+    covariance_msg_t twist_covariance_; /*!< The estimated pose increment covariance. */
 
     ros::NodeHandle private_nh_ = ros::NodeHandle("~");
 
@@ -488,7 +489,7 @@ namespace laser_odometry
     tf::quaternionTFToMsg(world_origin_to_base_.getRotation(),
                           msg_ptr->pose.pose.orientation);
 
-    msg_ptr->pose.covariance = covariance_;
+    msg_ptr->pose.covariance = pose_covariance_;
   }
 
 } /* namespace laser_odometry */

@@ -32,7 +32,7 @@ bool LaserOdometryBase::configure()
     std::fill_n(default_covariance.begin(), 6, 1e-5);
   }
 
-  covariance_ = boost::assign::list_of
+  pose_covariance_ = boost::assign::list_of
                (static_cast<double>(default_covariance[0]))  (0)  (0)  (0)  (0) (0)
                (0)  (static_cast<double>(default_covariance[1]))  (0)  (0)  (0) (0)
                (0)  (0)  (static_cast<double>(default_covariance[2]))  (0)  (0) (0)
