@@ -1,0 +1,8 @@
+- builder: doxygen
+  file_patterns: '*.h'
+  authors: Jeremie Deray, jeremie.deray@pal-robotics.com
+  maintainers: Jeremie Deray <jeremie.deray@pal-robotics.com>
+  depends:
+    - catkin
+  name: 'The laser_odometry_core C++ API documentation'
+  predefined: '__attribute__(x)='

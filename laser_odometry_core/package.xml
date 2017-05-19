@@ -20,10 +20,10 @@
   <depend>sensor_msgs</depend>
   <depend>pluginlib</depend>
 
-  <test_depend>roslib</test_depend>
-  <test_depend>rostest</test_depend>
+  <!--<test_depend>roslib</test_depend>-->
+  <!--<test_depend>rostest</test_depend>-->
 
   <export>
-    <!-- -->
+    <rosdoc config="rosdoc.yaml" />
   </export>
 </package>
