@@ -80,7 +80,8 @@ namespace laser_odometry
   {
   public:
 
-    /// @brief The covariance message type. @see geometry_msgs::PoseWithCovariance::_covariance_type.
+    /// @brief The covariance message type.
+    /// @see geometry_msgs::PoseWithCovariance::_covariance_type.
     using covariance_msg_t = geometry_msgs::PoseWithCovariance::_covariance_type;
 
     /// @brief A brief report of the matching.

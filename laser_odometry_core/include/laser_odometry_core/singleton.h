@@ -17,7 +17,7 @@ namespace details
 {
 
 /**
-* \brief A thread-safer Singleton implementation with
+* \brief A thread-safer? Singleton implementation with
 * argument forwarding.
 **/
 template <class T>
@@ -67,7 +67,7 @@ struct Singleton<T>::Deleter
   }
 };
 
-} /* namespace laser_odometry */
 } /* namespace details */
+} /* namespace laser_odometry */
 
 #endif /* SINGLETON_H_ */

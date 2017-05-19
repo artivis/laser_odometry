@@ -16,4 +16,4 @@ To develop your own plugin, please refer to [the plugin instructions](laser_odom
 #### *@todo*:
 
 - [ ] documentation
-- [ ] publish key-frames
+- [x] publish key-frames
