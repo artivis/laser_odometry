@@ -4,12 +4,12 @@
   <arg name="laser_odometry_type" default="laser_odometry::LaserOdometryMyfavoriteScanMatcher"/>
 
   <!-- A config file for the laser odometry plugin. -->
-  <arg name="config_file" default="$(find laser_odometry)/config/laser_odometry_node_default.yaml"/>
+  <arg name="config_file" default="$(find laser_odometry_node)/config/laser_odometry_node_default.yaml"/>
 
   <!-- The input topic. -->
   <arg name="topic_in" default="~topic_in"/>
 
-  <node pkg="laser_odometry" type="laser_odometry_node" name="laser_odometry_node" output="screen">
+  <node pkg="laser_odometry_node" type="laser_odometry_node" name="laser_odometry_node" output="screen">
     <param name="laser_odometry_type"   value="$(arg laser_odometry_type)" />
     <rosparam file="$(arg config_file)" command="load"                     />
     <remap from="~scan_in"              to="my_topic"                      />

@@ -3,12 +3,7 @@
   <name>laser_odometry</name>
   <version>0.0.0</version>
   <description>
-    Node package of the laser_odometry project.
-    It contains the ROS node that instantiate the
-    laser scan matcher plugin.
-    It also defines and centralizes some of the common
-    steps to aggregate a consecutive laser scan displacement
-    estimates to a proper odometry.
+    The Laser Odometry metapackage
   </description>
 
   <author email="jeremie.deray@pal-robotics.com">Jeremie Deray</author>
@@ -18,17 +13,10 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
-  <depend>roscpp</depend>
-  <depend>tf</depend>
-  <depend>sensor_msgs</depend>
-  <depend>pluginlib</depend>
-  <depend>laser_odometry_core</depend>
-  <depend>topic_tools</depend>
-
-  <test_depend>roslib</test_depend>
-  <test_depend>rostest</test_depend>
+  <exec_depend>laser_odometry_node</exec_depend>
+  <exec_depend>laser_odometry_core</exec_depend>
 
   <export>
-    <!-- -->
+    <metapackage/>
   </export>
 </package>
