@@ -32,7 +32,7 @@ bool LaserOdometryBase::configure()
     std::fill_n(default_covariance.begin(), 6, 1e-5);
   }
 
-  pose_covariance_ = boost::assign::list_of
+  twist_covariance_ = boost::assign::list_of
                (static_cast<double>(default_covariance[0]))  (0)  (0)  (0)  (0) (0)
                (0)  (static_cast<double>(default_covariance[1]))  (0)  (0)  (0) (0)
                (0)  (0)  (static_cast<double>(default_covariance[2]))  (0)  (0) (0)
@@ -63,6 +63,8 @@ LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_msg,
     initialized_ = initialize(scan_msg);
 
     fixed_origin_to_base_ = fixed_origin_ * fixed_to_base_;
+
+    //pose_covariance_ = twist_covariance_;
 
     fillMsg(pose_msg);
 
@@ -158,6 +160,8 @@ LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
     initialized_ = initialize(cloud_msg);
 
     fixed_origin_to_base_ = fixed_origin_ * fixed_to_base_;
+
+    //pose_covariance_ = twist_covariance_;
 
     fillMsg(pose_msg);
 

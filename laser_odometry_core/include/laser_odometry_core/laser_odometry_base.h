@@ -493,7 +493,8 @@ namespace laser_odometry
     tf::quaternionTFToMsg(fixed_origin_to_base_.getRotation(),
                           msg_ptr->pose.pose.orientation);
 
-    msg_ptr->pose.covariance = pose_covariance_;
+    //msg_ptr->pose.covariance  = pose_covariance_;
+    msg_ptr->twist.covariance = twist_covariance_;
   }
 
 } /* namespace laser_odometry */
