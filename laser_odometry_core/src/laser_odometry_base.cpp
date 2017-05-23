@@ -308,7 +308,7 @@ void LaserOdometryBase::postProcessing()
 
 }
 
-bool LaserOdometryBase::isKeyFrame(const tf::Transform& /*tf*/)
+bool LaserOdometryBase::isKeyFrame(const tf::Transform& /*correction*/)
 {
   return true;
 }

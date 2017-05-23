@@ -386,7 +386,7 @@ namespace laser_odometry
     ros::Time current_time_;
 
     /**
-     * @brief Called within configure(), it allow sthe derived class
+     * @brief Called within configure(), it allow the derived class
      * to perform its configuration step.
      * @return Whether the class is configured or not.
      *
@@ -421,7 +421,7 @@ namespace laser_odometry
      *
      * @note The base class returns tf::Transform::getIdentity() by default.
      */
-    virtual tf::Transform predict(const tf::Transform& tf);
+    virtual tf::Transform predict(const tf::Transform& correction);
 
     /**
      * @brief Allows the derived class to perform some pre-processing
@@ -447,7 +447,7 @@ namespace laser_odometry
      *
      * @note The base class returns \b true by default.
      */
-    virtual bool isKeyFrame(const tf::Transform& tf);
+    virtual bool isKeyFrame(const tf::Transform& correction);
 
     /**
      * @brief Allows the derived class to perform some actions if the
