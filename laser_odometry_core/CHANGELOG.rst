@@ -2,8 +2,8 @@
 Changelog for package laser_odometry_core
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.0.1 (2017-05-23)
+------------------
 * LICENSE pkg.xml
 * cov is twist cov, comment pose cov
 * :lipstick:
