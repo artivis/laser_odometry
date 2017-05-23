@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>laser_odometry_core</name>
-  <version>0.0.1</version>
+  <version>0.0.2</version>
   <description>
     Core library for the laser_odometry package.
     It contains the base class from which laser scan matcher wrappers

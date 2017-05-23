@@ -2,8 +2,8 @@
 Changelog for package laser_odometry_core
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.0.2 (2017-05-23)
+------------------
 * missing deps
 * typo & clearer var name
 * Contributors: Jeremie Deray
