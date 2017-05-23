@@ -21,8 +21,3 @@ Under development plugins:
 <!-- -  [laser_odometr_rf2o](https://github.com/artivis/laser_odometr_rf2o) -->
 
 To develop your own plugin, please refer to [the plugin instructions](https://github.com/artivis/laser_odometry/wiki/Create-a-plugin).
-  
-#### *@todo*:
-
-- [ ] documentation
-- [x] publish key-frames
