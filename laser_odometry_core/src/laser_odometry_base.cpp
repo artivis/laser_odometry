@@ -5,7 +5,7 @@
 #include <boost/assign/list_of.hpp>
 
 #define assert_not_null(x) \
-  assert(x != nullptr && #x ' is nullptr at ' __LINE__);
+  assert(x != nullptr);
 
 namespace laser_odometry
 {
