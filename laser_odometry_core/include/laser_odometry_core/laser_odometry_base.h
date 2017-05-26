@@ -103,53 +103,53 @@ namespace laser_odometry
      * @brief Compute the 2D odometry given a LaserScan.
      * @param[in] scan_msg. The input LaserScan.
      * @param[out] pose_msg. The estimated 2D pose.
-     * @param[out] relative_pose_msg. The estimated 2D pose increment.
+     * @param[out] pose_increment_msg. The estimated 2D pose increment.
      * @return ProcessReport. A brief summary of the scan matching process.
      *
      * @see ProcessReport
      */
     ProcessReport process(const sensor_msgs::LaserScanConstPtr& scan_msg,
                           geometry_msgs::Pose2DPtr pose_msg,
-                          geometry_msgs::Pose2DPtr relative_pose_msg = nullptr);
+                          geometry_msgs::Pose2DPtr pose_increment_msg = nullptr);
 
     /**
      * @brief Compute the 3D (actually 2D) odometry given a LaserScan.
      * @param[in] scan_msg. The input LaserScan.
-     * @param[out] pose_msg. The estimated 3D odometry (actually 2D).
-     * @param[out] relative_odom_msg. The estimated 3D odometry increment. @note This will probably disapear.
+     * @param[out] odom_msg. The estimated 3D odometry (actually 2D).
+     * @param[out] odom_increment_msg. The estimated 3D odometry increment.
      * @return ProcessReport. A brief summary of the scan matching process.
      *
      * @see ProcessReport
      */
     ProcessReport process(const sensor_msgs::LaserScanConstPtr& scan_msg,
-                          nav_msgs::OdometryPtr pose_msg,
-                          nav_msgs::OdometryPtr relative_odom_msg = nullptr);
+                          nav_msgs::OdometryPtr odom_msg,
+                          nav_msgs::OdometryPtr odom_increment_msg = nullptr);
 
     /**
      * @brief Compute the 2D odometry given a PointCloud2.
      * @param[in] cloud_msg. The input PointCloud2.
      * @param[out] pose_msg. The estimated 2D pose.
-     * @param[out] relative_pose_msg. The estimated 2D pose increment.
+     * @param[out] pose_increment_msg. The estimated 2D pose increment.
      * @return ProcessReport. A brief summary of the pointcloud matching process.
      *
      * @see ProcessReport
      */
     ProcessReport process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
                           geometry_msgs::Pose2DPtr pose_msg,
-                          geometry_msgs::Pose2DPtr relative_pose_msg = nullptr);
+                          geometry_msgs::Pose2DPtr pose_increment_msg = nullptr);
 
     /**
      * @brief Compute the 3D odometry given a \c PointCloud2.
      * @param[in] cloud_msg. The input \c PointCloud2.
      * @param[out] pose_msg. The estimated 3D odometry.
-     * @param[out] relative_odom_msg. The estimated 3D odometry increment. @note This will probably disapear.
+     * @param[out] pose_increment_msg. The estimated 3D odometry increment.
      * @return ProcessReport. A brief summary of the pointcloud matching process.
      *
      * @see ProcessReport
      */
     ProcessReport process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
-                          nav_msgs::OdometryPtr pose_msg,
-                          nav_msgs::OdometryPtr relative_odom_msg = nullptr);
+                          nav_msgs::OdometryPtr odom_msg,
+                          nav_msgs::OdometryPtr odom_increment_msg = nullptr);
 
   protected:
 
@@ -320,7 +320,7 @@ namespace laser_odometry
     bool has_new_kf_   = false; /*!< @brief Whether the matcher has a new referent reading. */
 
     covariance_msg_t pose_covariance_;  /*!< @brief The estimated pose covariance. */
-    covariance_msg_t twist_covariance_; /*!< @brief The estimated pose increment covariance. */
+    covariance_msg_t increment_covariance_; /*!< @brief The estimated pose increment covariance. */
 
     ros::NodeHandle private_nh_ = ros::NodeHandle("~");
 
@@ -341,7 +341,7 @@ namespace laser_odometry
 
     /// @brief The relative transform in the laser_frame.
     /// @note This is the transform the derived class should fills.
-    tf::Transform correction_;
+    tf::Transform increment_;
 
     /// \brief The relative transform in the base_frame.
     tf::Transform relative_tf_;
@@ -421,7 +421,7 @@ namespace laser_odometry
      *
      * @note The base class returns tf::Transform::getIdentity() by default.
      */
-    virtual tf::Transform predict(const tf::Transform& correction);
+    virtual tf::Transform predict(const tf::Transform& increment);
 
     /**
      * @brief Allows the derived class to perform some pre-processing
@@ -447,7 +447,7 @@ namespace laser_odometry
      *
      * @note The base class returns \b true by default.
      */
-    virtual bool isKeyFrame(const tf::Transform& correction);
+    virtual bool isKeyFrame(const tf::Transform& increment);
 
     /**
      * @brief Allows the derived class to perform some actions if the
@@ -466,6 +466,12 @@ namespace laser_odometry
      */
     template <typename T>
     void fillMsg(T& msg_ptr);
+
+    /**
+     * @brief Fills the published message with the estimated pose increment.
+     */
+    template <typename T>
+    void fillIncrementMsg(T& msg_ptr);
   };
 
   /// @brief A base-class pointer.
@@ -474,6 +480,8 @@ namespace laser_odometry
   template <>
   inline void LaserOdometryBase::fillMsg<geometry_msgs::Pose2DPtr>(geometry_msgs::Pose2DPtr& msg_ptr)
   {
+    if (msg_ptr == nullptr) return;
+
     msg_ptr->x = fixed_origin_to_base_.getOrigin().getX();
     msg_ptr->y = fixed_origin_to_base_.getOrigin().getY();
     msg_ptr->theta = tf::getYaw(fixed_origin_to_base_.getRotation());
@@ -482,19 +490,51 @@ namespace laser_odometry
   template <>
   inline void LaserOdometryBase::fillMsg<nav_msgs::OdometryPtr>(nav_msgs::OdometryPtr& msg_ptr)
   {
+    if (msg_ptr == nullptr) return;
+
     msg_ptr->header.stamp    = current_time_;
     msg_ptr->header.frame_id = laser_odom_frame_;
     msg_ptr->child_frame_id  = base_frame_;
 
     msg_ptr->pose.pose.position.x = fixed_origin_to_base_.getOrigin().getX();
     msg_ptr->pose.pose.position.y = fixed_origin_to_base_.getOrigin().getY();
-    msg_ptr->pose.pose.position.z = 0;
+    msg_ptr->pose.pose.position.z = fixed_origin_to_base_.getOrigin().getZ();
 
     tf::quaternionTFToMsg(fixed_origin_to_base_.getRotation(),
                           msg_ptr->pose.pose.orientation);
 
     //msg_ptr->pose.covariance  = pose_covariance_;
-    msg_ptr->twist.covariance = twist_covariance_;
+    //msg_ptr->twist.covariance = pose_twist_covariance_;
+  }
+
+  template <>
+  inline void LaserOdometryBase::fillIncrementMsg<geometry_msgs::Pose2DPtr>(geometry_msgs::Pose2DPtr& msg_ptr)
+  {
+    if (msg_ptr == nullptr) return;
+
+    msg_ptr->x = increment_.getOrigin().getX();
+    msg_ptr->y = increment_.getOrigin().getY();
+    msg_ptr->theta = tf::getYaw(increment_.getRotation());
+  }
+
+  template <>
+  inline void LaserOdometryBase::fillIncrementMsg<nav_msgs::OdometryPtr>(nav_msgs::OdometryPtr& msg_ptr)
+  {
+    if (msg_ptr == nullptr) return;
+
+    msg_ptr->header.stamp    = current_time_;
+    msg_ptr->header.frame_id = "last_key_frame"; /// @todo this frame does not exist. Should it?
+    msg_ptr->child_frame_id  = base_frame_;
+
+    msg_ptr->pose.pose.position.x = increment_.getOrigin().getX();
+    msg_ptr->pose.pose.position.y = increment_.getOrigin().getY();
+    msg_ptr->pose.pose.position.z = increment_.getOrigin().getZ();
+
+    tf::quaternionTFToMsg(increment_.getRotation(),
+                          msg_ptr->pose.pose.orientation);
+
+    msg_ptr->pose.covariance  = increment_covariance_;
+    //msg_ptr->twist.covariance = increment_twist_covariance_;
   }
 
 } /* namespace laser_odometry */
