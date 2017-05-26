@@ -474,6 +474,8 @@ namespace laser_odometry
   template <>
   inline void LaserOdometryBase::fillMsg<geometry_msgs::Pose2DPtr>(geometry_msgs::Pose2DPtr& msg_ptr)
   {
+    if (msg_ptr == nullptr) return;
+
     msg_ptr->x = fixed_origin_to_base_.getOrigin().getX();
     msg_ptr->y = fixed_origin_to_base_.getOrigin().getY();
     msg_ptr->theta = tf::getYaw(fixed_origin_to_base_.getRotation());
@@ -482,13 +484,15 @@ namespace laser_odometry
   template <>
   inline void LaserOdometryBase::fillMsg<nav_msgs::OdometryPtr>(nav_msgs::OdometryPtr& msg_ptr)
   {
+    if (msg_ptr == nullptr) return;
+
     msg_ptr->header.stamp    = current_time_;
     msg_ptr->header.frame_id = laser_odom_frame_;
     msg_ptr->child_frame_id  = base_frame_;
 
     msg_ptr->pose.pose.position.x = fixed_origin_to_base_.getOrigin().getX();
     msg_ptr->pose.pose.position.y = fixed_origin_to_base_.getOrigin().getY();
-    msg_ptr->pose.pose.position.z = 0;
+    msg_ptr->pose.pose.position.z = fixed_origin_to_base_.getOrigin().getZ();
 
     tf::quaternionTFToMsg(fixed_origin_to_base_.getRotation(),
                           msg_ptr->pose.pose.orientation);
