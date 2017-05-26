@@ -2,8 +2,8 @@
 Changelog for package laser_odometry_core
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.0 (2017-05-26)
+------------------
 * add fillIncrementMsg
 * fix msg_ptr z oups
 * rename twist_cov -> inc_cov

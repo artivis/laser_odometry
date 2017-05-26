@@ -2,8 +2,8 @@
 Changelog for package laser_odometry_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.0 (2017-05-26)
+------------------
 * add pose increment publication in node
 * Contributors: Jeremie Deray
 

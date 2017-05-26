@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>laser_odometry_node</name>
-  <version>0.0.2</version>
+  <version>0.1.0</version>
   <description>
     Node package of the laser_odometry project.
     It contains the ROS node that instantiate the
