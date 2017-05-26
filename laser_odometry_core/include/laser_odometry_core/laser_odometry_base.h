@@ -103,53 +103,53 @@ namespace laser_odometry
      * @brief Compute the 2D odometry given a LaserScan.
      * @param[in] scan_msg. The input LaserScan.
      * @param[out] pose_msg. The estimated 2D pose.
-     * @param[out] relative_pose_msg. The estimated 2D pose increment.
+     * @param[out] pose_increment_msg. The estimated 2D pose increment.
      * @return ProcessReport. A brief summary of the scan matching process.
      *
      * @see ProcessReport
      */
     ProcessReport process(const sensor_msgs::LaserScanConstPtr& scan_msg,
                           geometry_msgs::Pose2DPtr pose_msg,
-                          geometry_msgs::Pose2DPtr relative_pose_msg = nullptr);
+                          geometry_msgs::Pose2DPtr pose_increment_msg = nullptr);
 
     /**
      * @brief Compute the 3D (actually 2D) odometry given a LaserScan.
      * @param[in] scan_msg. The input LaserScan.
-     * @param[out] pose_msg. The estimated 3D odometry (actually 2D).
-     * @param[out] relative_odom_msg. The estimated 3D odometry increment. @note This will probably disapear.
+     * @param[out] odom_msg. The estimated 3D odometry (actually 2D).
+     * @param[out] odom_increment_msg. The estimated 3D odometry increment.
      * @return ProcessReport. A brief summary of the scan matching process.
      *
      * @see ProcessReport
      */
     ProcessReport process(const sensor_msgs::LaserScanConstPtr& scan_msg,
-                          nav_msgs::OdometryPtr pose_msg,
-                          nav_msgs::OdometryPtr relative_odom_msg = nullptr);
+                          nav_msgs::OdometryPtr odom_msg,
+                          nav_msgs::OdometryPtr odom_increment_msg = nullptr);
 
     /**
      * @brief Compute the 2D odometry given a PointCloud2.
      * @param[in] cloud_msg. The input PointCloud2.
      * @param[out] pose_msg. The estimated 2D pose.
-     * @param[out] relative_pose_msg. The estimated 2D pose increment.
+     * @param[out] pose_increment_msg. The estimated 2D pose increment.
      * @return ProcessReport. A brief summary of the pointcloud matching process.
      *
      * @see ProcessReport
      */
     ProcessReport process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
                           geometry_msgs::Pose2DPtr pose_msg,
-                          geometry_msgs::Pose2DPtr relative_pose_msg = nullptr);
+                          geometry_msgs::Pose2DPtr pose_increment_msg = nullptr);
 
     /**
      * @brief Compute the 3D odometry given a \c PointCloud2.
      * @param[in] cloud_msg. The input \c PointCloud2.
      * @param[out] pose_msg. The estimated 3D odometry.
-     * @param[out] relative_odom_msg. The estimated 3D odometry increment. @note This will probably disapear.
+     * @param[out] pose_increment_msg. The estimated 3D odometry increment.
      * @return ProcessReport. A brief summary of the pointcloud matching process.
      *
      * @see ProcessReport
      */
     ProcessReport process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
-                          nav_msgs::OdometryPtr pose_msg,
-                          nav_msgs::OdometryPtr relative_odom_msg = nullptr);
+                          nav_msgs::OdometryPtr odom_msg,
+                          nav_msgs::OdometryPtr odom_increment_msg = nullptr);
 
   protected:
 
@@ -341,7 +341,7 @@ namespace laser_odometry
 
     /// @brief The relative transform in the laser_frame.
     /// @note This is the transform the derived class should fills.
-    tf::Transform correction_;
+    tf::Transform increment_;
 
     /// \brief The relative transform in the base_frame.
     tf::Transform relative_tf_;
@@ -421,7 +421,7 @@ namespace laser_odometry
      *
      * @note The base class returns tf::Transform::getIdentity() by default.
      */
-    virtual tf::Transform predict(const tf::Transform& correction);
+    virtual tf::Transform predict(const tf::Transform& increment);
 
     /**
      * @brief Allows the derived class to perform some pre-processing
@@ -447,7 +447,7 @@ namespace laser_odometry
      *
      * @note The base class returns \b true by default.
      */
-    virtual bool isKeyFrame(const tf::Transform& correction);
+    virtual bool isKeyFrame(const tf::Transform& increment);
 
     /**
      * @brief Allows the derived class to perform some actions if the

@@ -49,7 +49,7 @@ bool LaserOdometryBase::configure()
 LaserOdometryBase::ProcessReport
 LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_msg,
                            geometry_msgs::Pose2DPtr pose_msg,
-                           geometry_msgs::Pose2DPtr /*relative_pose_msg*/)
+                           geometry_msgs::Pose2DPtr pose_increment_msg)
 {
   assert_not_null(scan_msg);
   assert_not_null(pose_msg);
@@ -89,8 +89,8 @@ LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_msg,
 
   if (processed)
   {
-    // the correction of the base's position, in the base frame
-    relative_tf_ = base_to_laser_ * correction_ * laser_to_base_;
+    // the increment of the base's position, in the base frame
+    relative_tf_ = base_to_laser_ * increment_ * laser_to_base_;
 
     // update the pose in the fixed frame
     fixed_to_base_ = fixed_to_base_kf_ * relative_tf_;
@@ -129,7 +129,7 @@ LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_msg,
 LaserOdometryBase::ProcessReport
 LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_ptr,
                            nav_msgs::OdometryPtr odom_ptr,
-                           nav_msgs::OdometryPtr /*relative_odom_ptr*/)
+                           nav_msgs::OdometryPtr odom_increment_msg)
 {
   assert_not_null(scan_ptr);
   assert_not_null(odom_ptr);
@@ -146,7 +146,7 @@ LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_ptr,
 LaserOdometryBase::ProcessReport
 LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
                            geometry_msgs::Pose2DPtr pose_msg,
-                           geometry_msgs::Pose2DPtr /*relative_pose_ptr*/)
+                           geometry_msgs::Pose2DPtr pose_increment_msg)
 {
   assert_not_null(cloud_msg);
   assert_not_null(pose_msg);
@@ -186,8 +186,8 @@ LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
 
   if (processed)
   {
-    // the correction of the base's position, in the base frame
-    relative_tf_ = base_to_laser_ * correction_ * laser_to_base_;
+    // the increment of the base's position, in the base frame
+    relative_tf_ = base_to_laser_ * increment_ * laser_to_base_;
 
     // update the pose in the fixed frame
     fixed_to_base_ = fixed_to_base_kf_ * relative_tf_;
@@ -204,7 +204,7 @@ LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
   // Retrieve pose2D
   fillMsg(pose_msg);
 
-  has_new_kf_ = isKeyFrame(correction_);
+  has_new_kf_ = isKeyFrame(increment_);
 
   if (has_new_kf_)
   {
@@ -226,7 +226,7 @@ LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
 LaserOdometryBase::ProcessReport
 LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
                            nav_msgs::OdometryPtr odom_ptr,
-                           nav_msgs::OdometryPtr /*relative_odom_ptr*/)
+                           nav_msgs::OdometryPtr odom_increment_msg)
 {
   assert_not_null(cloud_msg);
   assert_not_null(odom_ptr);
@@ -259,7 +259,7 @@ const tf::Transform& LaserOdometryBase::getEstimatedPose() const noexcept
 
 void LaserOdometryBase::reset()
 {
-  correction_        = tf::Transform::getIdentity();
+  increment_         = tf::Transform::getIdentity();
 
   base_to_laser_     = tf::Transform::getIdentity();
   laser_to_base_     = tf::Transform::getIdentity();
@@ -308,7 +308,7 @@ void LaserOdometryBase::postProcessing()
 
 }
 
-bool LaserOdometryBase::isKeyFrame(const tf::Transform& /*correction*/)
+bool LaserOdometryBase::isKeyFrame(const tf::Transform& /*increment*/)
 {
   return true;
 }
