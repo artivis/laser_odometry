@@ -1,6 +1,8 @@
 # laser_odometry : A [`pluginlib`](http://wiki.ros.org/pluginlib)-based package for **laser-scan matching**.
 ---
 
+[![Build Status](https://travis-ci.org/artivis/laser_odometry.svg?branch=master)](https://travis-ci.org/artivis/laser_odometry)
+
 Aims at providing a single, simple interface for different scan matcher algorithms.
 
 With a single node to start, selecting an scan-matching algorithm is as simple as setting a parameter in a launch file !
