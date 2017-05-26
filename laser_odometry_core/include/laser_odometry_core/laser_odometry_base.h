@@ -320,7 +320,7 @@ namespace laser_odometry
     bool has_new_kf_   = false; /*!< @brief Whether the matcher has a new referent reading. */
 
     covariance_msg_t pose_covariance_;  /*!< @brief The estimated pose covariance. */
-    covariance_msg_t twist_covariance_; /*!< @brief The estimated pose increment covariance. */
+    covariance_msg_t increment_covariance_; /*!< @brief The estimated pose increment covariance. */
 
     ros::NodeHandle private_nh_ = ros::NodeHandle("~");
 
@@ -494,7 +494,7 @@ namespace laser_odometry
                           msg_ptr->pose.pose.orientation);
 
     //msg_ptr->pose.covariance  = pose_covariance_;
-    msg_ptr->twist.covariance = twist_covariance_;
+    //msg_ptr->twist.covariance = pose_twist_covariance_;
   }
 
 } /* namespace laser_odometry */

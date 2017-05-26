@@ -29,10 +29,10 @@ bool LaserOdometryBase::configure()
                     << " covariance coeff. Should be 6. Setting default.");
 
     default_covariance.resize(6);
-    std::fill_n(default_covariance.begin(), 6, 1e-5);
+    std::fill_n(default_covariance.begin(), 6, 1e-8);
   }
 
-  twist_covariance_ = boost::assign::list_of
+  increment_covariance_ = boost::assign::list_of
                (static_cast<double>(default_covariance[0]))  (0)  (0)  (0)  (0) (0)
                (0)  (static_cast<double>(default_covariance[1]))  (0)  (0)  (0) (0)
                (0)  (0)  (static_cast<double>(default_covariance[2]))  (0)  (0) (0)
