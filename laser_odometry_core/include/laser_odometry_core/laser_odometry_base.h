@@ -466,6 +466,12 @@ namespace laser_odometry
      */
     template <typename T>
     void fillMsg(T& msg_ptr);
+
+    /**
+     * @brief Fills the published message with the estimated pose increment.
+     */
+    template <typename T>
+    void fillIncrementMsg(T& msg_ptr);
   };
 
   /// @brief A base-class pointer.
@@ -499,6 +505,36 @@ namespace laser_odometry
 
     //msg_ptr->pose.covariance  = pose_covariance_;
     //msg_ptr->twist.covariance = pose_twist_covariance_;
+  }
+
+  template <>
+  inline void LaserOdometryBase::fillIncrementMsg<geometry_msgs::Pose2DPtr>(geometry_msgs::Pose2DPtr& msg_ptr)
+  {
+    if (msg_ptr == nullptr) return;
+
+    msg_ptr->x = increment_.getOrigin().getX();
+    msg_ptr->y = increment_.getOrigin().getY();
+    msg_ptr->theta = tf::getYaw(increment_.getRotation());
+  }
+
+  template <>
+  inline void LaserOdometryBase::fillIncrementMsg<nav_msgs::OdometryPtr>(nav_msgs::OdometryPtr& msg_ptr)
+  {
+    if (msg_ptr == nullptr) return;
+
+    msg_ptr->header.stamp    = current_time_;
+    msg_ptr->header.frame_id = "last_key_frame"; /// @todo this frame does not exist. Should it?
+    msg_ptr->child_frame_id  = base_frame_;
+
+    msg_ptr->pose.pose.position.x = increment_.getOrigin().getX();
+    msg_ptr->pose.pose.position.y = increment_.getOrigin().getY();
+    msg_ptr->pose.pose.position.z = increment_.getOrigin().getZ();
+
+    tf::quaternionTFToMsg(increment_.getRotation(),
+                          msg_ptr->pose.pose.orientation);
+
+    msg_ptr->pose.covariance  = increment_covariance_;
+    //msg_ptr->twist.covariance = increment_twist_covariance_;
   }
 
 } /* namespace laser_odometry */

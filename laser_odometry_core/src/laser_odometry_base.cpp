@@ -67,6 +67,7 @@ LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_msg,
     //pose_covariance_ = twist_covariance_;
 
     fillMsg(pose_msg);
+    fillIncrementMsg(pose_increment_msg);
 
     ROS_INFO_STREAM_COND(initialized_, "LaserOdometry Initialized!");
 
@@ -106,6 +107,7 @@ LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_msg,
 
   // Retrieve pose2D
   fillMsg(pose_msg);
+  fillIncrementMsg(pose_increment_msg);
 
   has_new_kf_ = isKeyFrame(relative_tf_);
   if (has_new_kf_)
@@ -139,6 +141,7 @@ LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_ptr,
   const auto process_report = process(scan_ptr, pose_2d_ptr);
 
   fillMsg(odom_ptr);
+  fillIncrementMsg(odom_increment_msg);
 
   return process_report;
 }
@@ -164,6 +167,7 @@ LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
     //pose_covariance_ = twist_covariance_;
 
     fillMsg(pose_msg);
+    fillIncrementMsg(pose_increment_msg);
 
     ROS_INFO_STREAM_COND(initialized_, "LaserOdometry Initialized!");
 
@@ -203,6 +207,7 @@ LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
 
   // Retrieve pose2D
   fillMsg(pose_msg);
+  fillIncrementMsg(pose_increment_msg);
 
   has_new_kf_ = isKeyFrame(increment_);
 
@@ -230,12 +235,14 @@ LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
 {
   assert_not_null(cloud_msg);
   assert_not_null(odom_ptr);
+  assert_not_null(odom_ptr);
 
   geometry_msgs::Pose2DPtr pose_2d_ptr = boost::make_shared<geometry_msgs::Pose2D>();
 
   const auto process_report = process(cloud_msg, pose_2d_ptr);
 
   fillMsg(odom_ptr);
+  fillIncrementMsg(odom_increment_msg);
 
   return process_report;
 }
