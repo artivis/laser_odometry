@@ -8,6 +8,20 @@
 namespace laser_odometry
 {
 
+namespace detail
+{
+
+template <typename E>
+constexpr typename std::underlying_type<E>::type get_underlying(const E& e) noexcept
+{
+  return static_cast<typename std::underlying_type<E>::type>(e);
+}
+
+template<class Enum, class T>
+Enum to_enum(const T& e) { return static_cast<Enum>(e); }
+
+} // namespace detail
+
 /**
  * @brief The LaserOdometryNode class.
  * It basically holds the listeners/publishers etc
@@ -17,6 +31,13 @@ namespace laser_odometry
 class LaserOdometryNode
 {
 public:
+
+  enum class IncrementPublishOptions : std::size_t
+  {
+    NO_PUB = 0,
+    ON_KEY_FRAME,
+    ALL
+  };
 
   /// @brief Default constructor.
   LaserOdometryNode();
@@ -60,6 +81,8 @@ protected:
   /// or a geometry_msgs::Pose2D msg
   bool publish_odom_ = true;
 
+  IncrementPublishOptions publish_odom_inc_ = IncrementPublishOptions::NO_PUB;
+
   /// @brief the message throttling ratio.
   int throttle_ = 1;
 
@@ -94,6 +117,12 @@ protected:
   /// or a geometry_msgs::Pose2D msg depending on
   /// publish_odom_ parameter.
   ros::Publisher  pub_odom_;
+
+  /// @brief The delta odometry publisher.
+  /// It publishes either a nav_msgs::Odometry msg
+  /// or a geometry_msgs::Pose2D msg depending on
+  /// publish_odom_ parameter.
+  ros::Publisher  pub_odom_inc_;
 
   /// @brief The Referent reading publisher.
   /// Everytime the referent reading is updated,
@@ -143,6 +172,9 @@ protected:
   /// based on the message type.
   template <typename T>
   void publish(const T& msg) const;
+
+  template <typename T>
+  void publish_inc(const T& msg) const;
 };
 
 template <typename T>
@@ -150,6 +182,27 @@ void LaserOdometryNode::publish(const T& msg) const
 {
   if (pub_odom_.getNumSubscribers() > 0)
     pub_odom_.publish(msg);
+}
+
+template <typename T>
+void LaserOdometryNode::publish_inc(const T& msg) const
+{
+  if (!pub_odom_inc_.getNumSubscribers() > 0) return;
+
+  switch (publish_odom_inc_)
+  {
+  case IncrementPublishOptions::ALL:
+    pub_odom_inc_.publish(msg);
+    break;
+  case IncrementPublishOptions::ON_KEY_FRAME:
+    if (laser_odom_ptr_->hasNewKeyFrame())
+      pub_odom_inc_.publish(msg);
+    break;
+  case IncrementPublishOptions::NO_PUB:
+    break;
+  default:
+    break;
+  }
 }
 
 template <>

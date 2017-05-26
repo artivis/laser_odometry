@@ -27,5 +27,12 @@ fixed_sensor: True
 # Throttling messages.
 throttle:     1
 
-# The default twist covariance diagonal.
-#covariance_diag todo
+# Odometry Increment publication option
+# 0 do not publish
+# 1 publish on key-reading
+# 2 publish always
+# default: 0
+publish_delta_option: 0
+
+# The default delta pose covariance diagonal.
+covariance_diag: [1e-8, 1e-8, 1e-8, 1e-8, 1e-8, 1e-8]

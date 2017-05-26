@@ -29,6 +29,10 @@ void LaserOdometryNode::initialize()
   private_nh_.param("throttle",     throttle_,     throttle_);
   private_nh_.param("global_frame", global_frame_, std::string("map"));
 
+  int inc_pub_opt = detail::get_underlying<IncrementPublishOptions>(publish_odom_inc_);
+  private_nh_.param("publish_delta_option", inc_pub_opt, inc_pub_opt);
+  publish_odom_inc_ = detail::to_enum<IncrementPublishOptions>(inc_pub_opt);
+
   laser_odom_ptr_ = make_laser_odometry(laser_odometry_type);
 
   if (laser_odom_ptr_ != nullptr)
@@ -61,9 +65,15 @@ void LaserOdometryNode::initialize()
   ROS_INFO("Subscribed to %s", sub_.getTopic().c_str());
 
   if (publish_odom_)
+  {
     pub_odom_ = private_nh_.advertise<nav_msgs::Odometry>("laser_odom", 1);
+    pub_odom_inc_  = private_nh_.advertise<nav_msgs::Odometry>("laser_delta_odom", 1);
+  }
   else
+  {
     pub_odom_ = private_nh_.advertise<geometry_msgs::Pose2D>("laser_odom", 1);
+    pub_odom_inc_  = private_nh_.advertise<geometry_msgs::Pose2D>("laser_delta_odom", 1);
+  }
 }
 
 void LaserOdometryNode::LaserCallback(const sensor_msgs::LaserScanConstPtr& new_scan)
@@ -104,12 +114,12 @@ void LaserOdometryNode::process()
   if (publish_odom_)
   {
     nav_msgs::OdometryPtr odom_ptr = boost::make_shared<nav_msgs::Odometry>();
-    //nav_msgs::OdometryPtr relative_odom_ptr;
+    nav_msgs::OdometryPtr odom_inc_ptr = boost::make_shared<nav_msgs::Odometry>();
 
     if (new_scan_)
     {
       new_scan_ = false;
-      laser_odom_ptr_->process(latest_scan_, odom_ptr);
+      laser_odom_ptr_->process(latest_scan_, odom_ptr, odom_inc_ptr);
 
       if (laser_odom_ptr_->hasNewKeyFrame())
       {
@@ -121,7 +131,7 @@ void LaserOdometryNode::process()
     else if (new_cloud_)
     {
       new_cloud_ = false;
-      laser_odom_ptr_->process(latest_cloud_, odom_ptr);
+      laser_odom_ptr_->process(latest_cloud_, odom_ptr, odom_inc_ptr);
 
       if (laser_odom_ptr_->hasNewKeyFrame())
       {
@@ -133,25 +143,29 @@ void LaserOdometryNode::process()
 
     publish(odom_ptr);
 
+    publish_inc(odom_inc_ptr);
+
     ROS_DEBUG_STREAM("Estimated odom\n" << odom_ptr->pose.pose);
   }
   else
   {
     geometry_msgs::Pose2DPtr pose_2d_ptr = boost::make_shared<geometry_msgs::Pose2D>();
-    //nav_msgs::OdometryPtr relative_odom_ptr;
+    geometry_msgs::Pose2DPtr pose_2d_inc_ptr = boost::make_shared<geometry_msgs::Pose2D>();
 
     if (new_scan_)
     {
       new_scan_ = false;
-      laser_odom_ptr_->process(latest_scan_, pose_2d_ptr);
+      laser_odom_ptr_->process(latest_scan_, pose_2d_ptr, pose_2d_inc_ptr);
     }
     else if (new_cloud_)
     {
       new_cloud_ = false;
-      laser_odom_ptr_->process(latest_cloud_, pose_2d_ptr);
+      laser_odom_ptr_->process(latest_cloud_, pose_2d_ptr, pose_2d_inc_ptr);
     }
 
     publish(pose_2d_ptr);
+
+    publish_inc(pose_2d_inc_ptr);
 
     ROS_DEBUG_STREAM("Estimated pose_2d\n" << *pose_2d_ptr);
   }
