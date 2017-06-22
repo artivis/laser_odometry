@@ -1,11 +1,11 @@
 # laser_odometry : A [`pluginlib`](http://wiki.ros.org/pluginlib)-based package for **laser-scan matching**.
 ---
 
-[comment]: <> ([![Build Status](https://travis-ci.org/artivis/laser_odometry.svg?branch=master)](https://travis-ci.org/artivis/laser_odometry))
+<!-- [![Build Status](https://travis-ci.org/artivis/laser_odometry.svg?branch=master)](https://travis-ci.org/artivis/laser_odometry) -->
 
 | Indigo            | Jade              | kinetic            |
 |-------------------|-------------------|--------------------|
-| [![Indigo][1]][1] | [![Jade][2]][5]   | [![kinetic][3]][5] |
+| [![Indigo][1]][5] | [![Jade][2]][5]   | [![kinetic][3]][5] |
 
 [1]: https://travis-matrix-badges.herokuapp.com/repos/artivis/laser_odometry/branches/master/1
 [2]: https://travis-matrix-badges.herokuapp.com/repos/artivis/laser_odometry/branches/master/4
