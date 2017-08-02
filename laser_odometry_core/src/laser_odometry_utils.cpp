@@ -71,6 +71,20 @@ bool getTf(const tf::tfMessagePtr tf_msg,
   return false;
 }
 
+bool isIdentity(const tf::Transform& tf, const double eps)
+{
+  const tf::Vector3& o = tf.getOrigin();
+
+  if (o.x() > eps) return false;
+  if (o.y() > eps) return false;
+  if (o.z() > eps) return false;
+
+  if (tf.getRotation().angleShortestPath(
+        tf::Quaternion::getIdentity()) > eps) return false;
+
+  return true;
+}
+
 std::string format(const tf::Transform& tf)
 {
   std::stringstream ss;

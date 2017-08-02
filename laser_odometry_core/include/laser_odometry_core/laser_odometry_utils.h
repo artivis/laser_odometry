@@ -29,6 +29,8 @@ bool getTf(const tf::tfMessagePtr tf_msg,
            const std::string& target_frame,
            tf::Transform& tf);
 
+bool isIdentity(const tf::Transform& tf, const double eps = 1e-8);
+
 std::string format(const tf::Transform& tf);
 
 void print(const tf::Transform& tf, const std::string& h = "");

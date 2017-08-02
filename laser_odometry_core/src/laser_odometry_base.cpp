@@ -76,14 +76,27 @@ LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_msg,
 
   preProcessing();
 
-  tf::Transform guess_relative_tf_ = predict(relative_tf_);
+  tf::Transform guess_relative_tf;
+
+  // If an increment prior has been set, use it.
+  // Otherwise predict from previously
+  // computed relative_tf_
+  if (utils::isIdentity(guess_relative_tf_))
+  {
+    guess_relative_tf  = guess_relative_tf_;
+    guess_relative_tf_ = tf::Transform::getIdentity();
+  }
+  else
+  {
+    guess_relative_tf = predict(relative_tf_);
+  }
 
   // account for the change since the last kf, in the fixed frame
-  guess_relative_tf_ = guess_relative_tf_ * (fixed_to_base_ * fixed_to_base_kf_.inverse());
+  guess_relative_tf = guess_relative_tf * (fixed_to_base_ * fixed_to_base_kf_.inverse());
 
   // the predicted change of the laser's position, in the laser frame
   tf::Transform pred_rel_tf_in_ltf = laser_to_base_ * fixed_to_base_.inverse() *
-                                      guess_relative_tf_ * fixed_to_base_ * base_to_laser_ ;
+                                      guess_relative_tf * fixed_to_base_ * base_to_laser_;
 
   // The actual computation
   const bool processed = process_impl(scan_msg, pred_rel_tf_in_ltf);
@@ -177,14 +190,27 @@ LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
 
   preProcessing();
 
-  tf::Transform guess_relative_tf_ = predict(relative_tf_);
+  tf::Transform guess_relative_tf;
+
+  // If an increment prior has been set, use it.
+  // Otherwise predict from previously
+  // computed relative_tf_
+  if (utils::isIdentity(guess_relative_tf_))
+  {
+    guess_relative_tf  = guess_relative_tf_;
+    guess_relative_tf_ = tf::Transform::getIdentity();
+  }
+  else
+  {
+    guess_relative_tf = predict(relative_tf_);
+  }
 
   // account for the change since the last kf, in the fixed frame
-  guess_relative_tf_ = guess_relative_tf_ * (fixed_to_base_ * fixed_to_base_kf_.inverse());
+  guess_relative_tf = guess_relative_tf * (fixed_to_base_ * fixed_to_base_kf_.inverse());
 
   // the predicted change of the laser's position, in the laser frame
   tf::Transform pred_rel_tf_in_ltf = laser_to_base_ * fixed_to_base_.inverse() *
-                                      guess_relative_tf_ * fixed_to_base_ * base_to_laser_ ;
+                                      guess_relative_tf * fixed_to_base_ * base_to_laser_ ;
 
   // The actual computation
   const bool processed = process_impl(cloud_msg, pred_rel_tf_in_ltf);
