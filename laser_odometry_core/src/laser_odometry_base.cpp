@@ -341,6 +341,36 @@ bool LaserOdometryBase::hasNewKeyFrame() const noexcept
   return has_new_kf_;
 }
 
+void LaserOdometryBase::setKeyFrame(const sensor_msgs::LaserScanConstPtr& kframe)
+{
+  initialized_ = initialize(kframe);
+
+  fixed_origin_to_base_ = fixed_origin_ * fixed_to_base_;
+
+  //pose_covariance_ = twist_covariance_;
+
+  ROS_INFO_STREAM_COND(initialized_, "LaserOdometry Initialized!");
+
+  /// @todo since we're setting the key-frame
+  /// we probably should reset some transforms
+  reference_scan_ = kframe;
+}
+
+void LaserOdometryBase::setKeyFrame(const sensor_msgs::PointCloud2ConstPtr& kframe)
+{
+  initialized_ = initialize(kframe);
+
+  fixed_origin_to_base_ = fixed_origin_ * fixed_to_base_;
+
+  //pose_covariance_ = twist_covariance_;
+
+  ROS_INFO_STREAM_COND(initialized_, "LaserOdometry Initialized!");
+
+  /// @todo since we're setting the key-frame
+  /// we probably should reset some transforms
+  reference_cloud_ = kframe;
+}
+
 void LaserOdometryBase::getKeyFrame(sensor_msgs::LaserScanConstPtr& kframe) const noexcept
 {
   kframe = reference_scan_;
