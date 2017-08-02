@@ -71,13 +71,12 @@ bool getTf(const tf::tfMessagePtr tf_msg,
   return false;
 }
 
-std::string format(const tf::Transform& tf, const std::string& h)
+std::string format(const tf::Transform& tf)
 {
   std::stringstream ss;
 
-  ss << h
-     << tf.getOrigin().getX()
-     << " " << tf.getOrigin().getX()
+  ss << tf.getOrigin().getX()
+     << " " << tf.getOrigin().getY()
      << " " << tf::getYaw(tf.getRotation());
 
   return ss.str();
@@ -85,7 +84,7 @@ std::string format(const tf::Transform& tf, const std::string& h)
 
 void print(const tf::Transform& tf, const std::string& h)
 {
-  std::cout << format(tf) << std::endl;
+  std::cout << h << format(tf) << std::endl;
 }
 
 } /* namespace utils */

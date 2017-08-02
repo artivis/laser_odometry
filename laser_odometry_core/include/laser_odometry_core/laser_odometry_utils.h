@@ -29,7 +29,7 @@ bool getTf(const tf::tfMessagePtr tf_msg,
            const std::string& target_frame,
            tf::Transform& tf);
 
-std::string format(const tf::Transform& tf, const std::string& h = "");
+std::string format(const tf::Transform& tf);
 
 void print(const tf::Transform& tf, const std::string& h = "");
 
