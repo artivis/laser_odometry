@@ -71,7 +71,7 @@ namespace detail
 using Instantiater = details::Singleton<LaserOdometryInstantiater>;
 }
 
-LaserOdometryPtr make_laser_odometry(const std::string& laser_odometry_type)
+inline LaserOdometryPtr make_laser_odometry(const std::string& laser_odometry_type)
 {
   return detail::Instantiater::get().instantiate_impl(laser_odometry_type);
 }
