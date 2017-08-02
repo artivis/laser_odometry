@@ -52,7 +52,7 @@ LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_msg,
                            geometry_msgs::Pose2DPtr pose_increment_msg)
 {
   assert_not_null(scan_msg);
-  assert_not_null(pose_msg);
+//  assert_not_null(pose_msg);
 
   has_new_kf_   = false;
   current_time_ = scan_msg->header.stamp;
@@ -110,6 +110,7 @@ LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_msg,
   fillIncrementMsg(pose_increment_msg);
 
   has_new_kf_ = isKeyFrame(relative_tf_);
+
   if (has_new_kf_)
   {
     // generate a keyframe
@@ -134,7 +135,7 @@ LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_ptr,
                            nav_msgs::OdometryPtr odom_increment_msg)
 {
   assert_not_null(scan_ptr);
-  assert_not_null(odom_ptr);
+//  assert_not_null(odom_ptr);
 
   geometry_msgs::Pose2DPtr pose_2d_ptr = boost::make_shared<geometry_msgs::Pose2D>();
 
@@ -152,7 +153,7 @@ LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
                            geometry_msgs::Pose2DPtr pose_increment_msg)
 {
   assert_not_null(cloud_msg);
-  assert_not_null(pose_msg);
+//  assert_not_null(pose_msg);
 
   has_new_kf_   = false;
   current_time_ = cloud_msg->header.stamp;
@@ -234,8 +235,7 @@ LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
                            nav_msgs::OdometryPtr odom_increment_msg)
 {
   assert_not_null(cloud_msg);
-  assert_not_null(odom_ptr);
-  assert_not_null(odom_ptr);
+//  assert_not_null(odom_ptr);
 
   geometry_msgs::Pose2DPtr pose_2d_ptr = boost::make_shared<geometry_msgs::Pose2D>();
 
