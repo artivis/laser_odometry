@@ -78,7 +78,7 @@ LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_msg,
 
   tf::Transform guess_relative_tf;
 
-  // If an increment prior has been set, use it.
+  // If an increment prior has been set, 'consum' it.
   // Otherwise predict from previously
   // computed relative_tf_
   if (utils::isIdentity(guess_relative_tf_))
@@ -192,7 +192,7 @@ LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
 
   tf::Transform guess_relative_tf;
 
-  // If an increment prior has been set, use it.
+  // If an increment prior has been set, 'consum' it.
   // Otherwise predict from previously
   // computed relative_tf_
   if (utils::isIdentity(guess_relative_tf_))
