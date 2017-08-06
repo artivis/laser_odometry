@@ -52,7 +52,6 @@ LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_msg,
                            geometry_msgs::Pose2DPtr pose_increment_msg)
 {
   assert_not_null(scan_msg);
-  assert_not_null(pose_msg);
 
   has_new_kf_   = false;
   current_time_ = scan_msg->header.stamp;
@@ -76,14 +75,27 @@ LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_msg,
 
   preProcessing();
 
-  tf::Transform guess_relative_tf_ = predict(relative_tf_);
+  tf::Transform guess_relative_tf;
+
+  // If an increment prior has been set, 'consum' it.
+  // Otherwise predict from previously
+  // computed relative_tf_
+  if (utils::isIdentity(guess_relative_tf_))
+  {
+    guess_relative_tf  = guess_relative_tf_;
+    guess_relative_tf_ = tf::Transform::getIdentity();
+  }
+  else
+  {
+    guess_relative_tf = predict(relative_tf_);
+  }
 
   // account for the change since the last kf, in the fixed frame
-  guess_relative_tf_ = guess_relative_tf_ * (fixed_to_base_ * fixed_to_base_kf_.inverse());
+  guess_relative_tf = guess_relative_tf * (fixed_to_base_ * fixed_to_base_kf_.inverse());
 
   // the predicted change of the laser's position, in the laser frame
   tf::Transform pred_rel_tf_in_ltf = laser_to_base_ * fixed_to_base_.inverse() *
-                                      guess_relative_tf_ * fixed_to_base_ * base_to_laser_ ;
+                                      guess_relative_tf * fixed_to_base_ * base_to_laser_;
 
   // The actual computation
   const bool processed = process_impl(scan_msg, pred_rel_tf_in_ltf);
@@ -110,6 +122,7 @@ LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_msg,
   fillIncrementMsg(pose_increment_msg);
 
   has_new_kf_ = isKeyFrame(relative_tf_);
+
   if (has_new_kf_)
   {
     // generate a keyframe
@@ -134,7 +147,6 @@ LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_ptr,
                            nav_msgs::OdometryPtr odom_increment_msg)
 {
   assert_not_null(scan_ptr);
-  assert_not_null(odom_ptr);
 
   geometry_msgs::Pose2DPtr pose_2d_ptr = boost::make_shared<geometry_msgs::Pose2D>();
 
@@ -152,7 +164,6 @@ LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
                            geometry_msgs::Pose2DPtr pose_increment_msg)
 {
   assert_not_null(cloud_msg);
-  assert_not_null(pose_msg);
 
   has_new_kf_   = false;
   current_time_ = cloud_msg->header.stamp;
@@ -176,14 +187,27 @@ LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
 
   preProcessing();
 
-  tf::Transform guess_relative_tf_ = predict(relative_tf_);
+  tf::Transform guess_relative_tf;
+
+  // If an increment prior has been set, 'consum' it.
+  // Otherwise predict from previously
+  // computed relative_tf_
+  if (utils::isIdentity(guess_relative_tf_))
+  {
+    guess_relative_tf  = guess_relative_tf_;
+    guess_relative_tf_ = tf::Transform::getIdentity();
+  }
+  else
+  {
+    guess_relative_tf = predict(relative_tf_);
+  }
 
   // account for the change since the last kf, in the fixed frame
-  guess_relative_tf_ = guess_relative_tf_ * (fixed_to_base_ * fixed_to_base_kf_.inverse());
+  guess_relative_tf = guess_relative_tf * (fixed_to_base_ * fixed_to_base_kf_.inverse());
 
   // the predicted change of the laser's position, in the laser frame
   tf::Transform pred_rel_tf_in_ltf = laser_to_base_ * fixed_to_base_.inverse() *
-                                      guess_relative_tf_ * fixed_to_base_ * base_to_laser_ ;
+                                      guess_relative_tf * fixed_to_base_ * base_to_laser_ ;
 
   // The actual computation
   const bool processed = process_impl(cloud_msg, pred_rel_tf_in_ltf);
@@ -234,8 +258,6 @@ LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
                            nav_msgs::OdometryPtr odom_increment_msg)
 {
   assert_not_null(cloud_msg);
-  assert_not_null(odom_ptr);
-  assert_not_null(odom_ptr);
 
   geometry_msgs::Pose2DPtr pose_2d_ptr = boost::make_shared<geometry_msgs::Pose2D>();
 
@@ -341,14 +363,48 @@ bool LaserOdometryBase::hasNewKeyFrame() const noexcept
   return has_new_kf_;
 }
 
-void LaserOdometryBase::getKeyFrame(sensor_msgs::LaserScanConstPtr& kframe) const noexcept
+void LaserOdometryBase::setKeyFrame(const sensor_msgs::LaserScanConstPtr& key_frame_msg)
 {
-  kframe = reference_scan_;
+  assert_not_null(key_frame_msg);
+
+  initialized_ = initialize(key_frame_msg);
+
+  fixed_origin_to_base_ = fixed_origin_ * fixed_to_base_;
+
+  //pose_covariance_ = twist_covariance_;
+
+  ROS_INFO_STREAM_COND(initialized_, "LaserOdometry Initialized!");
+
+  /// @todo since we're setting the key-frame
+  /// we probably should reset some transforms
+  reference_scan_ = key_frame_msg;
 }
 
-void LaserOdometryBase::getKeyFrame(sensor_msgs::PointCloud2ConstPtr& kframe) const noexcept
+void LaserOdometryBase::setKeyFrame(const sensor_msgs::PointCloud2ConstPtr& key_frame_msg)
 {
-  kframe = reference_cloud_;
+  assert_not_null(key_frame_msg);
+
+  initialized_ = initialize(key_frame_msg);
+
+  fixed_origin_to_base_ = fixed_origin_ * fixed_to_base_;
+
+  //pose_covariance_ = twist_covariance_;
+
+  ROS_INFO_STREAM_COND(initialized_, "LaserOdometry Initialized!");
+
+  /// @todo since we're setting the key-frame
+  /// we probably should reset some transforms
+  reference_cloud_ = key_frame_msg;
+}
+
+void LaserOdometryBase::getKeyFrame(sensor_msgs::LaserScanConstPtr& key_frame_msg) const noexcept
+{
+  key_frame_msg = reference_scan_;
+}
+
+void LaserOdometryBase::getKeyFrame(sensor_msgs::PointCloud2ConstPtr& key_frame_msg) const noexcept
+{
+  key_frame_msg = reference_cloud_;
 }
 
 ////////////////////////
