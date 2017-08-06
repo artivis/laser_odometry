@@ -305,25 +305,25 @@ namespace laser_odometry
      * @brief Get the referent LaserScan.
      * @param[in] the sensor_msgs::LaserScan key-frame.
      */
-    void getKeyFrame(sensor_msgs::LaserScanConstPtr& kframe) const noexcept;
+    void getKeyFrame(sensor_msgs::LaserScanConstPtr& key_frame_msg) const noexcept;
 
     /**
      * @brief Set the referent LaserScan.
      * @param[in] the sensor_msgs::LaserScan key-frame.
      */
-    void setKeyFrame(const sensor_msgs::LaserScanConstPtr& kframe);
+    void setKeyFrame(const sensor_msgs::LaserScanConstPtr& key_frame_msg);
 
     /**
      * @brief Get the referent PointCloud2.
      * @param[in] the sensor_msgs::PointCloud2 key-frame.
      */
-    void getKeyFrame(sensor_msgs::PointCloud2ConstPtr& kframe) const noexcept;
+    void getKeyFrame(sensor_msgs::PointCloud2ConstPtr& key_frame_msg) const noexcept;
 
     /**
      * @brief Set the referent PointCloud2.
      * @param[in] the sensor_msgs::PointCloud2 key-frame.
      */
-    void setKeyFrame(const sensor_msgs::PointCloud2ConstPtr& kframe);
+    void setKeyFrame(const sensor_msgs::PointCloud2ConstPtr& key_frame_msg);
 
   protected:
 
