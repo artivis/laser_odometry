@@ -288,18 +288,29 @@ const tf::Transform& LaserOdometryBase::getEstimatedPose() const noexcept
 
 void LaserOdometryBase::reset()
 {
-  increment_         = tf::Transform::getIdentity();
+  initialized_ = false;
+  has_new_kf_  = false;
 
-  base_to_laser_     = tf::Transform::getIdentity();
-  laser_to_base_     = tf::Transform::getIdentity();
+  increment_         = tf::Transform::getIdentity();
   relative_tf_       = tf::Transform::getIdentity();
-  fixed_origin_      = tf::Transform::getIdentity();
-  fixed_to_base_     = tf::Transform::getIdentity();
   guess_relative_tf_ = tf::Transform::getIdentity();
-  fixed_to_base_kf_  = tf::Transform::getIdentity();
+  fixed_to_base_kf_  = fixed_to_base_;
 
   reference_scan_  = nullptr;
   reference_cloud_ = nullptr;
+}
+
+void LaserOdometryBase::hardReset()
+{
+  /// @todo reset configured_ too ? :s
+  /// implies reseting 'laser_frame_' etc too.
+
+  reset();
+
+  base_to_laser_     = tf::Transform::getIdentity();
+  laser_to_base_     = tf::Transform::getIdentity();
+  fixed_origin_      = tf::Transform::getIdentity();
+  fixed_to_base_     = tf::Transform::getIdentity();
 }
 
 bool LaserOdometryBase::configured() const noexcept

@@ -197,6 +197,13 @@ namespace laser_odometry
     virtual void reset();
 
     /**
+     * @brief Hard reset the matcher.
+     * The base class implemetation resets all transforms to
+     * Identity and the key-reading to nullptr.
+     */
+    virtual void hardReset();
+
+    /**
      * @brief Configure the base class various parameters.
      * It internally calls configureImpl() to allow
      * the derived class to have it own configuration.
