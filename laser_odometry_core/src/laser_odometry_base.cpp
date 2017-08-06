@@ -52,7 +52,6 @@ LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_msg,
                            geometry_msgs::Pose2DPtr pose_increment_msg)
 {
   assert_not_null(scan_msg);
-//  assert_not_null(pose_msg);
 
   has_new_kf_   = false;
   current_time_ = scan_msg->header.stamp;
@@ -148,7 +147,6 @@ LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_ptr,
                            nav_msgs::OdometryPtr odom_increment_msg)
 {
   assert_not_null(scan_ptr);
-//  assert_not_null(odom_ptr);
 
   geometry_msgs::Pose2DPtr pose_2d_ptr = boost::make_shared<geometry_msgs::Pose2D>();
 
@@ -166,7 +164,6 @@ LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
                            geometry_msgs::Pose2DPtr pose_increment_msg)
 {
   assert_not_null(cloud_msg);
-//  assert_not_null(pose_msg);
 
   has_new_kf_   = false;
   current_time_ = cloud_msg->header.stamp;
@@ -261,7 +258,6 @@ LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
                            nav_msgs::OdometryPtr odom_increment_msg)
 {
   assert_not_null(cloud_msg);
-//  assert_not_null(odom_ptr);
 
   geometry_msgs::Pose2DPtr pose_2d_ptr = boost::make_shared<geometry_msgs::Pose2D>();
 
@@ -367,9 +363,11 @@ bool LaserOdometryBase::hasNewKeyFrame() const noexcept
   return has_new_kf_;
 }
 
-void LaserOdometryBase::setKeyFrame(const sensor_msgs::LaserScanConstPtr& kframe)
+void LaserOdometryBase::setKeyFrame(const sensor_msgs::LaserScanConstPtr& key_frame_msg)
 {
-  initialized_ = initialize(kframe);
+  assert_not_null(key_frame_msg);
+
+  initialized_ = initialize(key_frame_msg);
 
   fixed_origin_to_base_ = fixed_origin_ * fixed_to_base_;
 
@@ -379,12 +377,14 @@ void LaserOdometryBase::setKeyFrame(const sensor_msgs::LaserScanConstPtr& kframe
 
   /// @todo since we're setting the key-frame
   /// we probably should reset some transforms
-  reference_scan_ = kframe;
+  reference_scan_ = key_frame_msg;
 }
 
-void LaserOdometryBase::setKeyFrame(const sensor_msgs::PointCloud2ConstPtr& kframe)
+void LaserOdometryBase::setKeyFrame(const sensor_msgs::PointCloud2ConstPtr& key_frame_msg)
 {
-  initialized_ = initialize(kframe);
+  assert_not_null(key_frame_msg);
+
+  initialized_ = initialize(key_frame_msg);
 
   fixed_origin_to_base_ = fixed_origin_ * fixed_to_base_;
 
@@ -394,17 +394,17 @@ void LaserOdometryBase::setKeyFrame(const sensor_msgs::PointCloud2ConstPtr& kfra
 
   /// @todo since we're setting the key-frame
   /// we probably should reset some transforms
-  reference_cloud_ = kframe;
+  reference_cloud_ = key_frame_msg;
 }
 
-void LaserOdometryBase::getKeyFrame(sensor_msgs::LaserScanConstPtr& kframe) const noexcept
+void LaserOdometryBase::getKeyFrame(sensor_msgs::LaserScanConstPtr& key_frame_msg) const noexcept
 {
-  kframe = reference_scan_;
+  key_frame_msg = reference_scan_;
 }
 
-void LaserOdometryBase::getKeyFrame(sensor_msgs::PointCloud2ConstPtr& kframe) const noexcept
+void LaserOdometryBase::getKeyFrame(sensor_msgs::PointCloud2ConstPtr& key_frame_msg) const noexcept
 {
-  kframe = reference_cloud_;
+  key_frame_msg = reference_cloud_;
 }
 
 ////////////////////////
