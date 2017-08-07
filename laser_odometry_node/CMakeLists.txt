@@ -27,15 +27,19 @@ find_package(catkin REQUIRED COMPONENTS
     pluginlib
     laser_odometry_core
     topic_tools
+    tf_conversions
+    eigen_conversions
 )
 
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ${PROJECT_NAME}
-  CATKIN_DEPENDS roscpp tf sensor_msgs pluginlib laser_odometry_core topic_tools
+  CATKIN_DEPENDS roscpp tf sensor_msgs pluginlib laser_odometry_core
+                 topic_tools tf_conversions eigen_conversions
 )
 
-include_directories(include ${catkin_INCLUDE_DIRS})
+include_directories(include)
+include_directories(SYSTEM ${catkin_INCLUDE_DIRS})
 
 ###############
 ##   Build   ##

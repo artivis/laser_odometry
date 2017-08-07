@@ -101,5 +101,11 @@ void print(const tf::Transform& tf, const std::string& h)
   std::cout << h << format(tf) << std::endl;
 }
 
+template <>
+inline bool all_positive<float>(const std::vector<float> vec);
+
+template <>
+inline bool all_positive<double>(const std::vector<double> vec);
+
 } /* namespace utils */
 } /* namespace laser_odometry */

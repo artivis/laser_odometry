@@ -4,6 +4,7 @@
 #include <laser_odometry_core/laser_odometry_core.h>
 
 #include <topic_tools/shape_shifter.h>
+#include <tf/transform_broadcaster.h>
 
 namespace laser_odometry
 {

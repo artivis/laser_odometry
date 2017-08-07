@@ -24,9 +24,11 @@
   <depend>pluginlib</depend>
   <depend>laser_odometry_core</depend>
   <depend>topic_tools</depend>
+  <depend>tf_conversions</depend>
+  <depend>eigen_conversions</depend>
 
-  <test_depend>roslib</test_depend>
-  <test_depend>rostest</test_depend>
+<!--  <test_depend>roslib</test_depend>-->
+<!--  <test_depend>rostest</test_depend>-->
 
   <export>
     <!-- -->

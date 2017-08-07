@@ -35,6 +35,16 @@ std::string format(const tf::Transform& tf);
 
 void print(const tf::Transform& tf, const std::string& h = "");
 
+template <typename T>
+bool all_positive(const std::vector<T> vec)
+{
+  for (const auto v : vec)
+  {
+    if (v < 0) return false;
+  }
+  return true;
+}
+
 } /* namespace utils */
 } /* namespace laser_odometry */
 

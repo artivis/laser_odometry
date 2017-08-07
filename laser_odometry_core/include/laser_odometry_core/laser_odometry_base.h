@@ -1,6 +1,8 @@
 #ifndef _LASER_ODOMETRY_CORE_LASER_ODOMETRY_BASE_H_
 #define _LASER_ODOMETRY_CORE_LASER_ODOMETRY_BASE_H_
 
+#include <laser_odometry_core/laser_odometry_transform.h>
+
 // The input ROS messages supported
 #include <sensor_msgs/LaserScan.h>
 #include <sensor_msgs/PointCloud2.h>
@@ -8,11 +10,10 @@
 // The output ROS messages supported
 #include <geometry_msgs/Pose2D.h>
 #include <nav_msgs/Odometry.h>
-//#include <geometry_msgs/PoseWithCovarianceStamped.h>
 
 // More ROS header
-#include <tf/tf.h>
-#include <tf/transform_broadcaster.h>
+#include <ros/node_handle.h>
+#include <eigen_conversions/eigen_msg.h>
 
 namespace laser_odometry
 {
@@ -82,7 +83,7 @@ namespace laser_odometry
 
     /// @brief The covariance message type.
     /// @see geometry_msgs::PoseWithCovariance::_covariance_type.
-    using covariance_msg_t = geometry_msgs::PoseWithCovariance::_covariance_type;
+//    using covariance_msg_t = geometry_msgs::PoseWithCovariance::_covariance_type;
 
     /// @brief A brief report of the matching.
     struct ProcessReport;
@@ -165,7 +166,7 @@ namespace laser_odometry
      * @note [Necessary] To be implemented in the derived class.
      */
     virtual bool process_impl(const sensor_msgs::LaserScanConstPtr& laser_msg,
-                              const tf::Transform& prediction);
+                              const Transform& prediction);
 
     /**
      * @brief Function to be implemented by the derived plugin.
@@ -179,15 +180,15 @@ namespace laser_odometry
      * @note [Necessary] To be implemented in the derived class.
      */
     virtual bool process_impl(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
-                              const tf::Transform& prediction);
+                              const Transform& prediction);
 
   public:
 
     /**
      * @brief Return the current estimated pose.
-     * @return A const-reference tf::Transform.
+     * @return A const-reference Transform.
      */
-    const tf::Transform& getEstimatedPose() const noexcept;
+    const Transform& getEstimatedPose() const noexcept;
 
     /**
      * @brief Reset the matcher.
@@ -223,43 +224,43 @@ namespace laser_odometry
 
     /// \brief Reference to the origin frame.
     /// \return Reference to the origin frame.
-    tf::Transform& getOrigin();
+    Transform& getOrigin();
     /// \return Const-reference to the origin frame.
-    const tf::Transform& getOrigin() const;
+    const Transform& getOrigin() const;
 
     /**
      * @brief Set the origin frame.
      * @param[in] origin. The origin frame.
      */
-    void setOrigin(const tf::Transform& origin);
+    void setOrigin(const Transform& origin);
 
     /// \brief Reference to the initial prediction transform of the upcoming matching.
     /// \return Reference to the initial prediction transform of the upcoming matching.
-    tf::Transform& getInitialGuess();
+    Transform& getInitialGuess();
 
     /// \brief Const-reference to the initial prediction transform of the upcoming matching.
     /// \return Const-reference to the initial prediction transform of the upcoming matching.
-    const tf::Transform& getInitialGuess() const;
+    const Transform& getInitialGuess() const;
 
     /**
      * @brief Set the initial prediction of the upcoming matching.
      * @param[in] guess. The initial prediciton.
      */
-    void setInitialGuess(const tf::Transform& guess);
+    void setInitialGuess(const Transform& guess);
 
     /// \brief Reference to the laser pose wrt the robot base frame.
     /// \return Reference to the laser pose wrt the robot base frame.
-    tf::Transform& getLaserPose();
+    Transform& getLaserPose();
 
     /// \brief Const-reference to the laser pose wrt the robot base frame.
     /// \return Const-reference to the laser pose wrt the robot base frame.
-    const tf::Transform& getLaserPose() const;
+    const Transform& getLaserPose() const;
 
     /**
      * @brief Set the laser pose wrt the robot base frame.
      * @param[in] base_to_laser.
      */
-    void setLaserPose(const tf::Transform& base_to_laser);
+    void setLaserPose(const Transform& base_to_laser);
 
     /// \brief the robot base frame name.
     /// \return the robot base frame name.
@@ -338,8 +339,14 @@ namespace laser_odometry
     bool initialized_  = false; /*!< @brief Whether the matcher is initialized. */
     bool has_new_kf_   = false; /*!< @brief Whether the matcher has a new referent reading. */
 
-    covariance_msg_t pose_covariance_;  /*!< @brief The estimated pose covariance. */
-    covariance_msg_t increment_covariance_; /*!< @brief The estimated pose increment covariance. */
+    /*!< @brief The default increment covariance diagonal. */
+    std::vector<Scalar> default_cov_diag_ = std::vector<Scalar>(6, default_cov_diag_val);
+
+    /*!< @brief The estimated pose covariance. */
+    Covariance pose_covariance_;
+
+    /*!< @brief The estimated pose increment covariance. */
+    Covariance increment_covariance_;
 
     ros::NodeHandle private_nh_ = ros::NodeHandle("~");
 
@@ -352,47 +359,47 @@ namespace laser_odometry
     std::string laser_odom_frame_ = "odom";
 
     /// \brief Tranform from base_frame to laser_frame
-    tf::Transform base_to_laser_;
+    Transform base_to_laser_;
 
     /// \brief Tranform from laser_frame to base_frame
     /// == base_to_laser_^-1
-    tf::Transform laser_to_base_;
+    Transform laser_to_base_;
 
     /// @brief The relative transform in the laser_frame.
     /// @note This is the transform the derived class should fills.
-    tf::Transform increment_;
+    Transform increment_;
 
     /// \brief The relative transform in the base_frame.
-    tf::Transform relative_tf_;
+    Transform relative_tf_;
 
     /// \brief Guessed/predicted tranform
     /// from reference_'reading' to
     /// current_'reading' in the base_frame.
-    tf::Transform guess_relative_tf_;
+    Transform guess_relative_tf_;
 
     /// \brief Tranform from fixed_frame
     /// to base_frame, where fixed_frame
     /// is the origin of the integration.
     /// == fixed_to_base_kf_ * relative_tf_.
-    tf::Transform fixed_to_base_;
+    Transform fixed_to_base_;
 
     /// \brief Tranform from fixed_frame to
     /// the last keyfame frame.
     /// == fixed_to_base * relative_tf_.
-    tf::Transform fixed_to_base_kf_;
+    Transform fixed_to_base_kf_;
 
     /// \brief An optional user defined
     /// transform from that maps the
     /// integration origin to another
     /// reference than Identity
     /// Default: Identity
-    tf::Transform fixed_origin_;
+    Transform fixed_origin_;
 
     /// \brief Tranform from the fixed_origin frame
     /// to the base_frame.
     /// It is the integrated robot odometry.
     /// == fixed_origin_ * fixed_to_base_.
-    tf::Transform fixed_origin_to_base_;
+    Transform fixed_origin_to_base_;
 
     /// \brief  The referent LaserScan.
     sensor_msgs::LaserScanConstPtr   reference_scan_;
@@ -438,9 +445,9 @@ namespace laser_odometry
      * @param[in] The last estimated pose increment in the \b world_frame_ frame.
      * @return A prediction of the upcoming pose increment.
      *
-     * @note The base class returns tf::Transform::getIdentity() by default.
+     * @note The base class returns Transform::Identity() by default.
      */
-    virtual tf::Transform predict(const tf::Transform& increment);
+    virtual Transform predict(const Transform& increment);
 
     /**
      * @brief Allows the derived class to perform some pre-processing
@@ -466,7 +473,7 @@ namespace laser_odometry
      *
      * @note The base class returns \b true by default.
      */
-    virtual bool isKeyFrame(const tf::Transform& increment);
+    virtual bool isKeyFrame(const Transform& increment);
 
     /**
      * @brief Allows the derived class to perform some actions if the
@@ -495,66 +502,6 @@ namespace laser_odometry
 
   /// @brief A base-class pointer.
   typedef boost::shared_ptr<LaserOdometryBase> LaserOdometryPtr;
-
-  template <>
-  inline void LaserOdometryBase::fillMsg<geometry_msgs::Pose2DPtr>(geometry_msgs::Pose2DPtr& msg_ptr)
-  {
-    if (msg_ptr == nullptr) return;
-
-    msg_ptr->x = fixed_origin_to_base_.getOrigin().getX();
-    msg_ptr->y = fixed_origin_to_base_.getOrigin().getY();
-    msg_ptr->theta = tf::getYaw(fixed_origin_to_base_.getRotation());
-  }
-
-  template <>
-  inline void LaserOdometryBase::fillMsg<nav_msgs::OdometryPtr>(nav_msgs::OdometryPtr& msg_ptr)
-  {
-    if (msg_ptr == nullptr) return;
-
-    msg_ptr->header.stamp    = current_time_;
-    msg_ptr->header.frame_id = laser_odom_frame_;
-    msg_ptr->child_frame_id  = base_frame_;
-
-    msg_ptr->pose.pose.position.x = fixed_origin_to_base_.getOrigin().getX();
-    msg_ptr->pose.pose.position.y = fixed_origin_to_base_.getOrigin().getY();
-    msg_ptr->pose.pose.position.z = fixed_origin_to_base_.getOrigin().getZ();
-
-    tf::quaternionTFToMsg(fixed_origin_to_base_.getRotation(),
-                          msg_ptr->pose.pose.orientation);
-
-    //msg_ptr->pose.covariance  = pose_covariance_;
-    //msg_ptr->twist.covariance = pose_twist_covariance_;
-  }
-
-  template <>
-  inline void LaserOdometryBase::fillIncrementMsg<geometry_msgs::Pose2DPtr>(geometry_msgs::Pose2DPtr& msg_ptr)
-  {
-    if (msg_ptr == nullptr) return;
-
-    msg_ptr->x = increment_.getOrigin().getX();
-    msg_ptr->y = increment_.getOrigin().getY();
-    msg_ptr->theta = tf::getYaw(increment_.getRotation());
-  }
-
-  template <>
-  inline void LaserOdometryBase::fillIncrementMsg<nav_msgs::OdometryPtr>(nav_msgs::OdometryPtr& msg_ptr)
-  {
-    if (msg_ptr == nullptr) return;
-
-    msg_ptr->header.stamp    = current_time_;
-    msg_ptr->header.frame_id = "last_key_frame"; /// @todo this frame does not exist. Should it?
-    msg_ptr->child_frame_id  = base_frame_;
-
-    msg_ptr->pose.pose.position.x = increment_.getOrigin().getX();
-    msg_ptr->pose.pose.position.y = increment_.getOrigin().getY();
-    msg_ptr->pose.pose.position.z = increment_.getOrigin().getZ();
-
-    tf::quaternionTFToMsg(increment_.getRotation(),
-                          msg_ptr->pose.pose.orientation);
-
-    msg_ptr->pose.covariance  = increment_covariance_;
-    //msg_ptr->twist.covariance = increment_twist_covariance_;
-  }
 
 } /* namespace laser_odometry */
 
