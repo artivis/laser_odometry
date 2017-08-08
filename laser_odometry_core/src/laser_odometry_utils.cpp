@@ -11,6 +11,18 @@ void tfFromXYTheta(const double x, const double y, const double theta, tf::Trans
                     {x, y, 0});
 }
 
+void tfFromXYTheta(const double x, const double y, const double theta, Transform& t)
+{
+  Eigen::AngleAxis<Scalar> rollAngle(0,    Eigen::Vector3d::UnitX());
+  Eigen::AngleAxis<Scalar> pitchAngle(0,   Eigen::Vector3d::UnitY());
+  Eigen::AngleAxis<Scalar> yawAngle(theta, Eigen::Vector3d::UnitZ());
+
+  Eigen::Quaternion<Scalar> q = rollAngle * pitchAngle * yawAngle;
+
+  t = q;
+  t.translation() = Eigen::Matrix<Scalar, 3, 1>(x, y, 0);
+}
+
 bool getTf(const std::string& source_frame,
            const std::string& target_frame,
            tf::StampedTransform& tf,

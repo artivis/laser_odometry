@@ -1,6 +1,8 @@
 #ifndef _LASER_ODOMETRY_CORE_LASER_ODOMETRY_UTILS_H_
 #define _LASER_ODOMETRY_CORE_LASER_ODOMETRY_UTILS_H_
 
+#include "laser_odometry_core/laser_odometry_transform.h"
+
 #include <tf/tf.h>
 #include <tf/transform_listener.h>
 
@@ -11,6 +13,9 @@ namespace utils
 
 void tfFromXYTheta(const double x, const double y,
                    const double theta, tf::Transform& t);
+
+void tfFromXYTheta(const double x, const double y,
+                   const double theta, Transform& t);
 
 bool getTf(const std::string& source_frame,
            const std::string& target_frame,
