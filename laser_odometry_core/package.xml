@@ -16,6 +16,7 @@
   <buildtool_depend>catkin</buildtool_depend>
 
   <depend>cmake_modules</depend>
+  <depend>eigen_conversions</depend>
   <depend>geometry_msgs</depend>
   <depend>nav_msgs</depend>
   <depend>pluginlib</depend>

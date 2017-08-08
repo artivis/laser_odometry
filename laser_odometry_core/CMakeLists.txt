@@ -18,6 +18,7 @@ endif()
 
 find_package(catkin REQUIRED COMPONENTS
   cmake_modules
+  eigen_conversions
   geometry_msgs
   nav_msgs
   pluginlib

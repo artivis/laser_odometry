@@ -4,6 +4,7 @@
 
 #include <tf/tf.h>
 #include <nav_msgs/Odometry.h>
+#include <tf_conversions/tf_eigen.h>
 #include <eigen_conversions/eigen_msg.h>
 
 namespace laser_odometry {
@@ -62,6 +63,15 @@ void toRos(const Covariance& covariance,
   covariance_msg.at(33) = covariance(5,3);
   covariance_msg.at(34) = covariance(5,4);
   covariance_msg.at(35) = covariance(5,5);
+}
+
+template<>
+void fromRos(const tf::Transform& tf,
+             Transform& t)
+{
+  Eigen::Affine3d aff;
+  tf::transformTFToEigen(tf, aff);
+  t = Transform(aff.matrix());
 }
 
 } /* namespace conversion */
