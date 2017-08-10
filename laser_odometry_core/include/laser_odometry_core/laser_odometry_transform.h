@@ -27,6 +27,19 @@ using Transform  = Isometry3s;
 // to the above Transform.
 using Covariance = Eigen::Matrix<Scalar, 6, 6>;
 
+struct TransformWithCovariance
+{
+  TransformWithCovariance(const Transform& transform,
+                          const Covariance& covariance) :
+    transform_(transform),
+    covariance_(covariance)
+  {
+    //
+  }
+
+  Transform  transform_;
+  Covariance covariance_;
+};
 
 /// Some helper functions ///
 
