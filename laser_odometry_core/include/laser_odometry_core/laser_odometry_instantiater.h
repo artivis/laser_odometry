@@ -28,7 +28,7 @@ public:
     {
       laser_odom_ptr = loader.createInstance(laser_odometry_type);
     }
-    catch (pluginlib::PluginlibException& ex)
+    catch (const pluginlib::PluginlibException& ex)
     {
       ROS_ERROR("The plugin failed to load for some reason.\n\tError: %s", ex.what());
     }
@@ -43,7 +43,7 @@ public:
       ROS_DEBUG_STREAM("Succes creating laser odometry: "
                        << laser_odometry_type);
 
-      bool configured = laser_odom_ptr->configure();
+      const bool configured = laser_odom_ptr->configure();
 
       if (!configured)
       {
