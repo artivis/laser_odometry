@@ -1,10 +1,11 @@
-#include <laser_odometry_core/laser_odometry_base.h>
-//#include <laser_odometry_core/laser_odometry_report.h>
-#include <laser_odometry_core/laser_odometry_conversion.h>
+#include "laser_odometry_core/laser_odometry_base.h"
+#include "laser_odometry_core/laser_odometry_conversion.h"
 
-#include <laser_odometry_core/laser_odometry_utils.h>
+#include "laser_odometry_core/laser_odometry_utils.h"
 
-#include <boost/assign/list_of.hpp>
+// The output ROS messages supported
+#include <geometry_msgs/Pose2D.h>
+#include <nav_msgs/Odometry.h>
 
 #define assert_not_null(x) \
   assert(x != nullptr);

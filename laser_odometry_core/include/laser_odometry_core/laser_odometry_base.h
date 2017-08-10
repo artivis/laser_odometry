@@ -7,13 +7,8 @@
 #include <sensor_msgs/LaserScan.h>
 #include <sensor_msgs/PointCloud2.h>
 
-// The output ROS messages supported
-#include <geometry_msgs/Pose2D.h>
-#include <nav_msgs/Odometry.h>
-
 // More ROS header
 #include <ros/node_handle.h>
-#include <eigen_conversions/eigen_msg.h>
 
 namespace laser_odometry
 {

@@ -2,6 +2,9 @@
 #include <laser_odometry_core/laser_odometry_instantiater.h>
 #include <laser_odometry_core/laser_odometry_utils.h>
 
+#include <geometry_msgs/Pose2D.h>
+#include <nav_msgs/Odometry.h>
+
 #include <tf_conversions/tf_eigen.h>
 
 namespace sm = sensor_msgs;
