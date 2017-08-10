@@ -227,10 +227,16 @@ namespace laser_odometry
 
     /* Guetter / Setter */
 
-    /// \brief Reference to the origin frame.
-    /// \return Reference to the origin frame.
+    /**
+     * @brief Reference to the origin frame.
+     * @return Reference to the origin frame.
+     */
     Transform& getOrigin();
-    /// \return Const-reference to the origin frame.
+
+    /**
+     * @brief Const-reference to the origin frame.
+     * @return Const-reference to the origin frame.
+     */
     const Transform& getOrigin() const;
 
     /**
@@ -239,16 +245,20 @@ namespace laser_odometry
      */
     void setOrigin(const Transform& origin);
 
-    /// \brief Reference to the initial prediction transform of the upcoming matching.
-    /// It is the pose increment from the last processed scan
-    /// to the current one.
-    /// \return Reference to the initial prediction transform of the upcoming matching.
+    /**
+     * @brief Reference to the initial prediction transform of the upcoming matching.
+     * It is the pose increment from the last processed scan
+     * to the current one.
+     * @return Reference to the initial prediction transform of the upcoming matching.
+     */
     Transform& getInitialGuess();
 
-    /// \brief Const-reference to the initial prediction transform of the upcoming matching.
-    /// It is the pose increment from the last processed scan
-    /// to the current one.
-    /// \return Const-reference to the initial prediction transform of the upcoming matching.
+    /**
+     * @brief Const-reference to the initial prediction transform of the upcoming matching.
+     * It is the pose increment from the last processed scan
+     * to the current one.
+     * @return Const-reference to the initial prediction transform of the upcoming matching.
+     */
     const Transform& getInitialGuess() const;
 
     /**
@@ -259,12 +269,16 @@ namespace laser_odometry
      */
     void setInitialGuess(const Transform& guess);
 
-    /// \brief Reference to the laser pose wrt the robot base frame.
-    /// \return Reference to the laser pose wrt the robot base frame.
+    /**
+     * @brief Reference to the laser pose wrt the robot base frame.
+     * @return Reference to the laser pose wrt the robot base frame.
+     */
     Transform& getLaserPose();
 
-    /// \brief Const-reference to the laser pose wrt the robot base frame.
-    /// \return Const-reference to the laser pose wrt the robot base frame.
+    /**
+     * @brief Const-reference to the laser pose wrt the robot base frame.
+     * @return Const-reference to the laser pose wrt the robot base frame.
+     */
     const Transform& getLaserPose() const;
 
     /**
@@ -273,31 +287,34 @@ namespace laser_odometry
      */
     void setLaserPose(const Transform& base_to_laser);
 
-    /// \brief the robot base frame name.
-    /// \return the robot base frame name.
+    /// @brief the robot base frame name.
+    /// @return the robot base frame name.
     const std::string& getFrameBase()  const noexcept;
 
-    /// \brief the robot laser frame name.
-    /// \return the robot laser frame name.
+    /// @brief the robot laser frame name.
+    /// @return the robot laser frame name.
     const std::string& getFrameLaser() const noexcept;
 
-    /// \brief the global fixed frame name.
-    /// \return the global fixed frame name.
+    /// @brief the global fixed frame name.
+    /// @return the global fixed frame name.
     const std::string& getFrameFixed() const noexcept;
 
-    /// \brief the global odometry frame name.
-    /// \return the global odometry frame name.
+    /// @brief the global odometry frame name.
+    /// @return the global odometry frame name.
     const std::string& getFrameOdom()  const noexcept;
 
     /// @brief Set the robot base frame name.
     /// @param[in] frame.
     void setFrameBase(const std::string& frame);
+
     /// @brief Set the robot laser frame name.
     /// @param[in] frame.
     void setFrameLaser(const std::string& frame);
+
     /// @brief Set the global fixed frame name.
     /// @param[in] frame.
     void setFrameFixed(const std::string& frame);
+
     /// @brief Set the global odometry frame name.
     /// @param[in] frame.
     void setFrameOdom(const std::string& frame);
@@ -308,10 +325,13 @@ namespace laser_odometry
      */
     const ros::Time& getCurrentTime() const noexcept;
 
-    /// @brief The type of odometry computed by the plugin.
-    /// @return The type of odometry computed by the plugin.
-    /// If not overrided, default is OdomType::Unknown
-    /// @see OdomType
+    /**
+     * @brief The type of odometry computed by the plugin.
+     * @return The type of odometry computed by the plugin.
+     * If not overrided, default is OdomType::Unknown
+     *
+     * @see OdomType
+     */
     virtual OdomType odomType() const noexcept;
 
     /**
@@ -346,33 +366,33 @@ namespace laser_odometry
 
   protected:
 
-    bool configured_   = false; /*!< @brief Whether the matcher is configured. */
-    bool initialized_  = false; /*!< @brief Whether the matcher is initialized. */
-    bool has_new_kf_   = false; /*!< @brief Whether the matcher has a new referent reading. */
+    bool configured_   = false; /// @brief Whether the matcher is configured.
+    bool initialized_  = false; /// @brief Whether the matcher is initialized.
+    bool has_new_kf_   = false; /// @brief Whether the matcher has a new referent reading.
 
-    /*!< @brief The default increment covariance diagonal. */
+    /// @brief The default increment covariance diagonal.
     std::vector<Scalar> default_cov_diag_ = std::vector<Scalar>(6, default_cov_diag_val);
 
-    /*!< @brief The estimated pose covariance. */
+    /// @brief The estimated pose covariance.
     Covariance pose_covariance_;
 
-    /*!< @brief The estimated pose increment covariance. */
+    /// @brief The estimated pose increment covariance.
     Covariance increment_covariance_;
 
     ros::NodeHandle private_nh_ = ros::NodeHandle("~");
 
-    std::string base_frame_       = "base_link";        /*!< @brief The robot base frame name. */
-    std::string laser_frame_      = "base_laser_link";  /*!< @brief The robot laser frame name. */
-    std::string fixed_frame_      = "map";              /*!< @brief The global fixed frame name. */
+    std::string base_frame_       = "base_link";        /// @brief The robot base frame name.
+    std::string laser_frame_      = "base_laser_link";  /// @brief The robot laser frame name.
+    std::string fixed_frame_      = "map";              /// @brief The global fixed frame name.
 
-    /// \brief The global odometry frame name.
+    /// @brief The global odometry frame name.
     /// This frame name is only used in the published message.
     std::string laser_odom_frame_ = "odom";
 
-    /// \brief Tranform from base_frame to laser_frame
+    /// @brief Tranform from base_frame to laser_frame
     Transform base_to_laser_ = Transform::Identity();
 
-    /// \brief Tranform from laser_frame to base_frame
+    /// @brief Tranform from laser_frame to base_frame
     /// == base_to_laser_^-1
     Transform laser_to_base_ = Transform::Identity();
 
@@ -380,45 +400,45 @@ namespace laser_odometry
     /// @note This is the transform the derived class should fills.
     Transform increment_ = Transform::Identity();
 
-    /// \brief The relative transform in the base_frame.
+    /// @brief The relative transform in the base_frame.
     Transform relative_tf_ = Transform::Identity();
 
-    /// \brief Guessed/predicted tranform
+    /// @brief Guessed/predicted tranform
     /// from reference_'reading' to
     /// current_'reading' in the base_frame.
     Transform guess_relative_tf_ = Transform::Identity();
 
-    /// \brief Tranform from fixed_frame
+    /// @brief Tranform from fixed_frame
     /// to base_frame, where fixed_frame
     /// is the origin of the integration.
     /// == fixed_to_base_kf_ * relative_tf_.
     Transform fixed_to_base_ = Transform::Identity();
 
-    /// \brief Tranform from fixed_frame to
+    /// @brief Tranform from fixed_frame to
     /// the last keyfame frame.
     /// == fixed_to_base * relative_tf_.
     Transform fixed_to_base_kf_ = Transform::Identity();
 
-    /// \brief An optional user defined
+    /// @brief An optional user defined
     /// transform from that maps the
     /// integration origin to another
     /// reference than Identity
     /// Default: Identity
     Transform fixed_origin_ = Transform::Identity();
 
-    /// \brief Tranform from the fixed_origin frame
+    /// @brief Tranform from the fixed_origin frame
     /// to the base_frame.
     /// It is the integrated robot odometry.
     /// == fixed_origin_ * fixed_to_base_.
     Transform fixed_origin_to_base_ = Transform::Identity();
 
-    /// \brief  The referent LaserScan.
+    /// @brief  The referent LaserScan.
     sensor_msgs::LaserScanConstPtr   reference_scan_;
 
-    /// \brief  The referent PointCloud2.
+    /// @brief  The referent PointCloud2.
     sensor_msgs::PointCloud2ConstPtr reference_cloud_;
 
-    /// \brief Current ros::Time accordingly
+    /// @brief Current ros::Time accordingly
     /// to the last processed message.
     ros::Time current_time_;
 
