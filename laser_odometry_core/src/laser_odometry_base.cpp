@@ -449,6 +449,12 @@ bool LaserOdometryBase::hasNewKeyFrame() const noexcept
   return has_new_kf_;
 }
 
+////////////////////////
+///                  ///
+/// Guetter / Setter ///
+///                  ///
+////////////////////////
+
 void LaserOdometryBase::setKeyFrame(const sensor_msgs::LaserScanConstPtr& key_frame_msg)
 {
   assert_not_null(key_frame_msg);
@@ -492,12 +498,6 @@ void LaserOdometryBase::getKeyFrame(sensor_msgs::PointCloud2ConstPtr& key_frame_
 {
   key_frame_msg = reference_cloud_;
 }
-
-////////////////////////
-///                  ///
-/// Guetter / Setter ///
-///                  ///
-////////////////////////
 
 Transform& LaserOdometryBase::getOrigin()
 {
@@ -616,6 +616,16 @@ void LaserOdometryBase::setFrameOdom(const std::string& frame)
 const ros::Time& LaserOdometryBase::getCurrentTime() const noexcept
 {
   return current_time_;
+}
+
+void LaserOdometryBase::setType(const std::string& type)
+{
+  laser_odometry_type_ = type;
+}
+
+std::string LaserOdometryBase::getType() const noexcept
+{
+  return laser_odometry_type_;
 }
 
 } /* namespace laser_odometry */

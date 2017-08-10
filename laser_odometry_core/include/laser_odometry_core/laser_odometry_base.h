@@ -321,6 +321,20 @@ namespace laser_odometry
     const ros::Time& getCurrentTime() const noexcept;
 
     /**
+     * @brief setType. Set the plugin name.
+     * @note This function is only meant to be
+     * used by the Instantiater.
+     * @param type. The plugin name.
+     */
+    void setType(const std::string& type);
+
+    /**
+     * @brief getType. Get the plugin name.
+     * @return The plugin name.
+     */
+    std::string getType() const noexcept;
+
+    /**
      * @brief The type of odometry computed by the plugin.
      * @return The type of odometry computed by the plugin.
      * If not overrided, default is OdomType::Unknown
@@ -364,6 +378,9 @@ namespace laser_odometry
     bool configured_   = false; /// @brief Whether the matcher is configured.
     bool initialized_  = false; /// @brief Whether the matcher is initialized.
     bool has_new_kf_   = false; /// @brief Whether the matcher has a new referent reading.
+
+    /// @brief The type of this odometer. Overrided by the derived plugin.
+    std::string laser_odometry_type_ = "laser_odometry_core::LaserOdometryBase";
 
     /// @brief The default increment covariance diagonal.
     std::vector<Scalar> default_cov_diag_ = std::vector<Scalar>(6, default_cov_diag_val);

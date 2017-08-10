@@ -52,6 +52,8 @@ public:
       }
     }
 
+    laser_odom_ptr->setType(laser_odometry_type);
+
     return laser_odom_ptr;
   }
 
