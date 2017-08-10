@@ -57,10 +57,36 @@ getYaw(const Eigen::MatrixBase<Derived>& r)
 }
 
 template <typename T, int Dim>
+inline bool isIdentity(const Isometry<T, Dim>& t,
+                        const T epsilon = 1e-5)
+{
+  return t.isApprox(Isometry<T, Dim>::Identity(), epsilon);
+}
+
+template <typename T, int Dim>
 inline bool isOthogonal(const Isometry<T, Dim>& t,
                         const T epsilon = 1e-5)
 {
-  return (anyabs(T(1) - t.rotation().determinant()) > epsilon) ? false : true;
+  // Calling t.rotation() normalizes the rotation already
+  // so that T(1) - R.rotation().determinant() = 0
+  // is always true.
+
+  const Eigen::Matrix<T, Dim-1, Dim-1> R(t.matrix().topLeftCorner(Dim-1, Dim-1));
+
+  return (anyabs(T(1) - anyabs(R.determinant())) > epsilon) ? false : true;
+
+//  return (anyabs(T(1) - t.matrix().topLeftCorner(Dim-1, Dim-1).determinant()) > epsilon) ? false : true;
+}
+
+template <typename T, int Dim>
+inline bool isRotationProper(const Isometry<T, Dim>& t,
+                             const T epsilon = 1e-6)
+{
+  // Calling t.rotation() normalizes the rotation already
+  // so that T(1) - R.rotation().determinant() = 0
+  // is always true.
+
+  return (anyabs(T(1) - t.linear().determinant()) > epsilon) ? false : true;
 }
 
 template <typename T, int N>
@@ -88,6 +114,15 @@ template <typename T, int N>
 bool isCovariance(const Eigen::Matrix<T, N, N>& M)
 {
   return isSymmetric(M) && isPositiveSemiDefinite(M);
+}
+
+template <typename T, int Dim>
+inline void makeOrthogonal(Isometry<T, Dim>& t)
+{
+  const Isometry<T, Dim> tmp = t;
+
+  t = tmp.rotation();
+  t.translation() = tmp.translation();
 }
 
 } /* namespace laser_odometry */
