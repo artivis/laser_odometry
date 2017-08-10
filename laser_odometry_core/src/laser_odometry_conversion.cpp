@@ -1,5 +1,4 @@
 #include "laser_odometry_core/laser_odometry_conversion.h"
-
 #include "laser_odometry_core/laser_odometry_transform.h"
 
 #include <tf/tf.h>

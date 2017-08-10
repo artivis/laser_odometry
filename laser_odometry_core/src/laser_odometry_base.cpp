@@ -1,5 +1,5 @@
 #include <laser_odometry_core/laser_odometry_base.h>
-#include <laser_odometry_core/laser_odometry_report.h>
+//#include <laser_odometry_core/laser_odometry_report.h>
 #include <laser_odometry_core/laser_odometry_conversion.h>
 
 #include <laser_odometry_core/laser_odometry_utils.h>
@@ -9,12 +9,28 @@
 #define assert_not_null(x) \
   assert(x != nullptr);
 
+#define assert_proper_rotation(x) \
+  if (!isRotationProper(x)) \
+  { \
+    ROS_ERROR_STREAM("l." << __LINE__ << " " << #x \
+       << " , rotation matrix" \
+       " is not orthogonal positive. Determinant " \
+        << x.linear().determinant()); \
+  } \
+
 namespace laser_odometry
 {
 
 // Some Specialization
+// Most of them resolve to passing arg by reference.
 template <>
-inline void LaserOdometryBase::fillMsg<geometry_msgs::Pose2DPtr>(geometry_msgs::Pose2DPtr& msg_ptr)
+void LaserOdometryBase::fillMsg<std::nullptr_t>(std::nullptr_t&&)
+{
+  //
+}
+
+template <>
+void LaserOdometryBase::fillMsg<geometry_msgs::Pose2DPtr&>(geometry_msgs::Pose2DPtr& msg_ptr)
 {
   if (msg_ptr == nullptr) return;
 
@@ -24,7 +40,7 @@ inline void LaserOdometryBase::fillMsg<geometry_msgs::Pose2DPtr>(geometry_msgs::
 }
 
 template <>
-inline void LaserOdometryBase::fillMsg<nav_msgs::OdometryPtr>(nav_msgs::OdometryPtr& msg_ptr)
+void LaserOdometryBase::fillMsg<nav_msgs::OdometryPtr&>(nav_msgs::OdometryPtr& msg_ptr)
 {
   if (msg_ptr == nullptr) return;
 
@@ -41,17 +57,32 @@ inline void LaserOdometryBase::fillMsg<nav_msgs::OdometryPtr>(nav_msgs::Odometry
 }
 
 template <>
-inline void LaserOdometryBase::fillIncrementMsg<geometry_msgs::Pose2DPtr>(geometry_msgs::Pose2DPtr& msg_ptr)
+void LaserOdometryBase::fillMsg<TransformWithCovariancePtr&>(TransformWithCovariancePtr& msg_ptr)
 {
   if (msg_ptr == nullptr) return;
 
-  msg_ptr->x = increment_.translation()(0);
-  msg_ptr->y = increment_.translation()(1);
-  msg_ptr->theta = getYaw(increment_.rotation());
+  msg_ptr->transform_  = fixed_origin_to_base_;
+  msg_ptr->covariance_ = pose_covariance_;
 }
 
 template <>
-inline void LaserOdometryBase::fillIncrementMsg<nav_msgs::OdometryPtr>(nav_msgs::OdometryPtr& msg_ptr)
+void LaserOdometryBase::fillIncrementMsg<std::nullptr_t>(std::nullptr_t&&)
+{
+  //
+}
+
+template <>
+void LaserOdometryBase::fillIncrementMsg<geometry_msgs::Pose2DPtr&>(geometry_msgs::Pose2DPtr& msg_ptr)
+{
+  if (msg_ptr == nullptr) return;
+
+  msg_ptr->x = relative_tf_.translation()(0);
+  msg_ptr->y = relative_tf_.translation()(1);
+  msg_ptr->theta = getYaw(relative_tf_.rotation());
+}
+
+template <>
+void LaserOdometryBase::fillIncrementMsg<nav_msgs::OdometryPtr&>(nav_msgs::OdometryPtr& msg_ptr)
 {
   if (msg_ptr == nullptr) return;
 
@@ -59,17 +90,25 @@ inline void LaserOdometryBase::fillIncrementMsg<nav_msgs::OdometryPtr>(nav_msgs:
   msg_ptr->header.frame_id = "last_key_frame"; /// @todo this frame does not exist. Should it?
   msg_ptr->child_frame_id  = base_frame_;
 
-  conversion::toRos(increment_, msg_ptr->pose.pose);
+  conversion::toRos(relative_tf_, msg_ptr->pose.pose);
 
   conversion::toRos(increment_covariance_, msg_ptr->pose.covariance);
-  //msg_ptr->twist.covariance = increment_twist_covariance_;
+}
+
+template <>
+void LaserOdometryBase::fillIncrementMsg<TransformWithCovariancePtr&>(TransformWithCovariancePtr& msg_ptr)
+{
+  if (msg_ptr == nullptr) return;
+
+  msg_ptr->transform_  = relative_tf_;
+  msg_ptr->covariance_ = increment_covariance_;
 }
 
 // Class functions definition
 
 bool LaserOdometryBase::configure()
 {
-  reset();
+  hardReset();
 
   private_nh_.param("laser_frame",      laser_frame_,      std::string("base_laser_link"));
   private_nh_.param("base_frame",       base_frame_,       std::string("base_link"));
@@ -109,12 +148,7 @@ bool LaserOdometryBase::configure()
                      << default_cov_diag_val);
   }
 
-  increment_covariance_(0,0) = default_cov_diag_[0];
-  increment_covariance_(1,1) = default_cov_diag_[1];
-  increment_covariance_(2,2) = default_cov_diag_[2];
-  increment_covariance_(3,3) = default_cov_diag_[3];
-  increment_covariance_(4,4) = default_cov_diag_[4];
-  increment_covariance_(5,5) = default_cov_diag_[5];
+  resetCovarianceDefault();
 
   pose_covariance_ = increment_covariance_;
 
@@ -125,9 +159,7 @@ bool LaserOdometryBase::configure()
 }
 
 LaserOdometryBase::ProcessReport
-LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_msg,
-                           geometry_msgs::Pose2DPtr pose_msg,
-                           geometry_msgs::Pose2DPtr pose_increment_msg)
+LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_msg)
 {
   assert_not_null(scan_msg);
 
@@ -139,12 +171,7 @@ LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_msg,
   {
     initialized_ = initialize(scan_msg);
 
-    fixed_origin_to_base_ = fixed_origin_ * fixed_to_base_;
-
-    //pose_covariance_ = twist_covariance_;
-
-    fillMsg(pose_msg);
-    fillIncrementMsg(pose_increment_msg);
+    fixed_origin_to_base_ = fixed_to_base_ * fixed_origin_;
 
     ROS_INFO_STREAM_COND(initialized_, "LaserOdometry Initialized!");
 
@@ -153,94 +180,16 @@ LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_msg,
 
   preProcessing();
 
-  Transform guess_relative_tf;
-
-  // If an increment prior has been set, 'consum' it.
-  // Otherwise predict from previously
-  // computed relative_tf_
-  if (!guess_relative_tf_.isApprox(Transform::Identity(), 1e-8))
-  {
-    guess_relative_tf  = guess_relative_tf_;
-    guess_relative_tf_ = Transform::Identity();
-  }
-  else
-  {
-    guess_relative_tf = predict(relative_tf_);
-
-    if (!isOthogonal(guess_relative_tf))
-    {
-      ROS_ERROR("guess_relative_tf, rotation matrix"
-                " is not orthogonal.");
-      guess_relative_tf = Transform::Identity();
-    }
-  }
-
-  // account for the change since the last kf, in the fixed frame
-  guess_relative_tf = guess_relative_tf * (fixed_to_base_ * fixed_to_base_kf_.inverse());
-
-  if (!isOthogonal(guess_relative_tf))
-  {
-    ROS_ERROR_STREAM("guess_relative_tf, rotation matrix"
-              " is not orthogonal.");
-  }
-
   // the predicted change of the laser's position, in the laser frame
-  const Transform pred_rel_tf_in_ltf = laser_to_base_ * fixed_to_base_.inverse() *
-                                        guess_relative_tf * fixed_to_base_ * base_to_laser_;
+//  const Transform pred_rel_tf_in_ltf = laser_to_base_ * fixed_to_base_.inverse() *
+//                                        incrementPrior() * fixed_to_base_ * base_to_laser_;
 
-  if (!isOthogonal(pred_rel_tf_in_ltf))
-  {
-    ROS_ERROR_STREAM("pred_rel_tf_in_ltf, rotation matrix"
-              " is not orthogonal.");
-  }
+  const Transform pred_rel_tf_in_ltf = laser_to_base_ * getIncrementPrior() * base_to_laser_;
 
   // The actual computation
   const bool processed = process_impl(scan_msg, pred_rel_tf_in_ltf);
 
-  if (processed)
-  {
-    if (!isOthogonal(increment_))
-    {
-      ROS_ERROR_STREAM("increment_, rotation matrix"
-                " is not orthogonal.");
-    }
-
-    // the increment of the base's position, in the base frame
-    relative_tf_ = base_to_laser_ * increment_ * laser_to_base_;
-
-    if (!isOthogonal(relative_tf_))
-    {
-      ROS_ERROR_STREAM("relative_tf_, rotation matrix"
-                " is not orthogonal.");
-    }
-
-    // update the pose in the fixed frame
-    fixed_to_base_ = fixed_to_base_kf_ * relative_tf_;
-
-    if (!isOthogonal(fixed_to_base_))
-    {
-      ROS_ERROR_STREAM("fixed_to_base_, rotation matrix"
-                " is not orthogonal.");
-    }
-
-    // update the pose in the fixed 'origin' frame
-    fixed_origin_to_base_ = fixed_origin_ * fixed_to_base_;
-
-    if (!isOthogonal(fixed_origin_to_base_))
-    {
-      ROS_ERROR_STREAM("fixed_origin_to_base_, rotation matrix"
-                " is not orthogonal.");
-    }
-  }
-  else
-  {
-    relative_tf_.setIdentity();
-    ROS_WARN("Error in laser matching");
-  }
-
-  // Retrieve pose2D
-  fillMsg(pose_msg);
-  fillIncrementMsg(pose_increment_msg);
+  posePlusIncrement(processed);
 
   has_new_kf_ = isKeyFrame(relative_tf_);
 
@@ -263,26 +212,7 @@ LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_msg,
 }
 
 LaserOdometryBase::ProcessReport
-LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_ptr,
-                           nav_msgs::OdometryPtr odom_ptr,
-                           nav_msgs::OdometryPtr odom_increment_msg)
-{
-  assert_not_null(scan_ptr);
-
-  geometry_msgs::Pose2DPtr pose_2d_ptr = boost::make_shared<geometry_msgs::Pose2D>();
-
-  const auto process_report = process(scan_ptr, pose_2d_ptr);
-
-  fillMsg(odom_ptr);
-  fillIncrementMsg(odom_increment_msg);
-
-  return process_report;
-}
-
-LaserOdometryBase::ProcessReport
-LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
-                           geometry_msgs::Pose2DPtr pose_msg,
-                           geometry_msgs::Pose2DPtr pose_increment_msg)
+LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 {
   assert_not_null(cloud_msg);
 
@@ -294,12 +224,7 @@ LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
   {
     initialized_ = initialize(cloud_msg);
 
-    fixed_origin_to_base_ = fixed_origin_ * fixed_to_base_;
-
-    //pose_covariance_ = twist_covariance_;
-
-    fillMsg(pose_msg);
-    fillIncrementMsg(pose_increment_msg);
+    fixed_origin_to_base_ = fixed_to_base_ * fixed_origin_;
 
     ROS_INFO_STREAM_COND(initialized_, "LaserOdometry Initialized!");
 
@@ -308,57 +233,23 @@ LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
 
   preProcessing();
 
-  Transform guess_relative_tf;
-
-  // If an increment prior has been set, 'consum' it.
-  // Otherwise predict from previously
-  // computed relative_tf_
-  if (guess_relative_tf_.isApprox(Transform::Identity(), 1e-8))
-  {
-    guess_relative_tf  = guess_relative_tf_;
-    guess_relative_tf_ = Transform::Identity();
-  }
-  else
-  {
-    guess_relative_tf = predict(relative_tf_);
-  }
-
-  // account for the change since the last kf, in the fixed frame
-  guess_relative_tf = guess_relative_tf * (fixed_to_base_ * fixed_to_base_kf_.inverse());
-
   // the predicted change of the laser's position, in the laser frame
-  Transform pred_rel_tf_in_ltf = laser_to_base_ * fixed_to_base_.inverse() *
-                                      guess_relative_tf * fixed_to_base_ * base_to_laser_ ;
+//  const Transform pred_rel_tf_in_ltf = laser_to_base_ * fixed_to_base_.inverse() *
+//                                        incrementPrior() * fixed_to_base_ * base_to_laser_;
+
+  const Transform pred_rel_tf_in_ltf = laser_to_base_ * getIncrementPrior() * base_to_laser_;
 
   // The actual computation
   const bool processed = process_impl(cloud_msg, pred_rel_tf_in_ltf);
 
-  if (processed)
-  {
-    // the increment of the base's position, in the base frame
-    relative_tf_ = base_to_laser_ * increment_ * laser_to_base_;
+  posePlusIncrement(processed);
 
-    // update the pose in the fixed frame
-    fixed_to_base_ = fixed_to_base_kf_ * relative_tf_;
-
-    // update the pose in the fixed 'origin' frame
-    fixed_origin_to_base_ = fixed_origin_ * fixed_to_base_;
-  }
-  else
-  {
-    relative_tf_.setIdentity();
-    ROS_WARN("Error in laser matching");
-  }
-
-  // Retrieve pose2D
-  fillMsg(pose_msg);
-  fillIncrementMsg(pose_increment_msg);
-
-  has_new_kf_ = isKeyFrame(increment_);
+  has_new_kf_ = isKeyFrame(relative_tf_);
 
   if (has_new_kf_)
   {
     // generate a keyframe
+
     fixed_to_base_kf_ = fixed_to_base_;
 
     reference_cloud_ = cloud_msg;
@@ -373,23 +264,6 @@ LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
   return ProcessReport{processed, has_new_kf_};
 }
 
-LaserOdometryBase::ProcessReport
-LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
-                           nav_msgs::OdometryPtr odom_ptr,
-                           nav_msgs::OdometryPtr odom_increment_msg)
-{
-  assert_not_null(cloud_msg);
-
-  geometry_msgs::Pose2DPtr pose_2d_ptr = boost::make_shared<geometry_msgs::Pose2D>();
-
-  const auto process_report = process(cloud_msg, pose_2d_ptr);
-
-  fillMsg(odom_ptr);
-  fillIncrementMsg(odom_increment_msg);
-
-  return process_report;
-}
-
 bool LaserOdometryBase::process_impl(const sensor_msgs::LaserScanConstPtr& /*laser_msg*/,
                                      const Transform& /*prediction*/)
 {
@@ -400,6 +274,71 @@ bool LaserOdometryBase::process_impl(const sensor_msgs::PointCloud2ConstPtr& /*c
                                      const Transform& /*prediction*/)
 {
   throw std::runtime_error("process_impl(sensor_msgs::PointCloud2ConstPtr) not implemented.");
+}
+
+Transform LaserOdometryBase::getIncrementPrior()
+{
+  Transform guess_relative_tf = Transform::Identity();
+
+  // If an increment prior has been set, 'consum' it.
+  // Otherwise predict from previously
+  // computed relative_tf_
+  if (!isIdentity(guess_relative_tf_) && isRotationProper(guess_relative_tf_))
+  {
+    guess_relative_tf  = guess_relative_tf_;
+    guess_relative_tf_ = Transform::Identity();
+  }
+  else
+  {
+    guess_relative_tf = predict(relative_tf_);
+
+    if (!isRotationProper(guess_relative_tf))
+    {
+      makeOrthogonal(guess_relative_tf);
+    }
+  }
+
+  // account for the change since the last kf, in the fixed frame
+  guess_relative_tf = guess_relative_tf * (fixed_to_base_ * fixed_to_base_kf_.inverse());
+
+  return guess_relative_tf;
+}
+
+void LaserOdometryBase::posePlusIncrement(const bool processed)
+{
+  if (processed)
+  {
+    if (!isRotationProper(increment_), 1e-10)
+    {
+      ROS_DEBUG_STREAM("increment_'s rotation matrix is not proper.");
+      makeOrthogonal(increment_);
+    }
+
+    // the increment of the base's position, in the base frame
+    relative_tf_ = base_to_laser_ * increment_ * laser_to_base_;
+
+    /// @todo increment_covariance_ in laser frame.
+    /// Is it simply rotating the covariance ?
+    Eigen::Matrix<Scalar, 6, 6> R = Eigen::Matrix<Scalar, 6, 6>::Identity();
+    R.topLeftCorner<3,3>()     = base_to_laser_.rotation();
+    R.bottomRightCorner<3,3>() = laser_to_base_.rotation();
+
+    /// @todo if no set by plugin, default covariance spins...
+    increment_covariance_ = R * increment_covariance_ * R.inverse();
+
+    // update the pose in the fixed frame
+    //fixed_to_base_ = fixed_to_base_kf_ * relative_tf_;
+    fixed_to_base_ = relative_tf_ * fixed_to_base_kf_;
+
+    // update the pose in the fixed 'origin' frame
+    //fixed_origin_to_base_ = fixed_origin_ * fixed_to_base_;
+    fixed_origin_to_base_ = fixed_to_base_ * fixed_origin_;
+  }
+  else
+  {
+    relative_tf_.setIdentity();
+    ROS_WARN("Error in laser matching.");
+  }
 }
 
 const Transform& LaserOdometryBase::getEstimatedPose() const noexcept
@@ -417,7 +356,6 @@ void LaserOdometryBase::reset()
   guess_relative_tf_ = Transform::Identity();
   fixed_to_base_kf_  = fixed_to_base_;
 
-
   reference_scan_  = nullptr;
   reference_cloud_ = nullptr;
 }
@@ -427,12 +365,12 @@ void LaserOdometryBase::hardReset()
   /// @todo reset configured_ too ? :s
   /// implies reseting 'laser_frame_' etc too.
 
-  reset();
-
   base_to_laser_     = Transform::Identity();
   laser_to_base_     = Transform::Identity();
   fixed_origin_      = Transform::Identity();
   fixed_to_base_     = Transform::Identity();
+
+  reset();
 }
 
 bool LaserOdometryBase::configured() const noexcept
@@ -483,6 +421,20 @@ void LaserOdometryBase::isKeyFrame()
 void LaserOdometryBase::isNotKeyFrame()
 {
 
+}
+
+void LaserOdometryBase::resetCovarianceDefault()
+{
+  increment_covariance_ = Covariance::Identity();
+
+  increment_covariance_(0,0) = default_cov_diag_[0];
+  increment_covariance_(1,1) = default_cov_diag_[1];
+  increment_covariance_(2,2) = default_cov_diag_[2];
+  increment_covariance_(3,3) = default_cov_diag_[3];
+  increment_covariance_(4,4) = default_cov_diag_[4];
+  increment_covariance_(5,5) = default_cov_diag_[5];
+
+  //pose_covariance_ = increment_covariance_;
 }
 
 OdomType LaserOdometryBase::odomType() const noexcept
@@ -558,7 +510,16 @@ const Transform& LaserOdometryBase::getOrigin() const
 
 void LaserOdometryBase::setOrigin(const Transform& origin)
 {
-  fixed_origin_ = origin;
+  if (isRotationProper(origin))
+  {
+    fixed_origin_ = origin;
+  }
+  else
+  {
+    ROS_ERROR("setOrigin:, origin's rotation matrix"
+              " is not orthogonal.\nSetting Identity instead.");
+    fixed_origin_ = Transform::Identity();
+  }
 }
 
 Transform& LaserOdometryBase::getInitialGuess()
@@ -573,7 +534,16 @@ const Transform& LaserOdometryBase::getInitialGuess() const
 
 void LaserOdometryBase::setInitialGuess(const Transform& guess)
 {
-  guess_relative_tf_ = guess;
+  if (isRotationProper(guess))
+  {
+    guess_relative_tf_ = guess;
+  }
+  else
+  {
+    ROS_ERROR("setInitialGuess:, initial guess's rotation matrix"
+              " is not orthogonal.\nSetting Identity instead.");
+    guess_relative_tf_ = Transform::Identity();
+  }
 }
 
 Transform& LaserOdometryBase::getLaserPose()
@@ -588,8 +558,18 @@ const Transform& LaserOdometryBase::getLaserPose() const
 
 void LaserOdometryBase::setLaserPose(const Transform& base_to_laser)
 {
-  base_to_laser_ = base_to_laser;
-  laser_to_base_ = base_to_laser.inverse();
+  if (isRotationProper(base_to_laser))
+  {
+    base_to_laser_ = base_to_laser;
+    laser_to_base_ = base_to_laser.inverse();
+  }
+  else
+  {
+    ROS_ERROR("setLaserPose:, laser pose's rotation matrix"
+              " is not orthogonal.\nSetting Identity instead.");
+    base_to_laser_ = Transform::Identity();
+    laser_to_base_ = Transform::Identity();
+  }
 }
 
 const std::string& LaserOdometryBase::getFrameBase()  const noexcept
