@@ -52,7 +52,7 @@ inline T anyabs(const T& v)
 }
 
 template <typename Derived>
-typename Eigen::MatrixBase<Derived>::Scalar
+inline typename Eigen::MatrixBase<Derived>::Scalar
 getYaw(const Eigen::MatrixBase<Derived>& r)
 {
   return std::atan2( r(1, 0), r(0, 0) );
@@ -73,11 +73,7 @@ inline bool isOthogonal(const Isometry<T, Dim>& t,
   // so that T(1) - R.rotation().determinant() = 0
   // is always true.
 
-  const Eigen::Matrix<T, Dim-1, Dim-1> R(t.matrix().topLeftCorner(Dim-1, Dim-1));
-
-  return (anyabs(T(1) - anyabs(R.determinant())) > epsilon) ? false : true;
-
-//  return (anyabs(T(1) - t.matrix().topLeftCorner(Dim-1, Dim-1).determinant()) > epsilon) ? false : true;
+  return (anyabs(T(1) - anyabs(t.linear().determinant())) > epsilon) ? false : true;
 }
 
 template <typename T, int Dim>
@@ -99,7 +95,7 @@ inline bool isSymmetric(const Eigen::Matrix<T, N, N>& M,
 }
 
 template <typename T, int N>
-bool isPositiveSemiDefinite(const Eigen::Matrix<T, N, N>& M)
+inline bool isPositiveSemiDefinite(const Eigen::Matrix<T, N, N>& M)
 {
   Eigen::SelfAdjointEigenSolver<Eigen::Matrix<T, N, N> > eigensolver(M);
 
@@ -113,7 +109,7 @@ bool isPositiveSemiDefinite(const Eigen::Matrix<T, N, N>& M)
 }
 
 template <typename T, int N>
-bool isCovariance(const Eigen::Matrix<T, N, N>& M)
+inline bool isCovariance(const Eigen::Matrix<T, N, N>& M)
 {
   return isSymmetric(M) && isPositiveSemiDefinite(M);
 }
