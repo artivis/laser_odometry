@@ -88,6 +88,86 @@ covariance2dTo3d(const Eigen::MatrixBase<Derived>& cov_2d)
   return cov_3d;
 }
 
+/// Some helper functions ///
+
+template<typename T>
+inline T anyabs(const T& v)
+{
+  return (v < T(0))? -v : v;
+}
+
+template <typename Derived>
+inline typename Eigen::MatrixBase<Derived>::Scalar
+getYaw(const Eigen::MatrixBase<Derived>& r)
+{
+  return std::atan2( r(1, 0), r(0, 0) );
+}
+
+template <typename T, int Dim>
+inline bool isIdentity(const Isometry<T, Dim>& t,
+                       const T epsilon = eps)
+{
+  return t.isApprox(Isometry<T, Dim>::Identity(), epsilon);
+}
+
+template <typename T, int Dim>
+inline bool isOthogonal(const Isometry<T, Dim>& t,
+                        const T epsilon = eps)
+{
+  // Calling t.rotation() normalizes the rotation already
+  // so that T(1) - R.rotation().determinant() = 0
+  // is always true.
+
+  return (anyabs(T(1) - anyabs(t.linear().determinant())) > epsilon) ? false : true;
+}
+
+template <typename T, int Dim>
+inline bool isRotationProper(const Isometry<T, Dim>& t,
+                             const T epsilon = eps)
+{
+  // Calling t.rotation() normalizes the rotation already
+  // so that T(1) - R.rotation().determinant() = 0
+  // is always true.
+
+  return (anyabs(T(1) - t.linear().determinant()) > epsilon) ? false : true;
+}
+
+template <typename T, int N>
+inline bool isSymmetric(const Eigen::Matrix<T, N, N>& M,
+                        const T epsilon = eps)
+{
+  return M.isApprox(M.transpose(), epsilon);
+}
+
+template <typename T, int N>
+inline bool isPositiveSemiDefinite(const Eigen::Matrix<T, N, N>& M)
+{
+  Eigen::SelfAdjointEigenSolver<Eigen::Matrix<T, N, N> > eigensolver(M);
+
+  if (eigensolver.info() == Eigen::Success)
+  {
+    // All eigenvalues must be >= 0:
+    return (eigensolver.eigenvalues().array() >= T(0)).all();
+  }
+
+  return false;
+}
+
+template <typename T, int N>
+inline bool isCovariance(const Eigen::Matrix<T, N, N>& M)
+{
+  return isSymmetric(M) && isPositiveSemiDefinite(M);
+}
+
+template <typename T, int Dim>
+inline void makeOrthogonal(Isometry<T, Dim>& t)
+{
+  const Isometry<T, Dim> tmp = t;
+
+  t = tmp.rotation();
+  t.translation() = tmp.translation();
+}
+
 } /* namespace utils */
 } /* namespace laser_odometry */
 

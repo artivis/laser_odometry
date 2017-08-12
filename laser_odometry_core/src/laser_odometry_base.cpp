@@ -37,7 +37,7 @@ void LaserOdometryBase::fillMsg<geometry_msgs::Pose2DPtr&>(geometry_msgs::Pose2D
 
   msg_ptr->x = fixed_origin_to_base_.translation()(0);
   msg_ptr->y = fixed_origin_to_base_.translation()(1);
-  msg_ptr->theta = getYaw(fixed_origin_to_base_.rotation());
+  msg_ptr->theta = utils::getYaw(fixed_origin_to_base_.rotation());
 }
 
 template <>
@@ -79,7 +79,7 @@ void LaserOdometryBase::fillIncrementMsg<geometry_msgs::Pose2DPtr&>(geometry_msg
 
   msg_ptr->x = relative_tf_.translation()(0);
   msg_ptr->y = relative_tf_.translation()(1);
-  msg_ptr->theta = getYaw(relative_tf_.rotation());
+  msg_ptr->theta = utils::getYaw(relative_tf_.rotation());
 }
 
 template <>
@@ -284,7 +284,8 @@ Transform LaserOdometryBase::getIncrementPrior()
   // If an increment prior has been set, 'consum' it.
   // Otherwise predict from previously
   // computed relative_tf_
-  if (!isIdentity(guess_relative_tf_) && isRotationProper(guess_relative_tf_))
+  if (!utils::isIdentity(guess_relative_tf_) &&
+       utils::isRotationProper(guess_relative_tf_))
   {
     guess_relative_tf  = guess_relative_tf_;
     guess_relative_tf_ = Transform::Identity();
@@ -293,9 +294,9 @@ Transform LaserOdometryBase::getIncrementPrior()
   {
     guess_relative_tf = predict(relative_tf_);
 
-    if (!isRotationProper(guess_relative_tf))
+    if (!utils::isRotationProper(guess_relative_tf))
     {
-      makeOrthogonal(guess_relative_tf);
+      utils::makeOrthogonal(guess_relative_tf);
     }
   }
 
@@ -309,10 +310,10 @@ void LaserOdometryBase::posePlusIncrement(const bool processed)
 {
   if (processed)
   {
-    if (!isRotationProper(increment_), 1e-10)
+    if (!utils::isRotationProper(increment_), 1e-10)
     {
       ROS_DEBUG_STREAM("increment_'s rotation matrix is not proper.");
-      makeOrthogonal(increment_);
+      utils::makeOrthogonal(increment_);
     }
 
     // the increment of the base's position, in the base frame
@@ -511,7 +512,7 @@ const Transform& LaserOdometryBase::getOrigin() const
 
 void LaserOdometryBase::setOrigin(const Transform& origin)
 {
-  if (isRotationProper(origin))
+  if (utils::isRotationProper(origin))
   {
     fixed_origin_ = origin;
   }
@@ -535,7 +536,7 @@ const Transform& LaserOdometryBase::getInitialGuess() const
 
 void LaserOdometryBase::setInitialGuess(const Transform& guess)
 {
-  if (isRotationProper(guess))
+  if (utils::isRotationProper(guess))
   {
     guess_relative_tf_ = guess;
   }
@@ -559,7 +560,7 @@ const Transform& LaserOdometryBase::getLaserPose() const
 
 void LaserOdometryBase::setLaserPose(const Transform& base_to_laser)
 {
-  if (isRotationProper(base_to_laser))
+  if (utils::isRotationProper(base_to_laser))
   {
     base_to_laser_ = base_to_laser;
     laser_to_base_ = base_to_laser.inverse();
