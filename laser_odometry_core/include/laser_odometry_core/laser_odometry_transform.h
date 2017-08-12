@@ -10,6 +10,8 @@ namespace laser_odometry
 
 using Scalar = double;
 
+constexpr Scalar eps = 1e-6;
+
 constexpr Scalar default_cov_diag_val = 1e-6;
 
 template <typename T, int Dim>
@@ -58,14 +60,14 @@ getYaw(const Eigen::MatrixBase<Derived>& r)
 
 template <typename T, int Dim>
 inline bool isIdentity(const Isometry<T, Dim>& t,
-                        const T epsilon = 1e-5)
+                       const T epsilon = eps)
 {
   return t.isApprox(Isometry<T, Dim>::Identity(), epsilon);
 }
 
 template <typename T, int Dim>
 inline bool isOthogonal(const Isometry<T, Dim>& t,
-                        const T epsilon = 1e-5)
+                        const T epsilon = eps)
 {
   // Calling t.rotation() normalizes the rotation already
   // so that T(1) - R.rotation().determinant() = 0
@@ -80,7 +82,7 @@ inline bool isOthogonal(const Isometry<T, Dim>& t,
 
 template <typename T, int Dim>
 inline bool isRotationProper(const Isometry<T, Dim>& t,
-                             const T epsilon = 1e-6)
+                             const T epsilon = eps)
 {
   // Calling t.rotation() normalizes the rotation already
   // so that T(1) - R.rotation().determinant() = 0
@@ -90,10 +92,10 @@ inline bool isRotationProper(const Isometry<T, Dim>& t,
 }
 
 template <typename T, int N>
-bool isSymmetric(const Eigen::Matrix<T, N, N>& M,
-                 const T eps = 1e-5)
+inline bool isSymmetric(const Eigen::Matrix<T, N, N>& M,
+                        const T epsilon = eps)
 {
-  return M.isApprox(M.transpose(), eps);
+  return M.isApprox(M.transpose(), epsilon);
 }
 
 template <typename T, int N>
