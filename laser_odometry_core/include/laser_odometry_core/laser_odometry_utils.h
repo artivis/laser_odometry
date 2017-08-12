@@ -50,6 +50,44 @@ bool all_positive(const std::vector<T> vec)
   return true;
 }
 
+template<typename T>
+inline Eigen::Matrix<T, 3, 3> matrixRollPitchYaw(const T roll,
+                                                 const T pitch,
+                                                 const T yaw)
+{
+  const Eigen::AngleAxis<T> ax = Eigen::AngleAxis<T>(roll,  Eigen::Matrix<T, 3, 1>::UnitX());
+  const Eigen::AngleAxis<T> ay = Eigen::AngleAxis<T>(pitch, Eigen::Matrix<T, 3, 1>::UnitY());
+  const Eigen::AngleAxis<T> az = Eigen::AngleAxis<T>(yaw,   Eigen::Matrix<T, 3, 1>::UnitZ());
+
+  return (az * ay * ax).toRotationMatrix().matrix();
+}
+
+template<typename T>
+inline Eigen::Matrix<T, 3, 3> matrixYaw(const T yaw)
+{
+  return matrixRollPitchYaw<T>(0, 0, yaw);
+}
+
+template <typename Derived>
+Eigen::Matrix<typename Derived::Scalar, 6, 6>
+covariance2dTo3d(const Eigen::MatrixBase<Derived>& cov_2d)
+{
+  static_assert(Eigen::MatrixBase<Derived>::RowsAtCompileTime == 3, "Input arg must be of size 3*3");
+  static_assert(Eigen::MatrixBase<Derived>::ColsAtCompileTime == 3, "Input arg must be of size 3*3");
+
+  using T = typename Derived::Scalar;
+
+  Eigen::Matrix<T, 6, 6> cov_3d = Eigen::Matrix<T, 6, 6>::Identity();
+
+  cov_3d.block(2,2,0,0) = cov_2d.block(2,2,0,0);
+  cov_3d.block(2,1,0,5) = cov_2d.block(2,1,0,2);
+  cov_3d.block(1,2,5,0) = cov_2d.block(1,2,2,0);
+
+  cov_3d(5,5) = cov_2d(2,2);
+
+  return cov_3d;
+}
+
 } /* namespace utils */
 } /* namespace laser_odometry */
 
