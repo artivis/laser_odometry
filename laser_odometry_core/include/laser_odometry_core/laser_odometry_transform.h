@@ -31,8 +31,8 @@ using Covariance = Eigen::Matrix<Scalar, 6, 6>;
 
 struct TransformWithCovariance
 {
-  TransformWithCovariance(const Transform& transform,
-                          const Covariance& covariance) :
+  explicit TransformWithCovariance(const Transform& transform,
+                                   const Covariance& covariance) :
     transform_(transform),
     covariance_(covariance)
   {
