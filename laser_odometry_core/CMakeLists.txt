@@ -50,9 +50,7 @@ target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 
 #Require C++11
 if(CMAKE_VERSION VERSION_LESS "3.1")
-  if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(${PROJECT_NAME} INTERFACE "-std=c++11")
-  endif()
+  set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "-std=c++11")
 else()
   set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 11)
   set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD_REQUIRED ON)
