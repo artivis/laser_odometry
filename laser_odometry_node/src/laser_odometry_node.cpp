@@ -2,6 +2,11 @@
 #include <laser_odometry_core/laser_odometry_instantiater.h>
 #include <laser_odometry_core/laser_odometry_utils.h>
 
+#include <geometry_msgs/Pose2D.h>
+#include <nav_msgs/Odometry.h>
+
+#include <tf_conversions/tf_eigen.h>
+
 namespace sm = sensor_msgs;
 
 namespace laser_odometry
@@ -47,16 +52,16 @@ void LaserOdometryNode::initialize()
 
   if (init_origin_)
   {
-    tf::Transform origin_to_base = tf::Transform::getIdentity();
+    tf::Transform tf_origin_to_base = tf::Transform::getIdentity();
     utils::getTf(laser_odom_ptr_->getFrameBase(),
-                 global_frame_, origin_to_base);
+                 global_frame_, tf_origin_to_base);
 
-    laser_odom_ptr_->setOrigin(origin_to_base);
+    Eigen::Affine3d origin_to_base;
+    tf::transformTFToEigen(tf_origin_to_base, origin_to_base);
 
-    geometry_msgs::Transform msg;
-    tf::transformTFToMsg(origin_to_base, msg);
+    laser_odom_ptr_->setOrigin(Transform(origin_to_base.matrix()));
 
-    ROS_INFO_STREAM("Initializing origin :\n" << msg);
+    ROS_INFO_STREAM("Initializing origin :\n" << origin_to_base.matrix());
   }
 
   sub_ = private_nh_.subscribe("topic_in", 1,
@@ -96,13 +101,16 @@ void LaserOdometryNode::CloudCallback(const sensor_msgs::PointCloud2ConstPtr& ne
 
 void LaserOdometryNode::setLaserFromTf(const ros::Time &t, const ros::Duration &d)
 {
-  tf::Transform base_to_laser = tf::Transform::getIdentity();
+  tf::Transform tf_base_to_laser = tf::Transform::getIdentity();
 
   utils::getTf(laser_odom_ptr_->getFrameLaser(),
                laser_odom_ptr_->getFrameBase(),
-               base_to_laser, t, d);
+               tf_base_to_laser, t, d);
 
-  laser_odom_ptr_->setLaserPose(base_to_laser);
+  Eigen::Affine3d base_to_laser;
+  tf::transformTFToEigen(tf_base_to_laser, base_to_laser);
+
+  laser_odom_ptr_->setLaserPose(Transform(base_to_laser.matrix()));
 }
 
 void LaserOdometryNode::process()
@@ -208,15 +216,15 @@ void LaserOdometryNode::sendTransform()
 {
   if (broadcast_tf_ && configured_)
   {
-    const tf::StampedTransform transform_msg(laser_odom_ptr_->getEstimatedPose(),
+    tf::Transform tf_fixed_origin_to_base = tf::Transform::getIdentity();
+    tf::transformEigenToTF(laser_odom_ptr_->getEstimatedPose(), tf_fixed_origin_to_base);
+
+    const tf::StampedTransform transform_msg(tf_fixed_origin_to_base,
                                              laser_odom_ptr_->getCurrentTime(),
                                              laser_odom_ptr_->getFrameOdom(),
                                              laser_odom_ptr_->getFrameBase());
 
-    geometry_msgs::TransformStamped ttf;
-    tf::transformStampedTFToMsg(transform_msg, ttf);
-
-    ROS_DEBUG_STREAM("Sending tf:\n" << ttf);
+    ROS_DEBUG_STREAM("Sending tf:\n" << laser_odom_ptr_->getEstimatedPose().matrix());
 
     tf_broadcaster_.sendTransform(transform_msg);
   }

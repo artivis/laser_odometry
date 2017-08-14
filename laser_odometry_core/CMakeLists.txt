@@ -17,21 +17,30 @@ else()
 endif()
 
 find_package(catkin REQUIRED COMPONENTS
+  cmake_modules
+  eigen_conversions
   geometry_msgs
   nav_msgs
   pluginlib
   roscpp
   sensor_msgs
   tf
+  tf_conversions
 )
+
+#find_package(tf_conversions 1.11.8 REQUIRED)
+
+find_package(Eigen REQUIRED)
 
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ${PROJECT_NAME}
-  CATKIN_DEPENDS roscpp tf sensor_msgs pluginlib
+  CATKIN_DEPENDS cmake_modules geometry_msgs nav_msgs pluginlib
+                 roscpp sensor_msgs tf tf_conversions
+  DEPENDS Eigen
 )
 
-include_directories(include ${catkin_INCLUDE_DIRS})
+include_directories(include ${catkin_INCLUDE_DIRS} ${Eigen_INCLUDE_DIRS})
 
 ###############
 ##   Build   ##
@@ -39,8 +48,9 @@ include_directories(include ${catkin_INCLUDE_DIRS})
 
 add_library(${PROJECT_NAME}
     src/laser_odometry_base.cpp
-    src/laser_odometry_utils.cpp
     src/laser_odometry_instantiater.cpp
+    src/laser_odometry_utils.cpp
+    src/laser_odometry_conversion.cpp
 )
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 
