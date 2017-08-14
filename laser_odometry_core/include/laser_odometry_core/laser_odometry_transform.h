@@ -31,6 +31,8 @@ using Covariance = Eigen::Matrix<Scalar, 6, 6>;
 
 struct TransformWithCovariance
 {
+  TransformWithCovariance() = default;
+
   explicit TransformWithCovariance(const Transform& transform,
                                    const Covariance& covariance) :
     transform_(transform),
@@ -39,8 +41,8 @@ struct TransformWithCovariance
     //
   }
 
-  Transform  transform_;
-  Covariance covariance_;
+  Transform  transform_  = Transform::Identity();
+  Covariance covariance_ = Covariance::Zero();
 };
 
 } /* namespace laser_odometry */
