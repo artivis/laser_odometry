@@ -1,24 +1,5 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.2.0 FATAL_ERROR)
 project(laser_odometry_node)
-
-if(NOT CMAKE_BUILD_TYPE)
-    set (CMAKE_BUILD_TYPE Release)
-endif(NOT CMAKE_BUILD_TYPE)
-
-#Set compiler according C++11 support
-include(CheckCXXCompilerFlag)
-CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
-CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
-if(COMPILER_SUPPORTS_CXX11)
-    message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has C++11 support.")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-elseif(COMPILER_SUPPORTS_CXX0X)
-    message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has C++0x support.")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
-else()
-    message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support.
-            Please use a different C++ compiler.")
-endif()
 
 find_package(catkin REQUIRED COMPONENTS
   eigen_conversions
@@ -46,16 +27,21 @@ include_directories(SYSTEM ${catkin_INCLUDE_DIRS})
 ##   Build   ##
 ###############
 
-add_executable(laser_odometry_node src/laser_odometry_node.cpp)
-target_link_libraries(laser_odometry_node
+add_executable(${PROJECT_NAME} src/laser_odometry_node.cpp)
+target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}
 )
+
+#Require C++11
+set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 11)
+set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD_REQUIRED ON)
+set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_EXTENSIONS OFF)
 
 ################
 ##  Install   ##
 ################
 
-install(TARGETS laser_odometry_node
+install(TARGETS ${PROJECT_NAME}
 #    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
     RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
