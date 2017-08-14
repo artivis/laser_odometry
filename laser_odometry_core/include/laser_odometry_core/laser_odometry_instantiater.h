@@ -4,7 +4,7 @@
 #include <pluginlib/class_loader.h>
 
 #include <laser_odometry_core/singleton.h>
-#include <laser_odometry_core/laser_odometry_core.h>
+#include <laser_odometry_core/laser_odometry_base.h>
 
 namespace
 {
