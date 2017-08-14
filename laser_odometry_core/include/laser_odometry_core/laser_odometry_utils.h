@@ -3,6 +3,8 @@
 
 #include "laser_odometry_core/laser_odometry_transform.h"
 
+#include <Eigen/Eigenvalues>
+
 #include <tf/tf.h>
 #include <tf/transform_listener.h>
 

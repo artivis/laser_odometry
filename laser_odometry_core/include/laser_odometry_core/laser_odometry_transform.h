@@ -3,7 +3,6 @@
 
 // Eigen header
 #include <Eigen/Geometry>
-#include <Eigen/Eigenvalues>
 
 namespace laser_odometry
 {
