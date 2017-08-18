@@ -399,7 +399,7 @@ namespace laser_odometry
 
     /// @brief The global odometry frame name.
     /// This frame name is only used in the published message.
-    std::string laser_odom_frame_ = "odom";
+    std::string laser_odom_frame_ = "laser_odom";
 
     /// @brief Tranform from base_frame to laser_frame
     Transform base_to_laser_ = Transform::Identity();
