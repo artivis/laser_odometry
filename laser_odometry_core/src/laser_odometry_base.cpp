@@ -111,10 +111,10 @@ bool LaserOdometryBase::configure()
 {
   hardReset();
 
-  private_nh_.param("laser_frame",      laser_frame_,      std::string("base_laser_link"));
-  private_nh_.param("base_frame",       base_frame_,       std::string("base_link"));
-  private_nh_.param("odom_frame",       fixed_frame_,      std::string("odom"));
-  private_nh_.param("laser_odom_frame", laser_odom_frame_, std::string("odom"));
+  private_nh_.param("laser_frame",      laser_frame_,      laser_frame_);
+  private_nh_.param("base_frame",       base_frame_,       base_frame_);
+  private_nh_.param("odom_frame",       fixed_frame_,      fixed_frame_);
+  private_nh_.param("laser_odom_frame", laser_odom_frame_, laser_odom_frame_);
 
   // Default covariance diag :
   std::vector<Scalar> default_covariance(default_cov_diag_);
