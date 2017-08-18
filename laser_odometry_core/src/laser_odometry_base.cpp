@@ -329,12 +329,12 @@ void LaserOdometryBase::posePlusIncrement(const bool processed)
     increment_covariance_ = R * increment_covariance_ * R.inverse();
 
     // update the pose in the fixed frame
-    //fixed_to_base_ = fixed_to_base_kf_ * relative_tf_;
-    fixed_to_base_ = relative_tf_ * fixed_to_base_kf_;
+    fixed_to_base_ = fixed_to_base_kf_ * relative_tf_;
+//    fixed_to_base_ = relative_tf_ * fixed_to_base_kf_;
 
     // update the pose in the fixed 'origin' frame
-    //fixed_origin_to_base_ = fixed_origin_ * fixed_to_base_;
-    fixed_origin_to_base_ = fixed_to_base_ * fixed_origin_;
+    fixed_origin_to_base_ = fixed_origin_ * fixed_to_base_;
+//    fixed_origin_to_base_ = fixed_to_base_ * fixed_origin_;
   }
   else
   {
