@@ -111,6 +111,8 @@ void LaserOdometryNode::setLaserFromTf(const ros::Time &t, const ros::Duration &
   tf::transformTFToEigen(tf_base_to_laser, base_to_laser);
 
   laser_odom_ptr_->setLaserPose(Transform(base_to_laser.matrix()));
+
+  ROS_INFO_STREAM("Setting laser to base :\n" << base_to_laser.matrix());
 }
 
 void LaserOdometryNode::process()
