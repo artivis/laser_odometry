@@ -81,9 +81,9 @@ covariance2dTo3d(const Eigen::MatrixBase<Derived>& cov_2d)
 
   Eigen::Matrix<T, 6, 6> cov_3d = Eigen::Matrix<T, 6, 6>::Identity();
 
-  cov_3d.block(2,2,0,0) = cov_2d.block(2,2,0,0);
-  cov_3d.block(2,1,0,5) = cov_2d.block(2,1,0,2);
-  cov_3d.block(1,2,5,0) = cov_2d.block(1,2,2,0);
+  cov_3d.block(0,0,2,2) = cov_2d.block(0,0,2,2);
+  cov_3d.block(0,5,2,1) = cov_2d.block(0,2,2,1);
+  cov_3d.block(5,0,1,2) = cov_2d.block(2,0,1,2);
 
   cov_3d(5,5) = cov_2d(2,2);
 
