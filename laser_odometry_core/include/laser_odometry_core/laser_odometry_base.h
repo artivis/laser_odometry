@@ -56,8 +56,8 @@ namespace laser_odometry
    *
    *       - getIncrementPrior
    *
-   *                    guess_relative_tf_ *IF*
-   *                 /  set using setInitialGuess
+   *                    increment_in_laser_prior_ *IF*
+   *                 /  set using setIncrementPrior
    *          return |
    *                 \  predict   otherwise         [O]
    *
@@ -483,14 +483,26 @@ namespace laser_odometry
     virtual void preProcessing();
 
     /**
-     * @brief getIncrementPrior. Return the increment prior
-     * either set by user if set (default) or using predict.
-     * @return The increment prior.
+     * @brief getIncrementPriorInKeyFrame. Return the increment prior
+     * in the last key-frame frame by using either the increment_in_base_prior_
+     * set by user (if set) (default) or using predict().
+     * @return The increment prior in the last key-frame frame.
      *
-     * @see setInitialGuess
+     * @see setIncrementPrior
      * @see predict
      */
-    Transform getIncrementPrior();
+    Transform getIncrementPriorInKeyFrame();
+
+    /**
+     * @brief getIncrementPriorInLaserFrame. Return the increment prior
+     * taking into acount the last key-frame in the laser frame.
+     * @return The increment prior in the last laser frame.
+     *
+     * @see getIncrementPriorInKeyFrame
+     * @see setIncrementPrior
+     * @see predict
+     */
+    Transform getIncrementPriorInLaserFrame();
 
     /**
      * @brief posePlusIncrement. Update the estimated current pose

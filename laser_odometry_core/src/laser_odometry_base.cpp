@@ -182,13 +182,10 @@ LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_msg)
   preProcessing();
 
   // the predicted change of the laser's position, in the laser frame
-//  const Transform pred_rel_tf_in_ltf = laser_to_base_ * fixed_to_base_.inverse() *
-//                                        incrementPrior() * fixed_to_base_ * base_to_laser_;
-
-  const Transform pred_rel_tf_in_ltf = laser_to_base_ * getIncrementPrior() * base_to_laser_;
+  const Transform increment_prior_in_laser = getIncrementPriorInLaserFrame();
 
   // The actual computation
-  const bool processed = processImpl(scan_msg, pred_rel_tf_in_ltf);
+  const bool processed = processImpl(scan_msg, increment_prior_in_laser);
 
   posePlusIncrement(processed);
 
@@ -235,13 +232,10 @@ LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
   preProcessing();
 
   // the predicted change of the laser's position, in the laser frame
-//  const Transform pred_rel_tf_in_ltf = laser_to_base_ * fixed_to_base_.inverse() *
-//                                        incrementPrior() * fixed_to_base_ * base_to_laser_;
-
-  const Transform pred_rel_tf_in_ltf = laser_to_base_ * getIncrementPrior() * base_to_laser_;
+  const Transform increment_prior_in_laser = getIncrementPriorInLaserFrame();
 
   // The actual computation
-  const bool processed = processImpl(cloud_msg, pred_rel_tf_in_ltf);
+  const bool processed = processImpl(cloud_msg, increment_prior_in_laser);
 
   posePlusIncrement(processed);
 
@@ -277,7 +271,7 @@ bool LaserOdometryBase::processImpl(const sensor_msgs::PointCloud2ConstPtr& /*cl
   throw std::runtime_error("processImpl(sensor_msgs::PointCloud2ConstPtr) not implemented.");
 }
 
-Transform LaserOdometryBase::getIncrementPrior()
+Transform LaserOdometryBase::getIncrementPriorInKeyFrame()
 {
   Transform increment_in_base_prior = Transform::Identity();
 
@@ -306,8 +300,12 @@ Transform LaserOdometryBase::getIncrementPrior()
   return increment_in_base_prior;
 }
 
+Transform LaserOdometryBase::getIncrementPriorInLaserFrame()
+{
+  return laser_to_base_ * getIncrementPriorInKeyFrame() * base_to_laser_;
 
-  return guess_relative_tf;
+//  return laser_to_base_ * fixed_to_base_.inverse() *
+//          incrementPrior() * fixed_to_base_ * base_to_laser_;
 }
 
 void LaserOdometryBase::posePlusIncrement(const bool processed)
