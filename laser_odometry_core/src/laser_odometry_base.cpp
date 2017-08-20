@@ -500,11 +500,6 @@ void LaserOdometryBase::getKeyFrame(sensor_msgs::PointCloud2ConstPtr& key_frame_
   key_frame_msg = reference_cloud_;
 }
 
-Transform& LaserOdometryBase::getOrigin()
-{
-  return fixed_origin_;
-}
-
 const Transform& LaserOdometryBase::getOrigin() const
 {
   return fixed_origin_;
@@ -524,11 +519,6 @@ void LaserOdometryBase::setOrigin(const Transform& origin)
   }
 }
 
-Transform& LaserOdometryBase::getInitialGuess()
-{
-  return guess_relative_tf_;
-}
-
 const Transform& LaserOdometryBase::getInitialGuess() const
 {
   return guess_relative_tf_;
@@ -546,11 +536,6 @@ void LaserOdometryBase::setInitialGuess(const Transform& guess)
               " is not orthogonal.\nSetting Identity instead.");
     guess_relative_tf_ = Transform::Identity();
   }
-}
-
-Transform& LaserOdometryBase::getLaserPose()
-{
-  return base_to_laser_;
 }
 
 const Transform& LaserOdometryBase::getLaserPose() const

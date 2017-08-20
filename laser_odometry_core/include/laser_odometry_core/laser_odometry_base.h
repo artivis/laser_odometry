@@ -223,12 +223,6 @@ namespace laser_odometry
     /* Guetter / Setter */
 
     /**
-     * @brief Reference to the origin frame.
-     * @return Reference to the origin frame.
-     */
-    Transform& getOrigin();
-
-    /**
      * @brief Const-reference to the origin frame.
      * @return Const-reference to the origin frame.
      */
@@ -239,14 +233,6 @@ namespace laser_odometry
      * @param[in] origin. The origin frame.
      */
     void setOrigin(const Transform& origin);
-
-    /**
-     * @brief Reference to the initial prediction transform of the upcoming matching.
-     * It is the pose increment from the last processed scan
-     * to the current one.
-     * @return Reference to the initial prediction transform of the upcoming matching.
-     */
-    Transform& getInitialGuess();
 
     /**
      * @brief Const-reference to the initial prediction transform of the upcoming matching.
@@ -263,12 +249,6 @@ namespace laser_odometry
      * @param[in] guess. The initial prediciton.
      */
     void setInitialGuess(const Transform& guess);
-
-    /**
-     * @brief Reference to the laser pose wrt the robot base frame.
-     * @return Reference to the laser pose wrt the robot base frame.
-     */
-    Transform& getLaserPose();
 
     /**
      * @brief Const-reference to the laser pose wrt the robot base frame.
