@@ -1,5 +1,8 @@
 <launch>
 
+  <!-- Launch node through valgrind/gdb. -->
+  <arg name="debug" default="false"/>
+
   <!-- The laser odometry plugin type. -->
   <arg name="laser_odometry_type"/>
 
@@ -9,10 +12,21 @@
   <!-- The input topic. -->
   <arg name="topic_in" default="~topic_in"/>
 
-  <node pkg="laser_odometry_node" type="laser_odometry_node" name="laser_odometry_node" output="screen">
-    <param name="laser_odometry_type" value="$(arg laser_odometry_type)" />
-    <rosparam file="$(arg node_config_file)" command="load" />
-    <remap from="~topic_in" to="$(arg topic_in)" />
-  </node>
+  <group unless="$(arg debug)">
+    <node pkg="laser_odometry_node" type="laser_odometry_node" name="laser_odometry_node" output="screen">
+      <param name="laser_odometry_type" value="$(arg laser_odometry_type)" />
+      <rosparam file="$(arg node_config_file)" command="load" />
+      <remap from="~topic_in" to="$(arg topic_in)" />
+    </node>
+  </group>
+
+  <group if="$(arg debug)">
+    <node pkg="laser_odometry_node" type="laser_odometry_node" name="laser_odometry_node"
+           output="screen" launch-prefix="valgrind"> <!-- gdb -ex run -args -->
+      <param name="laser_odometry_type" value="$(arg laser_odometry_type)" />
+      <rosparam file="$(arg node_config_file)" command="load" />
+      <remap from="~topic_in" to="$(arg topic_in)" />
+    </node>
+  </group>
 
 </launch>

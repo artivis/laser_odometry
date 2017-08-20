@@ -7,18 +7,6 @@
 #include <geometry_msgs/Pose2D.h>
 #include <nav_msgs/Odometry.h>
 
-#define assert_not_null(x) \
-  assert(x != nullptr);
-
-#define assert_proper_rotation(x) \
-  if (!isRotationProper(x)) \
-  { \
-    ROS_ERROR_STREAM("l." << __LINE__ << " " << #x \
-       << " , rotation matrix" \
-       " is not orthogonal positive. Determinant " \
-        << x.linear().determinant()); \
-  } \
-
 namespace laser_odometry
 {
 
@@ -162,7 +150,11 @@ bool LaserOdometryBase::configure()
 LaserOdometryBase::ProcessReport
 LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_msg)
 {
-  assert_not_null(scan_msg);
+  if (scan_msg == nullptr)
+  {
+    ROS_WARN("Laser odometry process function received a nullptr input message!");
+    return ProcessReport::ErrorReport();
+  }
 
   has_new_kf_   = false;
   current_time_ = scan_msg->header.stamp;
@@ -212,7 +204,11 @@ LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_msg)
 LaserOdometryBase::ProcessReport
 LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 {
-  assert_not_null(cloud_msg);
+  if (cloud_msg == nullptr)
+  {
+    ROS_WARN("Laser odometry process function received a nullptr input message!");
+    return ProcessReport::ErrorReport();
+  }
 
   has_new_kf_   = false;
   current_time_ = cloud_msg->header.stamp;
@@ -460,7 +456,11 @@ bool LaserOdometryBase::hasNewKeyFrame() const noexcept
 
 void LaserOdometryBase::setKeyFrame(const sensor_msgs::LaserScanConstPtr& key_frame_msg)
 {
-  assert_not_null(key_frame_msg);
+  if (key_frame_msg == nullptr)
+  {
+    ROS_WARN("Laser odometry setKeyFrame function received a nullptr input message!");
+    return;
+  }
 
   initialized_ = initialize(key_frame_msg);
 
@@ -477,7 +477,11 @@ void LaserOdometryBase::setKeyFrame(const sensor_msgs::LaserScanConstPtr& key_fr
 
 void LaserOdometryBase::setKeyFrame(const sensor_msgs::PointCloud2ConstPtr& key_frame_msg)
 {
-  assert_not_null(key_frame_msg);
+  if (key_frame_msg == nullptr)
+  {
+    ROS_WARN("Laser odometry setKeyFrame function received a nullptr input message!");
+    return;
+  }
 
   initialized_ = initialize(key_frame_msg);
 
