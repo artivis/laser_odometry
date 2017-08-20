@@ -63,7 +63,7 @@ namespace laser_odometry
    *
    *       - processImpl                            [X]
    *
-   *       - posePlusIncrement                      [X]
+   *       - posePlusIncrement                      [O]
    *
    *       - is_keyframe = isKeyFrame               [O]
    *
@@ -77,8 +77,8 @@ namespace laser_odometry
    *
    *       - postProcessing                         [O]
    *
-   * [X] Symbol marks the necessity for the base class to override the function.<br>
-   * [O] Symbol marks optionality for the base class to override the function.
+   * [X] Symbol marks the necessity for the base class to override the function.
+   * [O] Symbol marks the optionality for the base class to override the function.
    *
    */
   class LaserOdometryBase
