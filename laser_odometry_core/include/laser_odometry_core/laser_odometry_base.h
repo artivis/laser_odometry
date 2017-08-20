@@ -56,12 +56,12 @@ namespace laser_odometry
    *
    *       - getIncrementPrior
    *
-   *                    guess_relative_tf_ *IF*
-   *                 /  set using setInitialGuess
+   *                    increment_in_base_prior_ *IF*
+   *                 /  set using setIncrementPrior
    *          return |
-   *                 \  predict   otherwise         [O]
+   *                 \  predict()  otherwise        [O]
    *
-   *       - process_impl                           [X]
+   *       - processImpl                            [X]
    *
    *       - posePlusIncrement                      [X]
    *
@@ -165,8 +165,8 @@ namespace laser_odometry
      *
      * @note [Necessary] To be implemented in the derived class.
      */
-    virtual bool process_impl(const sensor_msgs::LaserScanConstPtr& laser_msg,
-                              const Transform& prediction);
+    virtual bool processImpl(const sensor_msgs::LaserScanConstPtr& laser_msg,
+                             const Transform& prediction);
 
     /**
      * @brief Function to be implemented by the derived plugin.
@@ -179,8 +179,8 @@ namespace laser_odometry
      *
      * @note [Necessary] To be implemented in the derived class.
      */
-    virtual bool process_impl(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
-                              const Transform& prediction);
+    virtual bool processImpl(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
+                             const Transform& prediction);
 
   public:
 
@@ -223,12 +223,6 @@ namespace laser_odometry
     /* Guetter / Setter */
 
     /**
-     * @brief Reference to the origin frame.
-     * @return Reference to the origin frame.
-     */
-    Transform& getOrigin();
-
-    /**
      * @brief Const-reference to the origin frame.
      * @return Const-reference to the origin frame.
      */
@@ -241,38 +235,26 @@ namespace laser_odometry
     void setOrigin(const Transform& origin);
 
     /**
-     * @brief Reference to the initial prediction transform of the upcoming matching.
-     * It is the pose increment from the last processed scan
-     * to the current one.
-     * @return Reference to the initial prediction transform of the upcoming matching.
+     * @brief Const-reference to the increment prior in the base_frame
+     * of the upcoming matching.
+     * It is the prior of the pose increment in the base_frame
+     * from the last processed scan to the current one.
+     * @return Const-reference to the increment prior of the upcoming matching.
      */
-    Transform& getInitialGuess();
+    const Transform& getIncrementPrior() const;
 
     /**
-     * @brief Const-reference to the initial prediction transform of the upcoming matching.
-     * It is the pose increment from the last processed scan
-     * to the current one.
-     * @return Const-reference to the initial prediction transform of the upcoming matching.
+     * @brief Set the increment prior in the base_frame
+     * of the upcoming matching.
+     * It is the prior of the pose increment in the base_frame
+     * from the last processed scan to the current one.
+     * @param[in] guess. The increment prior of the upcoming matching.
      */
-    const Transform& getInitialGuess() const;
+    void setIncrementPrior(const Transform& increment_in_base_prior);
 
     /**
-     * @brief Set the initial prediction of the upcoming matching.
-     * It is the pose increment from the last processed scan
-     * to the current one.
-     * @param[in] guess. The initial prediciton.
-     */
-    void setInitialGuess(const Transform& guess);
-
-    /**
-     * @brief Reference to the laser pose wrt the robot base frame.
-     * @return Reference to the laser pose wrt the robot base frame.
-     */
-    Transform& getLaserPose();
-
-    /**
-     * @brief Const-reference to the laser pose wrt the robot base frame.
-     * @return Const-reference to the laser pose wrt the robot base frame.
+     * @brief Const-reference to the laser pose wrt the robot base_frame.
+     * @return Const-reference to the laser pose wrt the robot base_frame.
      */
     const Transform& getLaserPose() const;
 
@@ -412,23 +394,23 @@ namespace laser_odometry
     /// @note This is the transform the derived class should fills.
     Transform increment_ = Transform::Identity();
 
-    /// @brief The relative transform in the base_frame.
-    Transform relative_tf_ = Transform::Identity();
+    /// @brief The increment in the base_frame.
+    Transform increment_in_base_ = Transform::Identity();
 
     /// @brief Guessed/predicted tranform
     /// from reference_'reading' to
     /// current_'reading' in the base_frame.
-    Transform guess_relative_tf_ = Transform::Identity();
+    Transform increment_in_base_prior_ = Transform::Identity();
 
     /// @brief Tranform from fixed_frame
     /// to base_frame, where fixed_frame
     /// is the origin of the integration.
-    /// == fixed_to_base_kf_ * relative_tf_.
+    /// == fixed_to_base_kf_ * increment_in_base_.
     Transform fixed_to_base_ = Transform::Identity();
 
     /// @brief Tranform from fixed_frame to
     /// the last keyfame frame.
-    /// == fixed_to_base * relative_tf_.
+    /// == fixed_to_base * increment_in_base_.
     Transform fixed_to_base_kf_ = Transform::Identity();
 
     /// @brief An optional user defined
@@ -501,14 +483,26 @@ namespace laser_odometry
     virtual void preProcessing();
 
     /**
-     * @brief getIncrementPrior. Return the increment prior
-     * either set by user if set (default) or using predict.
-     * @return The increment prior.
+     * @brief getIncrementPriorInKeyFrame. Return the increment prior
+     * in the last key-frame frame by using either the increment_in_base_prior_
+     * set by user (if set) (default) or using predict().
+     * @return The increment prior in the last key-frame frame.
      *
-     * @see setInitialGuess
+     * @see setIncrementPrior
      * @see predict
      */
-    Transform getIncrementPrior();
+    Transform getIncrementPriorInKeyFrame();
+
+    /**
+     * @brief getIncrementPriorInLaserFrame. Return the increment prior
+     * taking into acount the last key-frame in the laser frame.
+     * @return The increment prior in the last laser frame.
+     *
+     * @see getIncrementPriorInKeyFrame
+     * @see setIncrementPrior
+     * @see predict
+     */
+    Transform getIncrementPriorInLaserFrame();
 
     /**
      * @brief posePlusIncrement. Update the estimated current pose
@@ -527,8 +521,8 @@ namespace laser_odometry
 
     /**
      * @brief Evaluate if the current reading should become the new
-     * referent reading form the matching.
-     * @param[in] The estimated pose increment in the world_frame_ frame.
+     * referent reading for the matching.
+     * @param[in] The estimated pose increment in the base_frame_ frame.
      * @return Whether the currently evaluated reading is the new referent.
      *
      * @note The base class returns \b true by default.
