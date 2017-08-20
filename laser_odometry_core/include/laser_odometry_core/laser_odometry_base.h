@@ -235,24 +235,26 @@ namespace laser_odometry
     void setOrigin(const Transform& origin);
 
     /**
-     * @brief Const-reference to the initial prediction transform of the upcoming matching.
-     * It is the pose increment from the last processed scan
-     * to the current one.
-     * @return Const-reference to the initial prediction transform of the upcoming matching.
+     * @brief Const-reference to the increment prior in the base_frame
+     * of the upcoming matching.
+     * It is the prior of the pose increment in the base_frame
+     * from the last processed scan to the current one.
+     * @return Const-reference to the increment prior of the upcoming matching.
      */
-    const Transform& getInitialGuess() const;
+    const Transform& getIncrementPrior() const;
 
     /**
-     * @brief Set the initial prediction of the upcoming matching.
-     * It is the pose increment from the last processed scan
-     * to the current one.
-     * @param[in] guess. The initial prediciton.
+     * @brief Set the increment prior in the base_frame
+     * of the upcoming matching.
+     * It is the prior of the pose increment in the base_frame
+     * from the last processed scan to the current one.
+     * @param[in] guess. The increment prior of the upcoming matching.
      */
-    void setInitialGuess(const Transform& guess);
+    void setIncrementPrior(const Transform& increment_in_base_prior);
 
     /**
-     * @brief Const-reference to the laser pose wrt the robot base frame.
-     * @return Const-reference to the laser pose wrt the robot base frame.
+     * @brief Const-reference to the laser pose wrt the robot base_frame.
+     * @return Const-reference to the laser pose wrt the robot base_frame.
      */
     const Transform& getLaserPose() const;
 
@@ -398,7 +400,7 @@ namespace laser_odometry
     /// @brief Guessed/predicted tranform
     /// from reference_'reading' to
     /// current_'reading' in the base_frame.
-    Transform guess_relative_tf_ = Transform::Identity();
+    Transform increment_in_base_prior_ = Transform::Identity();
 
     /// @brief Tranform from fixed_frame
     /// to base_frame, where fixed_frame

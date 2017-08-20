@@ -279,29 +279,33 @@ bool LaserOdometryBase::processImpl(const sensor_msgs::PointCloud2ConstPtr& /*cl
 
 Transform LaserOdometryBase::getIncrementPrior()
 {
-  Transform guess_relative_tf = Transform::Identity();
+  Transform increment_in_base_prior = Transform::Identity();
 
   // If an increment prior has been set, 'consum' it.
   // Otherwise predict from previously
   // computed relative_tf_
-  if (!utils::isIdentity(guess_relative_tf_) &&
-       utils::isRotationProper(guess_relative_tf_))
+  if (!utils::isIdentity(increment_in_base_prior_) &&
+       utils::isRotationProper(increment_in_base_prior_))
   {
-    guess_relative_tf  = guess_relative_tf_;
-    guess_relative_tf_ = Transform::Identity();
+    increment_in_base_prior  = increment_in_base_prior_;
+    increment_in_base_prior_ = Transform::Identity();
   }
   else
   {
-    guess_relative_tf = predict(relative_tf_);
+    increment_in_base_prior = predict(relative_tf_);
 
-    if (!utils::isRotationProper(guess_relative_tf))
+    if (!utils::isRotationProper(increment_in_base_prior))
     {
-      utils::makeOrthogonal(guess_relative_tf);
+      utils::makeOrthogonal(increment_in_base_prior);
     }
   }
 
   // account for the change since the last kf, in the fixed frame
-  guess_relative_tf = guess_relative_tf * (fixed_to_base_ * fixed_to_base_kf_.inverse());
+  increment_in_base_prior = increment_in_base_prior * (fixed_to_base_ * fixed_to_base_kf_.inverse());
+
+  return increment_in_base_prior;
+}
+
 
   return guess_relative_tf;
 }
@@ -355,7 +359,7 @@ void LaserOdometryBase::reset()
 
   increment_         = Transform::Identity();
   relative_tf_       = Transform::Identity();
-  guess_relative_tf_ = Transform::Identity();
+  increment_in_base_prior_ = Transform::Identity();
   fixed_to_base_kf_  = fixed_to_base_;
 
   reference_scan_  = nullptr;
@@ -519,22 +523,22 @@ void LaserOdometryBase::setOrigin(const Transform& origin)
   }
 }
 
-const Transform& LaserOdometryBase::getInitialGuess() const
+const Transform& LaserOdometryBase::getIncrementPrior() const
 {
-  return guess_relative_tf_;
+  return increment_in_base_prior_;
 }
 
-void LaserOdometryBase::setInitialGuess(const Transform& guess)
+void LaserOdometryBase::setIncrementPrior(const Transform& increment_in_base_prior)
 {
-  if (utils::isRotationProper(guess))
+  if (utils::isRotationProper(increment_in_base_prior))
   {
-    guess_relative_tf_ = guess;
+    increment_in_base_prior_ = increment_in_base_prior;
   }
   else
   {
     ROS_ERROR("setInitialGuess:, initial guess's rotation matrix"
               " is not orthogonal.\nSetting Identity instead.");
-    guess_relative_tf_ = Transform::Identity();
+    increment_in_base_prior_ = Transform::Identity();
   }
 }
 
