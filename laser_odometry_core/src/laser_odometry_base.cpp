@@ -156,6 +156,8 @@ LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_msg)
     return ProcessReport::ErrorReport();
   }
 
+  ros::WallTime start = ros::WallTime::now();
+
   has_new_kf_   = false;
   current_time_ = scan_msg->header.stamp;
 
@@ -198,6 +200,8 @@ LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_msg)
 
   postProcessing();
 
+  execution_time_ = ros::WallTime::now() - start;
+
   return ProcessReport{processed, has_new_kf_};
 }
 
@@ -209,6 +213,8 @@ LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
     ROS_WARN("Laser odometry process function received a nullptr input message!");
     return ProcessReport::ErrorReport();
   }
+
+  ros::WallTime start = ros::WallTime::now();
 
   has_new_kf_   = false;
   current_time_ = cloud_msg->header.stamp;
@@ -251,6 +257,8 @@ LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
     isNotKeyFrame();
 
   postProcessing();
+
+  execution_time_ = ros::WallTime::now() - start;
 
   return ProcessReport{processed, has_new_kf_};
 }
@@ -608,6 +616,11 @@ void LaserOdometryBase::setFrameOdom(const std::string& frame)
 const ros::Time& LaserOdometryBase::getCurrentTime() const noexcept
 {
   return current_time_;
+}
+
+const ros::WallDuration& LaserOdometryBase::getExecutionTime() const noexcept
+{
+  return execution_time_;
 }
 
 void LaserOdometryBase::setType(const std::string& type)
