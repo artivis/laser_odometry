@@ -303,6 +303,13 @@ namespace laser_odometry
     const ros::Time& getCurrentTime() const noexcept;
 
     /**
+     * @brief Return the execution time of the last
+     * process call.
+     * @return Const-reference to process execution time.
+     */
+    const ros::WallDuration& getExecutionTime() const noexcept;
+
+    /**
      * @brief setType. Set the plugin name.
      * @note This function is only meant to be
      * used by the Instantiater.
@@ -363,6 +370,9 @@ namespace laser_odometry
 
     /// @brief The type of this odometer. Overrided by the derived plugin.
     std::string laser_odometry_type_ = "laser_odometry_core::LaserOdometryBase";
+
+    /// @brief The execution time of the last process call.
+    ros::WallDuration execution_time_;
 
     /// @brief The default increment covariance diagonal.
     std::vector<Scalar> default_cov_diag_ = std::vector<Scalar>(6, default_cov_diag_val);
