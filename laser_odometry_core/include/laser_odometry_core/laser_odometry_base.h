@@ -394,8 +394,8 @@ namespace laser_odometry
     /// @note This is the transform the derived class should fills.
     Transform increment_ = Transform::Identity();
 
-    /// @brief The relative transform in the base_frame.
-    Transform relative_tf_ = Transform::Identity();
+    /// @brief The increment in the base_frame.
+    Transform increment_in_base_ = Transform::Identity();
 
     /// @brief Guessed/predicted tranform
     /// from reference_'reading' to
@@ -405,12 +405,12 @@ namespace laser_odometry
     /// @brief Tranform from fixed_frame
     /// to base_frame, where fixed_frame
     /// is the origin of the integration.
-    /// == fixed_to_base_kf_ * relative_tf_.
+    /// == fixed_to_base_kf_ * increment_in_base_.
     Transform fixed_to_base_ = Transform::Identity();
 
     /// @brief Tranform from fixed_frame to
     /// the last keyfame frame.
-    /// == fixed_to_base * relative_tf_.
+    /// == fixed_to_base * increment_in_base_.
     Transform fixed_to_base_kf_ = Transform::Identity();
 
     /// @brief An optional user defined
