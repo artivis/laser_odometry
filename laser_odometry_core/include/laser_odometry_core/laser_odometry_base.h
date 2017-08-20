@@ -56,10 +56,10 @@ namespace laser_odometry
    *
    *       - getIncrementPrior
    *
-   *                    increment_in_laser_prior_ *IF*
+   *                    increment_in_base_prior_ *IF*
    *                 /  set using setIncrementPrior
    *          return |
-   *                 \  predict   otherwise         [O]
+   *                 \  predict()  otherwise        [O]
    *
    *       - processImpl                            [X]
    *
@@ -521,8 +521,8 @@ namespace laser_odometry
 
     /**
      * @brief Evaluate if the current reading should become the new
-     * referent reading form the matching.
-     * @param[in] The estimated pose increment in the world_frame_ frame.
+     * referent reading for the matching.
+     * @param[in] The estimated pose increment in the base_frame_ frame.
      * @return Whether the currently evaluated reading is the new referent.
      *
      * @note The base class returns \b true by default.
