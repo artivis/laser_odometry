@@ -188,7 +188,7 @@ LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_msg)
   const Transform pred_rel_tf_in_ltf = laser_to_base_ * getIncrementPrior() * base_to_laser_;
 
   // The actual computation
-  const bool processed = process_impl(scan_msg, pred_rel_tf_in_ltf);
+  const bool processed = processImpl(scan_msg, pred_rel_tf_in_ltf);
 
   posePlusIncrement(processed);
 
@@ -241,7 +241,7 @@ LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
   const Transform pred_rel_tf_in_ltf = laser_to_base_ * getIncrementPrior() * base_to_laser_;
 
   // The actual computation
-  const bool processed = process_impl(cloud_msg, pred_rel_tf_in_ltf);
+  const bool processed = processImpl(cloud_msg, pred_rel_tf_in_ltf);
 
   posePlusIncrement(processed);
 
@@ -265,16 +265,16 @@ LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
   return ProcessReport{processed, has_new_kf_};
 }
 
-bool LaserOdometryBase::process_impl(const sensor_msgs::LaserScanConstPtr& /*laser_msg*/,
-                                     const Transform& /*prediction*/)
+bool LaserOdometryBase::processImpl(const sensor_msgs::LaserScanConstPtr& /*laser_msg*/,
+                                    const Transform& /*prediction*/)
 {
-  throw std::runtime_error("process_impl(sensor_msgs::LaserScanConstPtr) not implemented.");
+  throw std::runtime_error("processImpl(sensor_msgs::LaserScanConstPtr) not implemented.");
 }
 
-bool LaserOdometryBase::process_impl(const sensor_msgs::PointCloud2ConstPtr& /*cloud_msg*/,
-                                     const Transform& /*prediction*/)
+bool LaserOdometryBase::processImpl(const sensor_msgs::PointCloud2ConstPtr& /*cloud_msg*/,
+                                    const Transform& /*prediction*/)
 {
-  throw std::runtime_error("process_impl(sensor_msgs::PointCloud2ConstPtr) not implemented.");
+  throw std::runtime_error("processImpl(sensor_msgs::PointCloud2ConstPtr) not implemented.");
 }
 
 Transform LaserOdometryBase::getIncrementPrior()

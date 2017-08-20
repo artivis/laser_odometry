@@ -61,7 +61,7 @@ namespace laser_odometry
    *          return |
    *                 \  predict   otherwise         [O]
    *
-   *       - process_impl                           [X]
+   *       - processImpl                            [X]
    *
    *       - posePlusIncrement                      [X]
    *
@@ -165,8 +165,8 @@ namespace laser_odometry
      *
      * @note [Necessary] To be implemented in the derived class.
      */
-    virtual bool process_impl(const sensor_msgs::LaserScanConstPtr& laser_msg,
-                              const Transform& prediction);
+    virtual bool processImpl(const sensor_msgs::LaserScanConstPtr& laser_msg,
+                             const Transform& prediction);
 
     /**
      * @brief Function to be implemented by the derived plugin.
@@ -179,8 +179,8 @@ namespace laser_odometry
      *
      * @note [Necessary] To be implemented in the derived class.
      */
-    virtual bool process_impl(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
-                              const Transform& prediction);
+    virtual bool processImpl(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
+                             const Transform& prediction);
 
   public:
 
