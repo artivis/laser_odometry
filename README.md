@@ -29,14 +29,14 @@ Available plugins:
 
 -   [laser_odometry_csm](https://github.com/artivis/laser_odometry_csm) A plugin for [csm](https://github.com/AndreaCensi/csm)
 -   [laser_odometry_libpointmatcher](https://github.com/artivis/laser_odometry_libpointmatcher) A plugin for [libpointmatcher](https://github.com/ethz-asl/libpointmatcher)
--   [laser_odometr_polar](https://github.com/artivis/laser_odometry_polar) A plugin for the [polar scan matcher](https://github.com/ccny-ros-pkg/scan_tools/tree/indigo/polar_scan_matcher)
+-   [laser_odometry_polar](https://github.com/artivis/laser_odometry_polar) A plugin for the [polar scan matcher](https://github.com/ccny-ros-pkg/scan_tools/tree/indigo/polar_scan_matcher)
+-   [laser_odometry_rf2o](https://github.com/artivis/laser_odometry_rf2o) A plugin for the [rf2o scan matcher](https://github.com/artivis/rf2o_laser_odometry)
 
 Under development plugins:
 
--   `laser_odometry_rf2o` A plugin for the [rf2o odometry](http://wiki.ros.org/rf2o_laser_odometry)
+-   None at this time.
 
 <!-- -  [laser_odometry_gpar](https://github.com/artivis/laser_odometry_gpar) -->
-<!-- -  [laser_odometr_rf2o](https://github.com/artivis/laser_odometr_rf2o) -->
 
 ## Documentation
 The overall execution scheme is summarized in the [pseudo-code](https://github.com/artivis/laser_odometry/wiki/Overall-execution-pseudo-code) wiki page.  
