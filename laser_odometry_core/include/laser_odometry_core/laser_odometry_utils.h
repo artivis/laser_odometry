@@ -170,6 +170,21 @@ inline void makeOrthogonal(Isometry<T, Dim>& t)
   t.translation() = tmp.translation();
 }
 
+template<typename Derived>
+inline Eigen::Matrix<typename Derived::Scalar, 3, 3>
+skew(const Eigen::MatrixBase<Derived>& v)
+{
+  static_assert(v.ColsAtCompileTime == 1, "Function 'skew' expect a vector.");
+  static_assert(v.RowsAtCompileTime == 3, "Function 'skew' expect a vector of size 3.");
+
+  typedef typename Derived::Scalar T;
+
+  return (Eigen::Matrix<T, 3, 3>() <<
+          0.0,   -v(2), +v(1),
+          +v(2), 0.0,   -v(0),
+          -v(1), +v(0), 0.0   ).finished();
+}
+
 } /* namespace utils */
 } /* namespace laser_odometry */
 
