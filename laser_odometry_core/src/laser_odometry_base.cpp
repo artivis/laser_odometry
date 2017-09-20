@@ -91,20 +91,25 @@ void LaserOdometryBase::fillIncrementMsg<TransformWithCovariancePtr&>(TransformW
   msg_ptr->covariance_ = increment_covariance_in_base_;
 }
 
+} /* namespace laser_odometry */
+
+namespace laser_odometry
+{
+
 // Class functions definition
 
 bool LaserOdometryBase::configure()
 {
   hardReset();
 
-  private_nh_.param("laser_frame",      laser_frame_,      laser_frame_);
-  private_nh_.param("base_frame",       base_frame_,       base_frame_);
-  private_nh_.param("odom_frame",       fixed_frame_,      fixed_frame_);
-  private_nh_.param("laser_odom_frame", laser_odom_frame_, laser_odom_frame_);
+  utils::getParam(private_nh_, "laser_frame",      laser_frame_,      laser_frame_,      true);
+  utils::getParam(private_nh_, "base_frame",       base_frame_,       base_frame_,       true);
+  utils::getParam(private_nh_, "fixed_frame",      fixed_frame_,      fixed_frame_,      true);
+  utils::getParam(private_nh_, "laser_odom_frame", laser_odom_frame_, laser_odom_frame_, true);
 
   // Default covariance diag :
-  std::vector<Scalar> default_covariance(default_cov_diag_);
-  private_nh_.param("covariance_diag", default_covariance, default_covariance);
+  std::vector<Scalar> default_covariance;
+  utils::getParam(private_nh_, "covariance_diag", default_covariance, default_cov_diag_, true);
 
   if (utils::all_positive(default_covariance))
   {
