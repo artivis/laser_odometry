@@ -12,6 +12,33 @@
 
 namespace laser_odometry
 {
+namespace utils
+{
+template<typename T>
+void getParam(const ros::NodeHandle& nh, const std::string& param_name,
+              T& param_val, const T& default_val, const bool verbose)
+{
+  if (nh.hasParam(param_name))
+  {
+    if (nh.getParam(param_name, param_val))
+    {
+      return;
+    }
+    else
+      ROS_WARN_STREAM_COND(verbose, "Could not retrieve param " << param_name);
+  }
+  else
+    ROS_WARN_STREAM_COND(verbose, "Param " << param_name
+                         << " does not exist on the param server.");
+
+  ROS_WARN_STREAM_COND(verbose, "Setting default value for param " << param_name);
+  param_val = default_val;
+}
+} /* namespace utils */
+} /* namespace laser_odometry */
+
+namespace laser_odometry
+{
   using TransformWithCovariancePtr = boost::shared_ptr<TransformWithCovariance>;
 
   /**
