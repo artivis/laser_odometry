@@ -5,9 +5,66 @@
 #include <geometry_msgs/Pose2D.h>
 #include <nav_msgs/Odometry.h>
 
+#include <tf/transform_listener.h>
 #include <tf_conversions/tf_eigen.h>
 
 namespace sm = sensor_msgs;
+
+namespace
+{
+bool getTf(const std::string& source_frame,
+           const std::string& target_frame,
+           tf::StampedTransform& tf,
+           const ros::Time& t = ros::Time(0),
+           const ros::Duration& d = ros::Duration(1.5))
+{
+  tf::TransformListener tf_listener;
+  tf::StampedTransform tf_tmp;
+
+  std::string error;
+  if (tf_listener.waitForTransform(target_frame, source_frame, t, d, ros::Duration(0.01), &error))
+  {
+    try
+    {
+      tf_listener.lookupTransform (
+        target_frame, source_frame, t, tf_tmp);
+    }
+    catch (tf::TransformException ex)
+    {
+      ROS_WARN("Could not get transform from %s to %s at %f after %f :\n %s",
+               source_frame.c_str(), target_frame.c_str(),
+               t.toSec(), d.toSec(), ex.what());
+
+      return false;
+    }
+  }
+  else
+  {
+    ROS_WARN("Could not find transform from %s to %s at %f after %f :\n %s",
+             source_frame.c_str(), target_frame.c_str(),
+             t.toSec(), d.toSec(), error.c_str());
+    return false;
+  }
+
+  tf = tf_tmp;
+  return true;
+}
+
+bool getTf(const std::string& source_frame,
+           const std::string& target_frame,
+           tf::Transform& tf,
+           const ros::Time& t = ros::Time(0),
+           const ros::Duration& d = ros::Duration(1.5))
+{
+  tf::StampedTransform stamped_tf;
+
+  bool ok = getTf(source_frame, target_frame, stamped_tf, t, d);
+
+  if (ok) tf = stamped_tf;
+
+  return ok;
+}
+}
 
 namespace laser_odometry
 {
@@ -53,8 +110,8 @@ void LaserOdometryNode::initialize()
   if (init_origin_)
   {
     tf::Transform tf_origin_to_base = tf::Transform::getIdentity();
-    utils::getTf(laser_odom_ptr_->getFrameBase(),
-                 global_frame_, tf_origin_to_base);
+    getTf(laser_odom_ptr_->getFrameBase(),
+          global_frame_, tf_origin_to_base);
 
     Eigen::Affine3d origin_to_base;
     tf::transformTFToEigen(tf_origin_to_base, origin_to_base);
@@ -103,9 +160,9 @@ void LaserOdometryNode::setLaserFromTf(const ros::Time &t, const ros::Duration &
 {
   tf::Transform tf_base_to_laser = tf::Transform::getIdentity();
 
-  utils::getTf(laser_odom_ptr_->getFrameLaser(),
-               laser_odom_ptr_->getFrameBase(),
-               tf_base_to_laser, t, d);
+  getTf(laser_odom_ptr_->getFrameLaser(),
+        laser_odom_ptr_->getFrameBase(),
+        tf_base_to_laser, t, d);
 
   Eigen::Affine3d base_to_laser;
   tf::transformTFToEigen(tf_base_to_laser, base_to_laser);
