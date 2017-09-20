@@ -35,4 +35,4 @@ throttle:     1
 publish_delta_option: 0
 
 # The default delta pose covariance diagonal.
-covariance_diag: [1e-8, 1e-8, 1e-8, 1e-8, 1e-8, 1e-8]
+covariance_diag: [1.e-8, 1.e-8, 1.e-8, 1.e-8, 1.e-8, 1.e-8]

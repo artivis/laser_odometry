@@ -191,6 +191,28 @@ namespace laser_odometry
     const Transform& getEstimatedPose() const noexcept;
 
     /**
+     * @brief Get the current estimated pose together with it's covariance matrix.
+     * @param estimated_pose The current pose.
+     * @param origin_covariance The current pose's covariance.
+     */
+    void getEstimatedPose(Transform& estimated_pose,
+                          Covariance& estimated_pose_covariance) const noexcept;
+
+    /**
+     * @brief Return the last key-frame estimated pose.
+     * @return A const-reference Transform.
+     */
+    const Transform& getKeyFrameEstimatedPose() const noexcept;
+
+    /**
+     * @brief Get the last key-frame estimated pose together with it's covariance matrix.
+     * @param kf_estimated_pose The last key-frame pose.
+     * @param kf_estimated_pose_covariance The last key-frame pose's covariance.
+     */
+    void getKeyFrameEstimatedPose(Transform& kf_estimated_pose,
+                                  Covariance& kf_estimated_pose_covariance) const noexcept;
+
+    /**
      * @brief Reset the matcher.
      * The base class implemetation resets all transforms to
      * Identity and the key-reading to nullptr.
@@ -229,10 +251,25 @@ namespace laser_odometry
     const Transform& getOrigin() const;
 
     /**
+     * @brief Get the origin frame together with it's covariance matrix.
+     * @param origin The origin transform.
+     * @param origin_covariance The origin transform's covariance.
+     */
+    void getOrigin(Transform& origin,
+                   Covariance& origin_covariance) const;
+
+    /**
      * @brief Set the origin frame.
      * @param[in] origin. The origin frame.
      */
     void setOrigin(const Transform& origin);
+
+    /**
+     * @brief Set the origin frame together with its covariance matrix.
+     * @param[in] origin. The origin frame.
+     */
+    void setOrigin(const Transform& origin,
+                   const Covariance& origin_covariance);
 
     /**
      * @brief Const-reference to the increment prior in the base_frame
@@ -259,10 +296,27 @@ namespace laser_odometry
     const Transform& getLaserPose() const;
 
     /**
+     * @brief Get the laser pose wrt the robot base_frame together with it's covariance matrix.
+     * @param[in] base_to_laser The base to laser transform.
+     * @param[in] base_to_laser_covariance The base to laser transform's covariance.
+     */
+    void getLaserPose(Transform& base_to_laser,
+                      Covariance& base_to_laser_covariance) const;
+
+    /**
      * @brief Set the laser pose wrt the robot base frame.
      * @param[in] base_to_laser.
      */
     void setLaserPose(const Transform& base_to_laser);
+
+    /**
+     * @brief Set the laser pose wrt the robot base frame
+     * together with its covariance matrix.
+     * @param[in] base_to_laser.
+     * @param[in] base_to_laser_covariance.
+     */
+    void setLaserPose(const Transform& base_to_laser,
+                      const Covariance& base_to_laser_covariance);
 
     /// @brief the robot base frame name.
     /// @return the robot base frame name.
@@ -362,6 +416,22 @@ namespace laser_odometry
      */
     void setKeyFrame(const sensor_msgs::PointCloud2ConstPtr& key_frame_msg);
 
+    /**
+     * @brief assertIncrement. Ensure that the estimated
+     * increment_'s rotational part is proper.
+     * If not, it enforces it.
+     */
+    void assertIncrement();
+
+    /**
+     * @brief assertIncrementCovariance. Ensure that the estimated
+     * increment_covariance_ is proper.
+     * If not, set default.
+     */
+    void assertIncrementCovariance();
+
+    inline Covariance defaultCovariance() const noexcept;
+
   protected:
 
     bool configured_   = false; /// @brief Whether the matcher is configured.
@@ -373,15 +443,6 @@ namespace laser_odometry
 
     /// @brief The execution time of the last process call.
     ros::WallDuration execution_time_;
-
-    /// @brief The default increment covariance diagonal.
-    std::vector<Scalar> default_cov_diag_ = std::vector<Scalar>(6, default_cov_diag_val);
-
-    /// @brief The estimated pose covariance.
-    Covariance pose_covariance_;
-
-    /// @brief The estimated pose increment covariance.
-    Covariance increment_covariance_;
 
     ros::NodeHandle private_nh_ = ros::NodeHandle("~");
 
@@ -436,10 +497,41 @@ namespace laser_odometry
     /// == fixed_origin_ * fixed_to_base_.
     Transform fixed_origin_to_base_ = Transform::Identity();
 
-    /// @brief  The referent LaserScan.
+    /// @brief The default increment covariance diagonal.
+    std::vector<Scalar> default_cov_diag_
+      = std::vector<Scalar>(6, default_cov_diag_val);
+
+    /// @brief The base to laser transform's covariance.
+    Covariance base_to_laser_covariance_;
+
+    /// @brief The laser to base transform's covariance.
+    Covariance laser_to_base_covariance_;
+
+    /// @brief The estimated pose increment covariance.
+    Covariance increment_covariance_ = Covariance::Zero();
+
+    /// @brief The estimated pose increment covariance in base frame.
+    Covariance increment_covariance_in_base_ = Covariance::Zero();
+
+    /// @brief The integrated covariance.
+    Covariance fixed_to_base_covariance_ = Covariance::Zero();
+
+    /// @brief The integrated covariance up to
+    /// the last key-frame.
+    Covariance fixed_to_base_kf_covariance_ = Covariance::Zero();
+
+    /// @brief The optional covariance associated
+    /// to the fixed_origin.
+    /// @see fixed_origin
+    Covariance fixed_origin_covariance_ = Covariance::Zero();
+
+    /// @brief The full integrated pose covariance.
+    Covariance fixed_origin_to_base_covariance_ = Covariance::Zero();
+
+    /// @brief The referent LaserScan.
     sensor_msgs::LaserScanConstPtr   reference_scan_;
 
-    /// @brief  The referent PointCloud2.
+    /// @brief The referent PointCloud2.
     sensor_msgs::PointCloud2ConstPtr reference_cloud_;
 
     /// @brief Current ros::Time accordingly

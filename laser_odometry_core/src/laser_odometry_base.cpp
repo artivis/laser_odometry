@@ -38,8 +38,7 @@ void LaserOdometryBase::fillMsg<nav_msgs::OdometryPtr&>(nav_msgs::OdometryPtr& m
   msg_ptr->child_frame_id  = base_frame_;
 
   conversion::toRos(fixed_origin_to_base_, msg_ptr->pose.pose);
-
-  conversion::toRos(pose_covariance_, msg_ptr->pose.covariance);
+  conversion::toRos(fixed_origin_to_base_covariance_, msg_ptr->pose.covariance);
 
   //msg_ptr->pose.covariance  = pose_covariance_;
   //msg_ptr->twist.covariance = pose_twist_covariance_;
@@ -51,7 +50,7 @@ void LaserOdometryBase::fillMsg<TransformWithCovariancePtr&>(TransformWithCovari
   if (msg_ptr == nullptr) return;
 
   msg_ptr->transform_  = fixed_origin_to_base_;
-  msg_ptr->covariance_ = pose_covariance_;
+  msg_ptr->covariance_ = fixed_origin_to_base_covariance_;
 }
 
 template <>
@@ -80,8 +79,7 @@ void LaserOdometryBase::fillIncrementMsg<nav_msgs::OdometryPtr&>(nav_msgs::Odome
   msg_ptr->child_frame_id  = base_frame_;
 
   conversion::toRos(increment_in_base_, msg_ptr->pose.pose);
-
-  conversion::toRos(increment_covariance_, msg_ptr->pose.covariance);
+  conversion::toRos(increment_covariance_in_base_, msg_ptr->pose.covariance);
 }
 
 template <>
@@ -90,7 +88,7 @@ void LaserOdometryBase::fillIncrementMsg<TransformWithCovariancePtr&>(TransformW
   if (msg_ptr == nullptr) return;
 
   msg_ptr->transform_  = increment_in_base_;
-  msg_ptr->covariance_ = increment_covariance_;
+  msg_ptr->covariance_ = increment_covariance_in_base_;
 }
 
 // Class functions definition
@@ -115,10 +113,30 @@ bool LaserOdometryBase::configure()
       default_cov_diag_[0] = default_covariance[0];
       default_cov_diag_[1] = default_covariance[1];
       default_cov_diag_[5] = default_covariance[2];
+
+      ROS_INFO_STREAM("Default covariance diagonal: ["
+                      << default_cov_diag_[0] << ","
+                      << default_cov_diag_[1] << ","
+                      << default_cov_diag_[2] << "].");
     }
     else if (default_covariance.size() == 6)
     {
       default_cov_diag_.swap(default_covariance);
+
+      if (odomType() == OdomType::Odom2D or odomType() == OdomType::Odom2DCov)
+      {
+        default_cov_diag_[2] = 0;
+        default_cov_diag_[3] = 0;
+        default_cov_diag_[4] = 0;
+      }
+
+      ROS_INFO_STREAM("Default covariance diagonal: ["
+                      << default_cov_diag_[0] << ","
+                      << default_cov_diag_[1] << ","
+                      << default_cov_diag_[2] << ","
+                      << default_cov_diag_[3] << ","
+                      << default_cov_diag_[4] << ","
+                      << default_cov_diag_[5] << "].");
     }
     else
     {
@@ -138,8 +156,6 @@ bool LaserOdometryBase::configure()
   }
 
   resetCovarianceDefault();
-
-  pose_covariance_ = increment_covariance_;
 
   // Configure derived class
   configured_ = configureImpl();
@@ -166,7 +182,19 @@ LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_msg)
   {
     initialized_ = initialize(scan_msg);
 
-    fixed_origin_to_base_ = fixed_to_base_ * fixed_origin_;
+    // update the pose in the fixed 'origin' frame
+    fixed_origin_to_base_ = fixed_origin_ * fixed_to_base_;
+
+    // the right jacobian of the above pose composition
+    Eigen::Matrix<Scalar, 6, 6> jac_right_comp_orig = Eigen::Matrix<Scalar, 6, 6>::Identity();
+    jac_right_comp_orig.bottomRightCorner<3,3>() = fixed_to_base_.rotation().transpose();
+    jac_right_comp_orig.topRightCorner<3,3>() = - (fixed_origin_.rotation()*utils::skew(fixed_to_base_.translation()));
+
+    // the left jacobian of the above pose composition
+    Eigen::Matrix<Scalar, 6, 6> jac_left_comp_orig = Eigen::Matrix<Scalar, 6, 6>::Identity();
+    jac_left_comp_orig.topLeftCorner<3,3>() = fixed_origin_.rotation();
+
+    fixed_origin_to_base_covariance_ = jac_right_comp_orig * fixed_to_base_covariance_ * jac_left_comp_orig + fixed_origin_covariance_;
 
     ROS_INFO_STREAM_COND(initialized_, "LaserOdometry Initialized!");
 
@@ -180,6 +208,9 @@ LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_msg)
 
   // The actual computation
   const bool processed = processImpl(scan_msg, increment_prior_in_laser);
+
+  assertIncrement();
+  assertIncrementCovariance();
 
   posePlusIncrement(processed);
 
@@ -238,6 +269,9 @@ LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 
   // The actual computation
   const bool processed = processImpl(cloud_msg, increment_prior_in_laser);
+
+  assertIncrement();
+  assertIncrementCovariance();
 
   posePlusIncrement(processed);
 
@@ -323,35 +357,70 @@ void LaserOdometryBase::posePlusIncrement(const bool processed)
     }
 
     // the increment of the base's position, in the base frame
-    increment_in_base_ = base_to_laser_ * increment_ * laser_to_base_;
+    const Transform tmp = base_to_laser_ * increment_;
+    increment_in_base_ = tmp * laser_to_base_;
 
-    /// @todo increment_covariance_ in laser frame.
-    /// Is it simply rotating the covariance ?
-    Eigen::Matrix<Scalar, 6, 6> R = Eigen::Matrix<Scalar, 6, 6>::Identity();
-    R.topLeftCorner<3,3>()     = base_to_laser_.rotation();
-    R.bottomRightCorner<3,3>() = laser_to_base_.rotation();
+    // the left jacobian of the above pose composition
+    Eigen::Matrix<Scalar, 6, 6> jac_left = Eigen::Matrix<Scalar, 6, 6>::Identity();
+    jac_left.bottomRightCorner<3,3>()    = increment_.rotation().transpose();
+    jac_left.topRightCorner<3,3>()       = -(base_to_laser_.rotation()*utils::skew(increment_.translation()));
 
-    /// @todo if no set by plugin, default covariance spins...
-    increment_covariance_ = R * increment_covariance_ * R.inverse();
+    // the right jacobian of the above pose composition
+    Eigen::Matrix<Scalar, 6, 6> jac_right = Eigen::Matrix<Scalar, 6, 6>::Identity();
+    jac_right.topLeftCorner<3,3>()        = base_to_laser_.rotation();
+
+    increment_covariance_in_base_ = jac_left  * increment_covariance_     * jac_left.transpose() +
+                                    jac_right * base_to_laser_covariance_ * jac_right.transpose();
+
+    // the left jacobian of the above pose composition
+    jac_left.bottomRightCorner<3,3>() = laser_to_base_.rotation().transpose();
+    jac_left.topRightCorner<3,3>()    = -(tmp.rotation()*utils::skew(laser_to_base_.translation()));
+
+    // the right jacobian of the above pose composition (tmp)
+    jac_right.topLeftCorner<3,3>() = tmp.rotation();
+
+    increment_covariance_in_base_ = jac_left  * laser_to_base_covariance_     * jac_left.transpose() +
+                                    jac_right * increment_covariance_in_base_ * jac_right.transpose();
 
     // update the pose in the fixed frame
     fixed_to_base_ = fixed_to_base_kf_ * increment_in_base_;
-//    fixed_to_base_ = increment_in_base_ * fixed_to_base_kf_;
+
+    // the left jacobian of the above pose composition
+    jac_left.bottomRightCorner<3,3>() = increment_in_base_.rotation().transpose();
+    jac_left.topRightCorner<3,3>() = -(fixed_to_base_kf_.rotation()*utils::skew(increment_in_base_.translation()));
+
+    // the right jacobian of the above pose composition
+    jac_right.topLeftCorner<3,3>() = fixed_to_base_kf_.rotation();
+
+    fixed_to_base_covariance_ = jac_left  * increment_covariance_in_base_ * jac_left.transpose() +
+                                jac_right * fixed_to_base_kf_covariance_  * jac_right.transpose();
 
     // update the pose in the fixed 'origin' frame
     fixed_origin_to_base_ = fixed_origin_ * fixed_to_base_;
-//    fixed_origin_to_base_ = fixed_to_base_ * fixed_origin_;
+
+    // the left jacobian of the above pose composition
+    jac_left.bottomRightCorner<3,3>() = fixed_to_base_.rotation().transpose();
+    jac_left.topRightCorner<3,3>() = - (fixed_origin_.rotation()*utils::skew(fixed_to_base_.translation()));
+
+    // the right jacobian of the above pose composition
+    jac_right.topLeftCorner<3,3>() = fixed_origin_.rotation();
+
+    fixed_origin_to_base_covariance_ = jac_left  * fixed_to_base_covariance_ * jac_left.transpose() +
+                                       jac_right * fixed_origin_covariance_  * jac_right.transpose();
+
+    ROS_DEBUG_STREAM("increment_covariance_:\n"            << increment_covariance_);
+    ROS_DEBUG_STREAM("increment_covariance_in_base_:\n"    << increment_covariance_in_base_);
+    ROS_DEBUG_STREAM("fixed_to_base_kf_covariance_:\n"     << fixed_to_base_kf_covariance_);
+    ROS_DEBUG_STREAM("fixed_to_base_covariance_:\n"        << fixed_to_base_covariance_);
+    ROS_DEBUG_STREAM("fixed_origin_covariance_:\n"         << fixed_origin_covariance_);
+    ROS_DEBUG_STREAM("fixed_origin_to_base_covariance_:\n" << fixed_origin_to_base_covariance_);
   }
   else
   {
     increment_in_base_.setIdentity();
+    increment_covariance_in_base_.setZero();
     ROS_WARN("Error in laser matching.");
   }
-}
-
-const Transform& LaserOdometryBase::getEstimatedPose() const noexcept
-{
-  return fixed_origin_to_base_;
 }
 
 void LaserOdometryBase::reset()
@@ -433,21 +502,20 @@ void LaserOdometryBase::isNotKeyFrame()
 
 void LaserOdometryBase::resetCovarianceDefault()
 {
-  increment_covariance_ = Covariance::Identity();
+  increment_covariance_ = defaultCovariance();
 
-  increment_covariance_(0,0) = default_cov_diag_[0];
-  increment_covariance_(1,1) = default_cov_diag_[1];
-  increment_covariance_(2,2) = default_cov_diag_[2];
-  increment_covariance_(3,3) = default_cov_diag_[3];
-  increment_covariance_(4,4) = default_cov_diag_[4];
-  increment_covariance_(5,5) = default_cov_diag_[5];
+  fixed_origin_covariance_         = defaultCovariance();
+  fixed_origin_to_base_covariance_ = defaultCovariance();
+  fixed_to_base_covariance_        = defaultCovariance();
+  fixed_to_base_kf_covariance_     = defaultCovariance();
 
-  //pose_covariance_ = increment_covariance_;
+  laser_to_base_covariance_ = defaultCovariance();
+  base_to_laser_covariance_ = defaultCovariance();
 }
 
 OdomType LaserOdometryBase::odomType() const noexcept
 {
-  ROS_WARN("odomType() function called but not overloaded!");
+  ROS_WARN_THROTTLE(1, "odomType() function called but not overloaded!");
   return OdomType::Unknown;
 }
 
@@ -456,11 +524,92 @@ bool LaserOdometryBase::hasNewKeyFrame() const noexcept
   return has_new_kf_;
 }
 
+void LaserOdometryBase::assertIncrement()
+{
+  if (!utils::isRotationProper(increment_))
+  {
+    utils::makeOrthogonal(increment_);
+  }
+}
+
+void LaserOdometryBase::assertIncrementCovariance()
+{
+  if (!utils::isCovariance(increment_covariance_))
+  {
+    increment_covariance_ = defaultCovariance();
+  }
+}
+
+Covariance LaserOdometryBase::defaultCovariance() const noexcept
+{
+  Covariance default_covariance = Covariance::Zero();
+
+  switch (odomType())
+  {
+  case OdomType::Unknown:
+    ///@todo Not sure what's better here ...
+    break;
+  case OdomType::Odom2D:
+    default_covariance(0,0) = default_cov_diag_val;
+    default_covariance(1,1) = default_cov_diag_val;
+    default_covariance(5,5) = default_cov_diag_val;
+    break;
+  case OdomType::Odom2DCov:
+    default_covariance(0,0) = default_cov_diag_val;
+    default_covariance(1,1) = default_cov_diag_val;
+    default_covariance(5,5) = default_cov_diag_val;
+    break;
+  case OdomType::Odom3D:
+    default_covariance = Covariance::Identity() * default_cov_diag_val;
+    break;
+  case OdomType::Odom3DCov:
+    default_covariance = Covariance::Identity() * default_cov_diag_val;
+    break;
+  default:
+    break;
+  }
+
+  return default_covariance;
+}
+
 ////////////////////////
 ///                  ///
 /// Guetter / Setter ///
 ///                  ///
 ////////////////////////
+
+const Transform& LaserOdometryBase::getEstimatedPose() const noexcept
+{
+  return fixed_origin_to_base_;
+}
+
+void LaserOdometryBase::getEstimatedPose(Transform& estimated_pose,
+                                         Covariance& estimated_pose_covariance) const noexcept
+{
+  estimated_pose = fixed_origin_to_base_;
+  estimated_pose_covariance = fixed_origin_to_base_covariance_;
+}
+
+/**
+ * @brief Return the last key-frame estimated pose.
+ * @return A const-reference Transform.
+ */
+const Transform& LaserOdometryBase::getKeyFrameEstimatedPose() const noexcept
+{
+  return fixed_to_base_kf_;
+}
+
+/**
+ * @brief Get the origin frame together with it's covariance matrix.
+ * @param origin The origin transform.
+ * @param origin_covariance The origin transform's covariance.
+ */
+void LaserOdometryBase::getKeyFrameEstimatedPose(Transform& kf_estimated_pose,
+                                                 Covariance& kf_estimated_pose_covariance) const noexcept
+{
+  kf_estimated_pose = fixed_to_base_kf_;
+  kf_estimated_pose_covariance = fixed_to_base_kf_covariance_;
+}
 
 void LaserOdometryBase::setKeyFrame(const sensor_msgs::LaserScanConstPtr& key_frame_msg)
 {
@@ -519,11 +668,30 @@ const Transform& LaserOdometryBase::getOrigin() const
   return fixed_origin_;
 }
 
-void LaserOdometryBase::setOrigin(const Transform& origin)
+void LaserOdometryBase::getOrigin(Transform& origin,
+                                  Covariance& origin_covariance) const
+{
+  origin = fixed_origin_;
+  origin_covariance = fixed_origin_covariance_;
+}
+
+void LaserOdometryBase::setOrigin(const Transform& origin,
+                                  const Covariance& origin_covariance)
 {
   if (utils::isRotationProper(origin))
   {
     fixed_origin_ = origin;
+
+    if (utils::isCovariance(origin_covariance))
+    {
+      fixed_origin_covariance_ = origin_covariance;
+    }
+    else
+    {
+      ROS_WARN("setOrigin:, origin's covariance matrix"
+               " is not proper.\nSetting default instead.");
+      fixed_origin_covariance_= defaultCovariance();
+    }
   }
   else
   {
@@ -531,6 +699,11 @@ void LaserOdometryBase::setOrigin(const Transform& origin)
               " is not orthogonal.\nSetting Identity instead.");
     fixed_origin_ = Transform::Identity();
   }
+}
+
+void LaserOdometryBase::setOrigin(const Transform& origin)
+{
+  setOrigin(origin, defaultCovariance());
 }
 
 const Transform& LaserOdometryBase::getIncrementPrior() const
@@ -557,12 +730,43 @@ const Transform& LaserOdometryBase::getLaserPose() const
   return base_to_laser_;
 }
 
-void LaserOdometryBase::setLaserPose(const Transform& base_to_laser)
+void LaserOdometryBase::getLaserPose(Transform& base_to_laser,
+                                     Covariance& base_to_laser_covariance) const
+{
+  base_to_laser = base_to_laser_;
+  base_to_laser_covariance = base_to_laser_covariance_;
+}
+
+void LaserOdometryBase::setLaserPose(const Transform& base_to_laser,
+                                     const Covariance& base_to_laser_covariance)
 {
   if (utils::isRotationProper(base_to_laser))
   {
     base_to_laser_ = base_to_laser;
     laser_to_base_ = base_to_laser.inverse();
+
+    Covariance tmp = base_to_laser_covariance;
+
+    if (!utils::isCovariance(tmp))
+    {
+      ROS_ERROR("setLaserPose:, laser pose's covariance matrix"
+                " is not proper.\nSetting default instead.");
+
+      tmp = defaultCovariance();
+    }
+
+    base_to_laser_covariance_ = tmp;
+
+    // the left jacobian of the inverse
+    Eigen::Matrix<Scalar, 6, 6> jac_left_inv = Eigen::Matrix<Scalar, 6, 6>::Identity();
+    jac_left_inv.topLeftCorner<3,3>() = laser_to_base_.rotation();
+    jac_left_inv.topRightCorner<3,3>() = utils::skew(laser_to_base_.translation()) * laser_to_base_.rotation();
+    jac_left_inv.bottomRightCorner<3,3>() = laser_to_base_.rotation();
+
+    // the right jacobian of the above pose composition
+    //Eigen::Matrix<Scalar, 6, 6> jac_right_inv = jac_left_inv.transpose();
+
+    laser_to_base_covariance_ = jac_left_inv * base_to_laser_covariance * jac_left_inv.transpose();
   }
   else
   {
@@ -570,7 +774,15 @@ void LaserOdometryBase::setLaserPose(const Transform& base_to_laser)
               " is not orthogonal.\nSetting Identity instead.");
     base_to_laser_ = Transform::Identity();
     laser_to_base_ = Transform::Identity();
+
+    base_to_laser_covariance_ = defaultCovariance();
+    laser_to_base_covariance_ = defaultCovariance();
   }
+}
+
+void LaserOdometryBase::setLaserPose(const Transform& base_to_laser)
+{
+  setLaserPose(base_to_laser, defaultCovariance());
 }
 
 const std::string& LaserOdometryBase::getFrameBase()  const noexcept
