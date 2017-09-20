@@ -120,12 +120,20 @@ namespace laser_odometry
     /**
      * @brief Default constructor.
      */
-    LaserOdometryBase()          = default;
+    LaserOdometryBase() = default;
 
     /**
      * @brief Default destructor.
      */
     virtual ~LaserOdometryBase() = default;
+
+    // non construction-copyable/movable
+    LaserOdometryBase(const LaserOdometryBase&) = delete;
+    LaserOdometryBase(LaserOdometryBase&&)      = delete;
+
+    // non copyable/movable
+    LaserOdometryBase& operator=(const LaserOdometryBase&) = delete;
+    LaserOdometryBase& operator=(LaserOdometryBase&&)      = delete;
 
     /**
      * @brief Compute the 2D odometry given a sensor_msgs::LaserScan.
@@ -473,9 +481,9 @@ namespace laser_odometry
 
     ros::NodeHandle private_nh_ = ros::NodeHandle("~");
 
-    std::string base_frame_       = "base_link";        /// @brief The robot base frame name.
-    std::string laser_frame_      = "base_laser_link";  /// @brief The robot laser frame name.
-    std::string fixed_frame_      = "map";              /// @brief The global fixed frame name.
+    std::string base_frame_  = "base_link";        /// @brief The robot base frame name.
+    std::string laser_frame_ = "base_laser_link";  /// @brief The robot laser frame name.
+    std::string fixed_frame_ = "map";              /// @brief The global fixed frame name.
 
     /// @brief The global odometry frame name.
     /// This frame name is only used in the published message.
