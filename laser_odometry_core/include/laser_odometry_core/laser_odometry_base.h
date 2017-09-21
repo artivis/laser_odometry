@@ -136,40 +136,20 @@ namespace laser_odometry
     LaserOdometryBase& operator=(LaserOdometryBase&&)      = delete;
 
     /**
-     * @brief Compute the 2D odometry given a sensor_msgs::LaserScan.
-     * @param[in] scan_msg. The input LaserScan.
+     * @brief Compute the odometry given a input message.
+     * @see SupportedMessageTypes.
+     * @param[in] msg. The input message.
      * @return ProcessReport. A brief summary of the scan matching process.
      *
      * @see ProcessReport
      */
-    ProcessReport process(const sensor_msgs::LaserScanConstPtr& scan_msg);
+    template <typename Msg>
+    ProcessReport process(Msg&& msg);
 
     /**
-     * @brief Compute the 2D odometry given a sensor_msgs::PointCloud2.
-     * @param[in] cloud_msg. The input PointCloud2.
-     * @return ProcessReport. A brief summary of the scan matching process.
-     *
-     * @see ProcessReport
-     */
-    ProcessReport process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg);
-
-    /**
-     * @brief Compute the 2D odometry given a sensor_msgs::LaserScan.
-     * @param[in] scan_msg. The input LaserScan.
-     * @param[out] pose. The estimated 2D pose.
-     * @param[out] pose_increment. The estimated 2D pose increment.
-     * @return ProcessReport. A brief summary of the scan matching process.
-     *
-     * @see ProcessReport
-     */
-    template <typename PoseMsgT, typename IncrementMsgT>
-    ProcessReport process(const sensor_msgs::LaserScanConstPtr& scan_msg,
-                          PoseMsgT&& pose_msg,
-                          IncrementMsgT&& pose_increment_msg = nullptr);
-
-    /**
-     * @brief Compute the 2D odometry given a sensor_msgs::PointCloud2.
-     * @param[in] scan_msg. The input PointCloud2.
+     * @brief Compute the odometry given a input message and fill-up ros messages.
+     * @see SupportedMessageTypes.
+     * @param[in] msg. The input message.
      * @param[out] pose. The estimated 2D pose.
      * @param[out] pose_increment. The estimated 2D pose increment.
      * @return ProcessReport. A brief summary of the scan matching process.
@@ -182,8 +162,8 @@ namespace laser_odometry
      *
      * @see ProcessReport
      */
-    template <typename PoseMsgT, typename IncrementMsgT>
-    ProcessReport process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
+    template <typename Msg, typename PoseMsgT, typename IncrementMsgT>
+    ProcessReport process(Msg&& msg,
                           PoseMsgT&& pose_msg,
                           IncrementMsgT&& pose_increment_msg = nullptr);
 
@@ -331,7 +311,8 @@ namespace laser_odometry
     const Transform& getLaserPose() const;
 
     /**
-     * @brief Get the laser pose wrt the robot base_frame together with it's covariance matrix.
+     * @brief Get the laser pose wrt the robot base_frame together with
+     * it's covariance matrix.
      * @param[in] base_to_laser The base to laser transform.
      * @param[in] base_to_laser_covariance The base to laser transform's covariance.
      */
@@ -603,6 +584,11 @@ namespace laser_odometry
     virtual bool initialize(const sensor_msgs::PointCloud2ConstPtr& cloud_msg);
 
     /**
+     * @brief initializeFrames
+     */
+    virtual void initializeFrames();
+
+    /**
      * @brief Perform a prediction of the pose increment for the upcoming matching.
      * @param[in] The last estimated pose increment in the \b world_frame_ frame.
      * @return A prediction of the upcoming pose increment.
@@ -647,6 +633,23 @@ namespace laser_odometry
      * @param processed.
      */
     void posePlusIncrement(const bool processed);
+
+    /**
+     * @brief updateKf
+     */
+    template <typename Msg>
+    void updateKf(Msg&& msg);
+
+    /**
+     * @brief updateKfMsg
+     */
+    template <typename Msg>
+    void updateKfMsg(Msg&& msg);
+
+    /**
+     * @brief updateKfTransform
+     */
+    void updateKfTransform();
 
     /**
      * @brief Allows the derived class to perform some post-processing
@@ -717,27 +720,82 @@ namespace laser_odometry
 
 namespace laser_odometry {
 
-template <typename PoseMsgT, typename IncrementMsgT>
-LaserOdometryBase::ProcessReport
-LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_msg,
-                           PoseMsgT&& pose_msg,
-                           IncrementMsgT&& pose_increment_msg)
+/**
+ * @brief updateKf
+ */
+template <typename Msg>
+void LaserOdometryBase::updateKf(Msg&& msg)
 {
-  const auto report = process(scan_msg);
-
-  fillMsgs(std::forward<PoseMsgT>(pose_msg),
-           std::forward<IncrementMsgT>(pose_increment_msg));
-
-  return report;
+  updateKfMsg(std::forward<Msg>(msg));
+  updateKfTransform();
 }
 
-template <typename PoseMsgT, typename IncrementMsgT>
+template <typename Msg>
+inline LaserOdometryBase::ProcessReport
+LaserOdometryBase::process(Msg&& msg)
+{
+  if (msg == nullptr)
+  {
+    ROS_WARN("Laser odometry process function received a nullptr input message!");
+    return ProcessReport::ErrorReport();
+  }
+
+  ros::WallTime start = ros::WallTime::now();
+
+  has_new_kf_   = false;
+  current_time_ = msg->header.stamp;
+
+  // first message
+  if (!initialized_)
+  {
+    initialized_ = initialize(std::forward<Msg>(msg));
+
+    initializeFrames();
+
+    ROS_INFO_STREAM_COND(initialized_, "LaserOdometry Initialized!");
+
+    return ProcessReport{true, true};
+  }
+
+  preProcessing();
+
+  // the predicted change of the laser's position, in the laser frame
+  const Transform increment_prior_in_laser = getIncrementPriorInLaserFrame();
+
+  // The actual computation
+  const bool processed = processImpl(std::forward<Msg>(msg), increment_prior_in_laser);
+
+  assertIncrement();
+  assertIncrementCovariance();
+
+  posePlusIncrement(processed);
+
+  has_new_kf_ = isKeyFrame(increment_in_base_);
+
+  if (has_new_kf_)
+  {
+    // generate a keyframe
+    updateKf(std::forward<Msg>(msg));
+
+    isKeyFrame();
+  }
+  else
+    isNotKeyFrame();
+
+  postProcessing();
+
+  execution_time_ = ros::WallTime::now() - start;
+
+  return ProcessReport{processed, has_new_kf_};
+}
+
+template <typename Msg, typename PoseMsgT, typename IncrementMsgT>
 LaserOdometryBase::ProcessReport
-LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
+LaserOdometryBase::process(Msg&& msg,
                            PoseMsgT&& pose_msg,
                            IncrementMsgT&& pose_increment_msg)
 {
-  const auto report = process(cloud_msg);
+  const auto report = process(std::forward<Msg>(msg));
 
   fillMsgs(std::forward<PoseMsgT>(pose_msg),
            std::forward<IncrementMsgT>(pose_increment_msg));
