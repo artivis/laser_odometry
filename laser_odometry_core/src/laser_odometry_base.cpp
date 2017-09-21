@@ -91,6 +91,18 @@ void LaserOdometryBase::fillIncrementMsg<TransformWithCovariancePtr&>(TransformW
   msg_ptr->covariance_ = increment_covariance_in_base_;
 }
 
+template <>
+void LaserOdometryBase::updateKfMsg(sensor_msgs::LaserScanConstPtr& msg)
+{
+  reference_scan_ = msg;
+}
+
+template <>
+void LaserOdometryBase::updateKfMsg(sensor_msgs::PointCloud2ConstPtr& msg)
+{
+  reference_cloud_ = msg;
+}
+
 } /* namespace laser_odometry */
 
 namespace laser_odometry
@@ -168,140 +180,6 @@ bool LaserOdometryBase::configure()
   return configured_;
 }
 
-LaserOdometryBase::ProcessReport
-LaserOdometryBase::process(const sensor_msgs::LaserScanConstPtr& scan_msg)
-{
-  if (scan_msg == nullptr)
-  {
-    ROS_WARN("Laser odometry process function received a nullptr input message!");
-    return ProcessReport::ErrorReport();
-  }
-
-  ros::WallTime start = ros::WallTime::now();
-
-  has_new_kf_   = false;
-  current_time_ = scan_msg->header.stamp;
-
-  // first message
-  if (!initialized_)
-  {
-    initialized_ = initialize(scan_msg);
-
-    // update the pose in the fixed 'origin' frame
-    fixed_origin_to_base_ = fixed_origin_ * fixed_to_base_;
-
-    // the right jacobian of the above pose composition
-    Eigen::Matrix<Scalar, 6, 6> jac_right_comp_orig = Eigen::Matrix<Scalar, 6, 6>::Identity();
-    jac_right_comp_orig.bottomRightCorner<3,3>() = fixed_to_base_.rotation().transpose();
-    jac_right_comp_orig.topRightCorner<3,3>() = - (fixed_origin_.rotation()*utils::skew(fixed_to_base_.translation()));
-
-    // the left jacobian of the above pose composition
-    Eigen::Matrix<Scalar, 6, 6> jac_left_comp_orig = Eigen::Matrix<Scalar, 6, 6>::Identity();
-    jac_left_comp_orig.topLeftCorner<3,3>() = fixed_origin_.rotation();
-
-    fixed_origin_to_base_covariance_ = jac_right_comp_orig * fixed_to_base_covariance_ * jac_left_comp_orig + fixed_origin_covariance_;
-
-    ROS_INFO_STREAM_COND(initialized_, "LaserOdometry Initialized!");
-
-    return ProcessReport{true, true};
-  }
-
-  preProcessing();
-
-  // the predicted change of the laser's position, in the laser frame
-  const Transform increment_prior_in_laser = getIncrementPriorInLaserFrame();
-
-  // The actual computation
-  const bool processed = processImpl(scan_msg, increment_prior_in_laser);
-
-  assertIncrement();
-  assertIncrementCovariance();
-
-  posePlusIncrement(processed);
-
-  has_new_kf_ = isKeyFrame(increment_in_base_);
-
-  if (has_new_kf_)
-  {
-    // generate a keyframe
-
-    fixed_to_base_kf_ = fixed_to_base_;
-
-    reference_scan_ = scan_msg;
-
-    isKeyFrame();
-  }
-  else
-    isNotKeyFrame();
-
-  postProcessing();
-
-  execution_time_ = ros::WallTime::now() - start;
-
-  return ProcessReport{processed, has_new_kf_};
-}
-
-LaserOdometryBase::ProcessReport
-LaserOdometryBase::process(const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
-{
-  if (cloud_msg == nullptr)
-  {
-    ROS_WARN("Laser odometry process function received a nullptr input message!");
-    return ProcessReport::ErrorReport();
-  }
-
-  ros::WallTime start = ros::WallTime::now();
-
-  has_new_kf_   = false;
-  current_time_ = cloud_msg->header.stamp;
-
-  // first message
-  if (!initialized_)
-  {
-    initialized_ = initialize(cloud_msg);
-
-    fixed_origin_to_base_ = fixed_to_base_ * fixed_origin_;
-
-    ROS_INFO_STREAM_COND(initialized_, "LaserOdometry Initialized!");
-
-    return ProcessReport{true, true};
-  }
-
-  preProcessing();
-
-  // the predicted change of the laser's position, in the laser frame
-  const Transform increment_prior_in_laser = getIncrementPriorInLaserFrame();
-
-  // The actual computation
-  const bool processed = processImpl(cloud_msg, increment_prior_in_laser);
-
-  assertIncrement();
-  assertIncrementCovariance();
-
-  posePlusIncrement(processed);
-
-  has_new_kf_ = isKeyFrame(increment_in_base_);
-
-  if (has_new_kf_)
-  {
-    // generate a keyframe
-
-    fixed_to_base_kf_ = fixed_to_base_;
-
-    reference_cloud_ = cloud_msg;
-
-    isKeyFrame();
-  }
-  else
-    isNotKeyFrame();
-
-  postProcessing();
-
-  execution_time_ = ros::WallTime::now() - start;
-
-  return ProcessReport{processed, has_new_kf_};
-}
-
 bool LaserOdometryBase::processImpl(const sensor_msgs::LaserScanConstPtr& /*laser_msg*/,
                                     const Transform& /*prediction*/)
 {
@@ -338,7 +216,8 @@ Transform LaserOdometryBase::getIncrementPriorInKeyFrame()
   }
 
   // account for the change since the last kf, in the fixed frame
-  increment_in_base_prior = increment_in_base_prior * (fixed_to_base_ * fixed_to_base_kf_.inverse());
+  increment_in_base_prior = increment_in_base_prior *
+                              (fixed_to_base_ * fixed_to_base_kf_.inverse());
 
   return increment_in_base_prior;
 }
@@ -428,15 +307,21 @@ void LaserOdometryBase::posePlusIncrement(const bool processed)
   }
 }
 
+void LaserOdometryBase::updateKfTransform()
+{
+  fixed_to_base_kf_ = fixed_to_base_;
+  fixed_to_base_kf_covariance_ = fixed_to_base_covariance_;
+}
+
 void LaserOdometryBase::reset()
 {
   initialized_ = false;
   has_new_kf_  = false;
 
-  increment_         = Transform::Identity();
+  increment_               = Transform::Identity();
   increment_in_base_       = Transform::Identity();
   increment_in_base_prior_ = Transform::Identity();
-  fixed_to_base_kf_  = fixed_to_base_;
+  fixed_to_base_kf_        = fixed_to_base_;
 
   reference_scan_  = nullptr;
   reference_cloud_ = nullptr;
@@ -473,6 +358,24 @@ bool LaserOdometryBase::initialize(const sensor_msgs::LaserScanConstPtr&   /*sca
 bool LaserOdometryBase::initialize(const sensor_msgs::PointCloud2ConstPtr& /*cloud_msg*/)
 {
   return true;
+}
+
+void LaserOdometryBase::initializeFrames()
+{
+  // update the pose in the fixed 'origin' frame
+  fixed_origin_to_base_ = fixed_origin_ * fixed_to_base_;
+
+  // the left jacobian of the above pose composition
+  Eigen::Matrix<Scalar, 6, 6> jac_left = Eigen::Matrix<Scalar, 6, 6>::Identity();
+  jac_left.bottomRightCorner<3,3>() = fixed_to_base_.rotation().transpose();
+  jac_left.topRightCorner<3,3>() = - (fixed_origin_.rotation()*utils::skew(fixed_to_base_.translation()));
+
+  // the right jacobian of the above pose composition
+  Eigen::Matrix<Scalar, 6, 6> jac_right = Eigen::Matrix<Scalar, 6, 6>::Identity();
+  jac_right.topLeftCorner<3,3>() = fixed_origin_.rotation();
+
+  fixed_origin_to_base_covariance_ = jac_left  * fixed_to_base_covariance_ * jac_left.transpose() +
+                                     jac_right * fixed_origin_covariance_  * jac_right.transpose();
 }
 
 Transform LaserOdometryBase::predict(const Transform& /*tf*/)
