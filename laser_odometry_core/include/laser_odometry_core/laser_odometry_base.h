@@ -704,11 +704,7 @@ namespace laser_odometry
      * and the estimated pose increment.
      */
     template <typename PoseMsgT, typename IncrementMsgT>
-    void fillMsgs(PoseMsgT&& pose_msg_ptr, IncrementMsgT&& increment_msg_ptr)
-    {
-      fillMsg(std::forward<PoseMsgT>(pose_msg_ptr));
-      fillIncrementMsg(std::forward<IncrementMsgT>(increment_msg_ptr));
-    }
+    void fillMsgs(PoseMsgT&& pose_msg_ptr, IncrementMsgT&& increment_msg_ptr);
   };
 
   /// @brief A base-class pointer.
@@ -717,92 +713,6 @@ namespace laser_odometry
 } /* namespace laser_odometry */
 
 #include <laser_odometry_core/laser_odometry_report.h>
-
-namespace laser_odometry {
-
-/**
- * @brief updateKf
- */
-template <typename Msg>
-void LaserOdometryBase::updateKf(Msg&& msg)
-{
-  updateKfMsg(std::forward<Msg>(msg));
-  updateKfTransform();
-}
-
-template <typename Msg>
-inline LaserOdometryBase::ProcessReport
-LaserOdometryBase::process(Msg&& msg)
-{
-  if (msg == nullptr)
-  {
-    ROS_WARN("Laser odometry process function received a nullptr input message!");
-    return ProcessReport::ErrorReport();
-  }
-
-  ros::WallTime start = ros::WallTime::now();
-
-  has_new_kf_   = false;
-  current_time_ = msg->header.stamp;
-
-  // first message
-  if (!initialized_)
-  {
-    initialized_ = initialize(std::forward<Msg>(msg));
-
-    initializeFrames();
-
-    ROS_INFO_STREAM_COND(initialized_, "LaserOdometry Initialized!");
-
-    return ProcessReport{true, true};
-  }
-
-  preProcessing();
-
-  // the predicted change of the laser's position, in the laser frame
-  const Transform increment_prior_in_laser = getIncrementPriorInLaserFrame();
-
-  // The actual computation
-  const bool processed = processImpl(std::forward<Msg>(msg), increment_prior_in_laser);
-
-  assertIncrement();
-  assertIncrementCovariance();
-
-  posePlusIncrement(processed);
-
-  has_new_kf_ = isKeyFrame(increment_in_base_);
-
-  if (has_new_kf_)
-  {
-    // generate a keyframe
-    updateKf(std::forward<Msg>(msg));
-
-    isKeyFrame();
-  }
-  else
-    isNotKeyFrame();
-
-  postProcessing();
-
-  execution_time_ = ros::WallTime::now() - start;
-
-  return ProcessReport{processed, has_new_kf_};
-}
-
-template <typename Msg, typename PoseMsgT, typename IncrementMsgT>
-LaserOdometryBase::ProcessReport
-LaserOdometryBase::process(Msg&& msg,
-                           PoseMsgT&& pose_msg,
-                           IncrementMsgT&& pose_increment_msg)
-{
-  const auto report = process(std::forward<Msg>(msg));
-
-  fillMsgs(std::forward<PoseMsgT>(pose_msg),
-           std::forward<IncrementMsgT>(pose_increment_msg));
-
-  return report;
-}
-
-} /* namespace laser_odometry */
+#include <laser_odometry_core/laser_odometry_base.hpp>
 
 #endif /* _LASER_ODOMETRY_CORE_LASER_ODOMETRY_BASE_H_ */
