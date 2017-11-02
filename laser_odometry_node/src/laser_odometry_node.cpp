@@ -5,65 +5,38 @@
 #include <geometry_msgs/Pose2D.h>
 #include <nav_msgs/Odometry.h>
 
-#include <tf/transform_listener.h>
-#include <tf_conversions/tf_eigen.h>
+#include <tf2_ros/transform_listener.h>
+#include <tf2_eigen/tf2_eigen.h>
 
 namespace sm = sensor_msgs;
 
-namespace
-{
+namespace {
+
 bool getTf(const std::string& source_frame,
            const std::string& target_frame,
-           tf::StampedTransform& tf,
+           laser_odometry::Transform& tf,
            const ros::Time& t = ros::Time(0),
            const ros::Duration& d = ros::Duration(1.5))
 {
-  tf::TransformListener tf_listener;
-  tf::StampedTransform tf_tmp;
+  tf2_ros::Buffer tf2_buffer;
+  tf2_ros::TransformListener tf2_listener(tf2_buffer);
 
-  std::string error;
-  if (tf_listener.waitForTransform(target_frame, source_frame, t, d, ros::Duration(0.01), &error))
-  {
-    try
-    {
-      tf_listener.lookupTransform (
-        target_frame, source_frame, t, tf_tmp);
-    }
-    catch (tf::TransformException ex)
-    {
-      ROS_WARN("Could not get transform from %s to %s at %f after %f :\n %s",
-               source_frame.c_str(), target_frame.c_str(),
-               t.toSec(), d.toSec(), ex.what());
-
-      return false;
-    }
+  geometry_msgs::TransformStamped transform_stamped;
+  try{
+    transform_stamped = tf2_buffer.lookupTransform(target_frame, source_frame, t, d);
   }
-  else
-  {
-    ROS_WARN("Could not find transform from %s to %s at %f after %f :\n %s",
-             source_frame.c_str(), target_frame.c_str(),
-             t.toSec(), d.toSec(), error.c_str());
+  catch (const tf2::TransformException &ex) {
+    ROS_WARN("%s", ex.what());
+    ros::Duration(1.0).sleep();
     return false;
   }
 
-  tf = tf_tmp;
+  Eigen::Affine3d etf = tf2::transformToEigen(transform_stamped);
+  tf.matrix() = etf.matrix();
+
   return true;
 }
 
-bool getTf(const std::string& source_frame,
-           const std::string& target_frame,
-           tf::Transform& tf,
-           const ros::Time& t = ros::Time(0),
-           const ros::Duration& d = ros::Duration(1.5))
-{
-  tf::StampedTransform stamped_tf;
-
-  bool ok = getTf(source_frame, target_frame, stamped_tf, t, d);
-
-  if (ok) tf = stamped_tf;
-
-  return ok;
-}
 }
 
 namespace laser_odometry
@@ -105,20 +78,17 @@ void LaserOdometryNode::initialize()
     throw std::runtime_error("Something went wrong.");
   }
 
-  setLaserFromTf();
+  setLaserFromTf(ros::Time::now());
 
   if (init_origin_)
   {
-    tf::Transform tf_origin_to_base = tf::Transform::getIdentity();
+    Transform tf_origin_to_base = Transform::Identity();
     getTf(laser_odom_ptr_->getFrameBase(),
           global_frame_, tf_origin_to_base);
 
-    Eigen::Affine3d origin_to_base;
-    tf::transformTFToEigen(tf_origin_to_base, origin_to_base);
+    laser_odom_ptr_->setOrigin(tf_origin_to_base);
 
-    laser_odom_ptr_->setOrigin(Transform(origin_to_base.matrix()));
-
-    ROS_INFO_STREAM("Initializing origin :\n" << origin_to_base.matrix());
+    ROS_INFO_STREAM("Initializing origin :\n" << tf_origin_to_base.matrix());
   }
 
   sub_ = private_nh_.subscribe("topic_in", 1,
@@ -158,18 +128,15 @@ void LaserOdometryNode::CloudCallback(const sensor_msgs::PointCloud2ConstPtr& ne
 
 void LaserOdometryNode::setLaserFromTf(const ros::Time &t, const ros::Duration &d)
 {
-  tf::Transform tf_base_to_laser = tf::Transform::getIdentity();
+  Transform tf_base_to_laser = Transform::Identity();
 
   getTf(laser_odom_ptr_->getFrameLaser(),
         laser_odom_ptr_->getFrameBase(),
         tf_base_to_laser, t, d);
 
-  Eigen::Affine3d base_to_laser;
-  tf::transformTFToEigen(tf_base_to_laser, base_to_laser);
+  laser_odom_ptr_->setLaserPose(tf_base_to_laser);
 
-  laser_odom_ptr_->setLaserPose(Transform(base_to_laser.matrix()));
-
-  ROS_INFO_STREAM("Setting laser to base :\n" << base_to_laser.matrix());
+  ROS_INFO_STREAM("Setting laser to base :\n" << tf_base_to_laser.matrix());
 }
 
 void LaserOdometryNode::process()
@@ -264,7 +231,7 @@ void LaserOdometryNode::resetListenerWithType(const topic_tools::ShapeShifter::P
     sub_ = private_nh_.subscribe("topic_in", 1,
                                  &LaserOdometryNode::CloudCallback, this);
 
-    pub_kframe_ = private_nh_.advertise<sensor_msgs::PointCloud>("key_frame", 1);
+    pub_kframe_ = private_nh_.advertise<sensor_msgs::PointCloud2>("key_frame", 1);
   }
   else {
     ROS_ERROR("Subscribed to topic of type %s !", new_s->getDataType().c_str());
@@ -275,17 +242,18 @@ void LaserOdometryNode::sendTransform()
 {
   if (broadcast_tf_ && configured_)
   {
-    tf::Transform tf_fixed_origin_to_base = tf::Transform::getIdentity();
-    tf::transformEigenToTF(laser_odom_ptr_->getEstimatedPose(), tf_fixed_origin_to_base);
+    Eigen::Affine3d etf;
+    etf.matrix() = laser_odom_ptr_->getEstimatedPose().matrix();
 
-    const tf::StampedTransform transform_msg(tf_fixed_origin_to_base,
-                                             laser_odom_ptr_->getCurrentTime(),
-                                             laser_odom_ptr_->getFrameOdom(),
-                                             laser_odom_ptr_->getFrameBase());
+    geometry_msgs::TransformStamped tf_msg = tf2::eigenToTransform(etf);
 
-    ROS_DEBUG_STREAM("Sending tf:\n" << laser_odom_ptr_->getEstimatedPose().matrix());
+    tf_msg.header.stamp = laser_odom_ptr_->getCurrentTime();
+    tf_msg.header.frame_id = laser_odom_ptr_->getFrameOdom();
+    tf_msg.child_frame_id  = laser_odom_ptr_->getFrameBase();
 
-    tf_broadcaster_.sendTransform(transform_msg);
+    ROS_DEBUG_STREAM("Sending tf:\n" << etf.matrix());
+
+    tf_broadcaster_.sendTransform(tf_msg);
   }
 }
 

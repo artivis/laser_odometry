@@ -16,8 +16,8 @@ find_package(catkin REQUIRED COMPONENTS
   pluginlib
   roscpp
   sensor_msgs
-  tf
-  tf_conversions
+  tf2_eigen
+  tf2_ros
   topic_tools
 )
 
@@ -25,7 +25,7 @@ catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ${PROJECT_NAME}
   CATKIN_DEPENDS eigen_conversions laser_odometry_core nav_msgs pluginlib
-                 roscpp sensor_msgs tf tf_conversions topic_tools
+                 roscpp sensor_msgs tf2_eigen tf2_ros topic_tools
 )
 
 include_directories(include)

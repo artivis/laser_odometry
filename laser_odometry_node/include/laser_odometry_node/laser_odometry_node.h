@@ -4,7 +4,7 @@
 #include <laser_odometry_core/laser_odometry_core.h>
 
 #include <topic_tools/shape_shifter.h>
-#include <tf/transform_broadcaster.h>
+#include <tf2_ros/transform_broadcaster.h>
 
 namespace laser_odometry
 {
@@ -107,7 +107,7 @@ protected:
   ros::NodeHandle private_nh_;
 
   /// \brief The \c tf broadcaster
-  tf::TransformBroadcaster tf_broadcaster_;
+  tf2_ros::TransformBroadcaster tf_broadcaster_;
 
   /// @brief Unique subscriber of the node.
   /// @see resetListenerWithType
