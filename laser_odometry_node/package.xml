@@ -14,7 +14,7 @@
   <author email="jeremie.deray@pal-robotics.com">Jeremie Deray</author>
   <maintainer email="jeremie.deray@pal-robotics.com">Jeremie Deray</maintainer>
 
-  <license>TODO</license>
+  <license>Apache-2.0</license>
 
   <buildtool_depend>catkin</buildtool_depend>
 
