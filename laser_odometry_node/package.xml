@@ -24,8 +24,8 @@
   <depend>pluginlib</depend>
   <depend>roscpp</depend>
   <depend>sensor_msgs</depend>
-  <depend>tf</depend>
-  <depend>tf_conversions</depend>
+  <depend>tf2_eigen</depend>
+  <depend>tf2_ros</depend>
   <depend>topic_tools</depend>
 
 <!--  <test_depend>roslib</test_depend>-->
