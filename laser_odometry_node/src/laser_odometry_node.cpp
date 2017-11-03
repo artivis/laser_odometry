@@ -64,6 +64,11 @@ void LaserOdometryNode::initialize()
   private_nh_.param("throttle",     throttle_,     throttle_);
   private_nh_.param("global_frame", global_frame_, std::string("map"));
 
+  if (broadcast_tf_)
+  {
+    tf_broadcaster_ptr_ = boost::make_shared<tf2_ros::TransformBroadcaster>();
+  }
+
   int inc_pub_opt = detail::get_underlying<IncrementPublishOptions>(publish_odom_inc_);
   private_nh_.param("publish_delta_option", inc_pub_opt, inc_pub_opt);
   publish_odom_inc_ = detail::to_enum<IncrementPublishOptions>(inc_pub_opt);
@@ -240,7 +245,7 @@ void LaserOdometryNode::resetListenerWithType(const topic_tools::ShapeShifter::P
 
 void LaserOdometryNode::sendTransform()
 {
-  if (broadcast_tf_ && configured_)
+  if (broadcast_tf_ && tf_broadcaster_ptr_ && configured_)
   {
     Eigen::Affine3d etf;
     etf.matrix() = laser_odom_ptr_->getEstimatedPose().matrix();
@@ -251,9 +256,9 @@ void LaserOdometryNode::sendTransform()
     tf_msg.header.frame_id = laser_odom_ptr_->getFrameOdom();
     tf_msg.child_frame_id  = laser_odom_ptr_->getFrameBase();
 
-    ROS_DEBUG_STREAM("Sending tf:\n" << etf.matrix());
+    ROS_INFO_STREAM("Sending tf:\n" << etf.matrix());
 
-    tf_broadcaster_.sendTransform(tf_msg);
+    tf_broadcaster_ptr_->sendTransform(tf_msg);
   }
 }
 

@@ -107,7 +107,7 @@ protected:
   ros::NodeHandle private_nh_;
 
   /// \brief The \c tf broadcaster
-  tf2_ros::TransformBroadcaster tf_broadcaster_;
+  boost::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_ptr_;
 
   /// @brief Unique subscriber of the node.
   /// @see resetListenerWithType
