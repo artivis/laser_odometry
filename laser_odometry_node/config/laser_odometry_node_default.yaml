@@ -27,6 +27,10 @@ fixed_sensor: True
 # Throttling messages.
 throttle:     1
 
+# How many tries to retrieve
+# the laser pose on the robot
+tf_try:       5
+
 # Odometry Increment publication option
 # 0 do not publish
 # 1 publish on key-reading
