@@ -16,7 +16,7 @@ bool getTf(const std::string& source_frame,
            const std::string& target_frame,
            laser_odometry::Transform& tf,
            const ros::Time& t = ros::Time(0),
-           const ros::Duration& d = ros::Duration(1.5))
+           const ros::Duration& d = ros::Duration(0.5))
 {
   tf2_ros::Buffer tf2_buffer;
   tf2_ros::TransformListener tf2_listener(tf2_buffer);
@@ -62,6 +62,7 @@ void LaserOdometryNode::initialize()
   private_nh_.param("publish_odom", publish_odom_, publish_odom_);
   private_nh_.param("fixed_sensor", fixed_sensor_, fixed_sensor_);
   private_nh_.param("throttle",     throttle_,     throttle_);
+  private_nh_.param("tf_try",       tf_try_,       tf_try_);
   private_nh_.param("global_frame", global_frame_, std::string("map"));
 
   if (broadcast_tf_)
@@ -133,11 +134,17 @@ void LaserOdometryNode::CloudCallback(const sensor_msgs::PointCloud2ConstPtr& ne
 
 void LaserOdometryNode::setLaserFromTf(const ros::Time &t, const ros::Duration &d)
 {
-  Transform tf_base_to_laser = Transform::Identity();
+  Transform tf_base_to_laser = laser_odom_ptr_->getLaserPose();
 
-  getTf(laser_odom_ptr_->getFrameLaser(),
-        laser_odom_ptr_->getFrameBase(),
-        tf_base_to_laser, t, d);
+  bool got_tf = false;
+
+  while (tf_try_ && !got_tf)
+  {
+    got_tf = getTf(laser_odom_ptr_->getFrameLaser(),
+                   laser_odom_ptr_->getFrameBase(),
+                   tf_base_to_laser, t, d);
+    --tf_try_;
+  }
 
   laser_odom_ptr_->setLaserPose(tf_base_to_laser);
 

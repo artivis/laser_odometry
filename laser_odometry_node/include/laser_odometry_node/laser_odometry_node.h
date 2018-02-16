@@ -87,6 +87,9 @@ protected:
   /// @brief the message throttling ratio.
   int throttle_ = 1;
 
+  /// @brief How many tries to retrieve the laser pose
+  int tf_try_ = 1;
+
   /// @brief The global frame from which the origin
   /// can base initialized.
   std::string global_frame_;
