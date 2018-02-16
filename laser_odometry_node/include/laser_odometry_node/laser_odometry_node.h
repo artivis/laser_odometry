@@ -33,13 +33,6 @@ class LaserOdometryNode
 {
 public:
 
-  enum class IncrementPublishOptions : std::size_t
-  {
-    NO_PUB = 0,
-    ON_KEY_FRAME,
-    ALL
-  };
-
   /// @brief Default constructor.
   LaserOdometryNode();
 
@@ -81,8 +74,6 @@ protected:
   /// @brief Whether to publish a nav_msgs::Odometry msg
   /// or a geometry_msgs::Pose2D msg
   bool publish_odom_ = true;
-
-  IncrementPublishOptions publish_odom_inc_ = IncrementPublishOptions::NO_PUB;
 
   /// @brief the message throttling ratio.
   int throttle_ = 1;
@@ -177,6 +168,8 @@ protected:
   template <typename T>
   void publish(const T& msg) const;
 
+  /// @brief On new-keyframe, publish increment
+  /// since last key-frame in sensor frame.
   template <typename T>
   void publish_inc(const T& msg) const;
 };
@@ -191,21 +184,10 @@ void LaserOdometryNode::publish(const T& msg) const
 template <typename T>
 void LaserOdometryNode::publish_inc(const T& msg) const
 {
-  if (!pub_odom_inc_.getNumSubscribers() > 0) return;
-
-  switch (publish_odom_inc_)
+  if (pub_odom_inc_.getNumSubscribers() > 0 &&
+      laser_odom_ptr_->hasNewKeyFrame())
   {
-  case IncrementPublishOptions::ALL:
     pub_odom_inc_.publish(msg);
-    break;
-  case IncrementPublishOptions::ON_KEY_FRAME:
-    if (laser_odom_ptr_->hasNewKeyFrame())
-      pub_odom_inc_.publish(msg);
-    break;
-  case IncrementPublishOptions::NO_PUB:
-    break;
-  default:
-    break;
   }
 }
 

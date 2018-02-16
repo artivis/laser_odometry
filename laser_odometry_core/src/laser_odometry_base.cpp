@@ -39,9 +39,6 @@ void LaserOdometryBase::fillMsg<nav_msgs::OdometryPtr&>(nav_msgs::OdometryPtr& m
 
   conversion::toRos(fixed_origin_to_base_, msg_ptr->pose.pose);
   conversion::toRos(fixed_origin_to_base_covariance_, msg_ptr->pose.covariance);
-
-  //msg_ptr->pose.covariance  = pose_covariance_;
-  //msg_ptr->twist.covariance = pose_twist_covariance_;
 }
 
 template <>
@@ -64,9 +61,9 @@ void LaserOdometryBase::fillIncrementMsg<geometry_msgs::Pose2DPtr&>(geometry_msg
 {
   if (msg_ptr == nullptr) return;
 
-  msg_ptr->x = increment_in_base_.translation()(0);
-  msg_ptr->y = increment_in_base_.translation()(1);
-  msg_ptr->theta = utils::getYaw(increment_in_base_.rotation());
+  msg_ptr->x = increment_.translation()(0);
+  msg_ptr->y = increment_.translation()(1);
+  msg_ptr->theta = utils::getYaw(increment_.rotation());
 }
 
 template <>
@@ -75,11 +72,12 @@ void LaserOdometryBase::fillIncrementMsg<nav_msgs::OdometryPtr&>(nav_msgs::Odome
   if (msg_ptr == nullptr) return;
 
   msg_ptr->header.stamp    = current_time_;
-  msg_ptr->header.frame_id = "last_key_frame"; /// @todo this frame does not exist. Should it?
-  msg_ptr->child_frame_id  = base_frame_;
+  /// @todo this frame does not exist.
+  msg_ptr->header.frame_id = "last_key_frame";
+  msg_ptr->child_frame_id  = laser_frame_;
 
-  conversion::toRos(increment_in_base_, msg_ptr->pose.pose);
-  conversion::toRos(increment_covariance_in_base_, msg_ptr->pose.covariance);
+  conversion::toRos(increment_, msg_ptr->pose.pose);
+  conversion::toRos(increment_covariance_, msg_ptr->pose.covariance);
 }
 
 template <>
@@ -87,8 +85,8 @@ void LaserOdometryBase::fillIncrementMsg<TransformWithCovariancePtr&>(TransformW
 {
   if (msg_ptr == nullptr) return;
 
-  msg_ptr->transform_  = increment_in_base_;
-  msg_ptr->covariance_ = increment_covariance_in_base_;
+  msg_ptr->transform_  = increment_;
+  msg_ptr->covariance_ = increment_covariance_;
 }
 
 template <>

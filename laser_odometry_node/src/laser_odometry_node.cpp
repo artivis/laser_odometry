@@ -70,10 +70,6 @@ void LaserOdometryNode::initialize()
     tf_broadcaster_ptr_ = boost::make_shared<tf2_ros::TransformBroadcaster>();
   }
 
-  int inc_pub_opt = detail::get_underlying<IncrementPublishOptions>(publish_odom_inc_);
-  private_nh_.param("publish_delta_option", inc_pub_opt, inc_pub_opt);
-  publish_odom_inc_ = detail::to_enum<IncrementPublishOptions>(inc_pub_opt);
-
   laser_odom_ptr_ = make_laser_odometry(laser_odometry_type);
 
   if (laser_odom_ptr_ != nullptr)
