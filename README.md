@@ -16,7 +16,7 @@ With a single node to start, selecting an scan-matching algorithm is as simple a
 <!-- [![Build Status](https://travis-ci.org/artivis/laser_odometry.svg?branch=master)](https://travis-ci.org/artivis/laser_odometry) -->
 ---
 ## Build Summary
-| Indigo            | Jade              | kinetic            | lunar              |
+| Indigo            | Jade              | Kinetic            | Lunar              |
 |-------------------|-------------------|--------------------|--------------------|
 | [![Indigo][1]][5] | [![Jade][2]][5]   | [![kinetic][3]][5] | [![lunar][4]][5]   |
 
