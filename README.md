@@ -16,13 +16,14 @@ With a single node to start, selecting an scan-matching algorithm is as simple a
 <!-- [![Build Status](https://travis-ci.org/artivis/laser_odometry.svg?branch=master)](https://travis-ci.org/artivis/laser_odometry) -->
 ---
 ## Build Summary
-| Indigo            | Jade              | kinetic            |
-|-------------------|-------------------|--------------------|
-| [![Indigo][1]][5] | [![Jade][2]][5]   | [![kinetic][3]][5] |
+| Indigo            | Jade              | kinetic            | lunar              |
+|-------------------|-------------------|--------------------|--------------------|
+| [![Indigo][1]][5] | [![Jade][2]][5]   | [![kinetic][3]][5] | [![lunar][4]][5]   |
 
 [1]: https://travis-matrix-badges.herokuapp.com/repos/artivis/laser_odometry/branches/master/1
 [2]: https://travis-matrix-badges.herokuapp.com/repos/artivis/laser_odometry/branches/master/4
 [3]: https://travis-matrix-badges.herokuapp.com/repos/artivis/laser_odometry/branches/master/7
+[4]: https://travis-matrix-badges.herokuapp.com/repos/artivis/laser_odometry/branches/master/10
 [5]: https://travis-ci.org/artivis/laser_odometry
 
 ## Plugins
