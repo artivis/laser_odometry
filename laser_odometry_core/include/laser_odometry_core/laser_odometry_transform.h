@@ -28,6 +28,8 @@ using Transform  = Isometry3s;
 // to the above Transform.
 using Covariance = Eigen::Matrix<Scalar, 6, 6>;
 
+using Jacobian = Eigen::Matrix<Scalar, 6, 6>;
+
 struct TransformWithCovariance
 {
   TransformWithCovariance() = default;

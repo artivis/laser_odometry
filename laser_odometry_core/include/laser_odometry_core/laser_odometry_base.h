@@ -628,6 +628,22 @@ namespace laser_odometry
     Transform getIncrementPriorInLaserFrame();
 
     /**
+     * @brief C = A \oplus B
+     *
+     * @param[in] A in SE(3)
+     * @param[in] B in SE(3)
+     * @param[out] J_C_A in R(6*6), Jacobian of composition wrt A
+     * @param[out] J_C_B in R(6*6), Jacobian of composition wrt B
+     * @return C in SE(3), the composition of A \oplus B
+     *
+     * @note
+     *  J_C_A = [ I -Ra [tb]x ; 0 Ra ]
+     *  J_C_B = [ Ra 0 ; 0 I ]
+     */
+    Transform oplus(const Transform& A, const Transform& B,
+                    Jacobian& J_C_A, Jacobian& J_C_B);
+
+    /**
      * @brief posePlusIncrement. Update the estimated current pose
      * with the evaluated increment if process() succeeded.
      * @param processed.

@@ -228,6 +228,23 @@ Transform LaserOdometryBase::getIncrementPriorInLaserFrame()
 //          incrementPrior() * fixed_to_base_ * base_to_laser_;
 }
 
+Transform LaserOdometryBase::oplus(const Transform& A,
+                                   const Transform& B,
+                                   Jacobian& J_C_A,
+                                   Jacobian& J_C_B)
+{
+  /// J_C_A = [ I -Ra [tb]x ; 0 Ra ]
+  J_C_A.setIdentity();
+  J_C_A.bottomRightCorner<3,3>() = A.rotation().transpose();
+  J_C_A.topRightCorner<3,3>()    = -(A.rotation()*utils::skew(B.translation()));
+
+  /// J_C_B = [ Ra 0 ; 0 I ]
+  J_C_B.setIdentity();
+  J_C_B.topLeftCorner<3,3>() = A.rotation();
+
+  return A*B;
+}
+
 void LaserOdometryBase::posePlusIncrement(const bool processed)
 {
   if (processed)
@@ -238,57 +255,29 @@ void LaserOdometryBase::posePlusIncrement(const bool processed)
       utils::makeOrthogonal(increment_);
     }
 
+    Jacobian jac_left, jac_right;
+    const Transform tmp = oplus(base_to_laser_, increment_, jac_left, jac_right);
+
+    increment_covariance_in_base_ = jac_left  * base_to_laser_covariance_ * jac_left.transpose() +
+                                    jac_right * increment_covariance_     * jac_right.transpose();
+
     // the increment of the base's position, in the base frame
-    const Transform tmp = base_to_laser_ * increment_;
-    increment_in_base_ = tmp * laser_to_base_;
+    increment_in_base_ = oplus(tmp, laser_to_base_, jac_left, jac_right);
 
-    // the left jacobian of the above pose composition
-    Eigen::Matrix<Scalar, 6, 6> jac_left = Eigen::Matrix<Scalar, 6, 6>::Identity();
-    jac_left.bottomRightCorner<3,3>()    = increment_.rotation().transpose();
-    jac_left.topRightCorner<3,3>()       = -(base_to_laser_.rotation()*utils::skew(increment_.translation()));
-
-    // the right jacobian of the above pose composition
-    Eigen::Matrix<Scalar, 6, 6> jac_right = Eigen::Matrix<Scalar, 6, 6>::Identity();
-    jac_right.topLeftCorner<3,3>()        = base_to_laser_.rotation();
-
-    increment_covariance_in_base_ = jac_left  * increment_covariance_     * jac_left.transpose() +
-                                    jac_right * base_to_laser_covariance_ * jac_right.transpose();
-
-    // the left jacobian of the above pose composition
-    jac_left.bottomRightCorner<3,3>() = laser_to_base_.rotation().transpose();
-    jac_left.topRightCorner<3,3>()    = -(tmp.rotation()*utils::skew(laser_to_base_.translation()));
-
-    // the right jacobian of the above pose composition (tmp)
-    jac_right.topLeftCorner<3,3>() = tmp.rotation();
-
-    increment_covariance_in_base_ = jac_left  * laser_to_base_covariance_     * jac_left.transpose() +
-                                    jac_right * increment_covariance_in_base_ * jac_right.transpose();
+    increment_covariance_in_base_ = jac_left  * increment_covariance_in_base_ * jac_left.transpose() +
+                                    jac_right * laser_to_base_covariance_     * jac_right.transpose();
 
     // update the pose in the fixed frame
-    fixed_to_base_ = fixed_to_base_kf_ * increment_in_base_;
+    fixed_to_base_ = oplus(fixed_to_base_kf_, increment_in_base_, jac_left, jac_right);
 
-    // the left jacobian of the above pose composition
-    jac_left.bottomRightCorner<3,3>() = increment_in_base_.rotation().transpose();
-    jac_left.topRightCorner<3,3>() = -(fixed_to_base_kf_.rotation()*utils::skew(increment_in_base_.translation()));
-
-    // the right jacobian of the above pose composition
-    jac_right.topLeftCorner<3,3>() = fixed_to_base_kf_.rotation();
-
-    fixed_to_base_covariance_ = jac_left  * increment_covariance_in_base_ * jac_left.transpose() +
-                                jac_right * fixed_to_base_kf_covariance_  * jac_right.transpose();
+    fixed_to_base_covariance_ = jac_left  * fixed_to_base_kf_covariance_  * jac_left.transpose() +
+                                jac_right * increment_covariance_in_base_ * jac_right.transpose();
 
     // update the pose in the fixed 'origin' frame
-    fixed_origin_to_base_ = fixed_origin_ * fixed_to_base_;
+    fixed_origin_to_base_ = oplus(fixed_origin_, fixed_to_base_, jac_left, jac_right);
 
-    // the left jacobian of the above pose composition
-    jac_left.bottomRightCorner<3,3>() = fixed_to_base_.rotation().transpose();
-    jac_left.topRightCorner<3,3>() = - (fixed_origin_.rotation()*utils::skew(fixed_to_base_.translation()));
-
-    // the right jacobian of the above pose composition
-    jac_right.topLeftCorner<3,3>() = fixed_origin_.rotation();
-
-    fixed_origin_to_base_covariance_ = jac_left  * fixed_to_base_covariance_ * jac_left.transpose() +
-                                       jac_right * fixed_origin_covariance_  * jac_right.transpose();
+    fixed_origin_to_base_covariance_ = jac_left  * fixed_origin_covariance_  * jac_left.transpose() +
+                                       jac_right * fixed_to_base_covariance_ * jac_right.transpose();
 
     ROS_DEBUG_STREAM("increment_covariance_:\n"            << increment_covariance_);
     ROS_DEBUG_STREAM("increment_covariance_in_base_:\n"    << increment_covariance_in_base_);
@@ -360,20 +349,13 @@ bool LaserOdometryBase::initialize(const sensor_msgs::PointCloud2ConstPtr& /*clo
 
 void LaserOdometryBase::initializeFrames()
 {
+  Jacobian jac_left, jac_right;
+
   // update the pose in the fixed 'origin' frame
-  fixed_origin_to_base_ = fixed_origin_ * fixed_to_base_;
+  fixed_origin_to_base_ = oplus(fixed_origin_, fixed_to_base_, jac_left, jac_right);
 
-  // the left jacobian of the above pose composition
-  Eigen::Matrix<Scalar, 6, 6> jac_left = Eigen::Matrix<Scalar, 6, 6>::Identity();
-  jac_left.bottomRightCorner<3,3>() = fixed_to_base_.rotation().transpose();
-  jac_left.topRightCorner<3,3>() = - (fixed_origin_.rotation()*utils::skew(fixed_to_base_.translation()));
-
-  // the right jacobian of the above pose composition
-  Eigen::Matrix<Scalar, 6, 6> jac_right = Eigen::Matrix<Scalar, 6, 6>::Identity();
-  jac_right.topLeftCorner<3,3>() = fixed_origin_.rotation();
-
-  fixed_origin_to_base_covariance_ = jac_left  * fixed_to_base_covariance_ * jac_left.transpose() +
-                                     jac_right * fixed_origin_covariance_  * jac_right.transpose();
+  fixed_origin_to_base_covariance_ = jac_left  * fixed_origin_covariance_  * jac_left.transpose() +
+                                     jac_right * fixed_to_base_covariance_ * jac_right.transpose();
 }
 
 Transform LaserOdometryBase::predict(const Transform& /*tf*/)
@@ -663,16 +645,13 @@ void LaserOdometryBase::setLaserPose(const Transform& base_to_laser,
 
     base_to_laser_covariance_ = tmp;
 
-    // the left jacobian of the inverse
-    Eigen::Matrix<Scalar, 6, 6> jac_left_inv = Eigen::Matrix<Scalar, 6, 6>::Identity();
-    jac_left_inv.topLeftCorner<3,3>() = laser_to_base_.rotation();
-    jac_left_inv.topRightCorner<3,3>() = utils::skew(laser_to_base_.translation()) * laser_to_base_.rotation();
-    jac_left_inv.bottomRightCorner<3,3>() = laser_to_base_.rotation();
+    /// jacobian of the inverse function
+    /// J_Tinv_T = [I -Rtinv[tt]x ; 0 Tr^T]
+    Jacobian jac_inv = Jacobian::Identity();
+    jac_inv.topRightCorner<3,3>()    = -laser_to_base_.rotation()*utils::skew(base_to_laser_.translation());
+    jac_inv.bottomRightCorner<3,3>() = base_to_laser_.rotation();
 
-    // the right jacobian of the above pose composition
-    //Eigen::Matrix<Scalar, 6, 6> jac_right_inv = jac_left_inv.transpose();
-
-    laser_to_base_covariance_ = jac_left_inv * base_to_laser_covariance * jac_left_inv.transpose();
+    laser_to_base_covariance_ = jac_inv * base_to_laser_covariance * jac_inv.transpose();
   }
   else
   {
