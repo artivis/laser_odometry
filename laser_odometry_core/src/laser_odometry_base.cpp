@@ -38,7 +38,7 @@ void LaserOdometryBase::fillMsg<nav_msgs::OdometryPtr&>(nav_msgs::OdometryPtr& m
   msg_ptr->child_frame_id  = base_frame_;
 
   conversion::toRos(fixed_origin_to_base_, msg_ptr->pose.pose);
-  conversion::toRos(fixed_origin_to_base_covariance_, msg_ptr->pose.covariance);
+  conversion::toRos<Covariance>(fixed_origin_to_base_covariance_ + noise_2d_3d_, msg_ptr->pose.covariance);
 }
 
 template <>
@@ -47,7 +47,7 @@ void LaserOdometryBase::fillMsg<TransformWithCovariancePtr&>(TransformWithCovari
   if (msg_ptr == nullptr) return;
 
   msg_ptr->transform_  = fixed_origin_to_base_;
-  msg_ptr->covariance_ = fixed_origin_to_base_covariance_;
+  msg_ptr->covariance_ = fixed_origin_to_base_covariance_ + noise_2d_3d_;
 }
 
 template <>
@@ -77,7 +77,7 @@ void LaserOdometryBase::fillIncrementMsg<nav_msgs::OdometryPtr&>(nav_msgs::Odome
   msg_ptr->child_frame_id  = laser_frame_;
 
   conversion::toRos(increment_, msg_ptr->pose.pose);
-  conversion::toRos(increment_covariance_, msg_ptr->pose.covariance);
+  conversion::toRos<Covariance>(increment_covariance_ + noise_2d_3d_, msg_ptr->pose.covariance);
 }
 
 template <>
@@ -86,7 +86,7 @@ void LaserOdometryBase::fillIncrementMsg<TransformWithCovariancePtr&>(TransformW
   if (msg_ptr == nullptr) return;
 
   msg_ptr->transform_  = increment_;
-  msg_ptr->covariance_ = increment_covariance_;
+  msg_ptr->covariance_ = increment_covariance_ + noise_2d_3d_;
 }
 
 template <>
@@ -475,7 +475,7 @@ void LaserOdometryBase::getEstimatedPose(Transform& estimated_pose,
                                          Covariance& estimated_pose_covariance) const noexcept
 {
   estimated_pose = fixed_origin_to_base_;
-  estimated_pose_covariance = fixed_origin_to_base_covariance_;
+  estimated_pose_covariance = fixed_origin_to_base_covariance_ + noise_2d_3d_;
 }
 
 /**
@@ -496,7 +496,7 @@ void LaserOdometryBase::getKeyFrameEstimatedPose(Transform& kf_estimated_pose,
                                                  Covariance& kf_estimated_pose_covariance) const noexcept
 {
   kf_estimated_pose = fixed_to_base_kf_;
-  kf_estimated_pose_covariance = fixed_to_base_kf_covariance_;
+  kf_estimated_pose_covariance = fixed_to_base_kf_covariance_ + noise_2d_3d_;
 }
 
 void LaserOdometryBase::setKeyFrame(const sensor_msgs::LaserScanConstPtr& key_frame_msg)
