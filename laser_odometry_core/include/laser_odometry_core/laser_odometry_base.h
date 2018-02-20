@@ -544,6 +544,11 @@ namespace laser_odometry
     /// @brief The full integrated pose covariance.
     Covariance fixed_origin_to_base_covariance_ = Covariance::Zero();
 
+    /// @brief some little noise to avoid singular matrix
+    /// when passing from 2D to 3D. It is only added when filling-up
+    /// the output messages/variables.
+    Covariance noise_2d_3d_ = Covariance::Constant(1e-8);
+
     /// @brief The referent LaserScan.
     sensor_msgs::LaserScanConstPtr   reference_scan_;
 
