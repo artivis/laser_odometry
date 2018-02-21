@@ -42,12 +42,13 @@ Under development plugins:
 
 ## Notes
 - This package is still under heavy developement thus the API is **not** completely stable yet.
-- To properly visualize the `nav_msgs/Odometry` message published by the node with `Rviz`, it is recommended to use the [rviz_plugin_covariance](https://github.com/laas/rviz_plugin_covariance) (E.g. [wiki Screenshot](https://github.com/artivis/laser_odometry/wiki/Screenshot)).
+- For ROS distro pre-Kinetic, to properly visualize the `nav_msgs/Odometry` message published by the node with `Rviz` (that is, with its covariance), it is recommended to use the [rviz_plugin_covariance](https://github.com/laas/rviz_plugin_covariance) (E.g. [wiki Screenshot](https://github.com/artivis/laser_odometry/wiki/Screenshot)).
 
 ## Documentation
-The Doxygen documention is available online at [codedocs.xyz/artivis/laser_odometry](https://codedocs.xyz/artivis/laser_odometry/index.html).  
-The overall execution scheme is summarized in the [pseudo-code](https://github.com/artivis/laser_odometry/wiki/Overall-execution-pseudo-code) wiki page.  
-To develop your own plugin, please refer to [the plugin instructions](https://github.com/artivis/laser_odometry/wiki/Create-a-plugin) wiki page.
+- The Doxygen documention is available online at [codedocs.xyz/artivis/laser_odometry](https://codedocs.xyz/artivis/laser_odometry/index.html).  
+- Some notes about the node topics and parameters can be found in the [Parameters & Topics](https://github.com/artivis/laser_odometry/wiki/Parameters-and-topics) wiki page.  
+- The overall execution scheme is summarized in the [pseudo-code](https://github.com/artivis/laser_odometry/wiki/Overall-execution-pseudo-code) wiki page.  
+- To develop your own plugin, please refer to [the plugin instructions](https://github.com/artivis/laser_odometry/wiki/Create-a-plugin) wiki page.
 
 ## Upcoming
 - More plugins, mostly correlation-based & feature-based scan matching.
