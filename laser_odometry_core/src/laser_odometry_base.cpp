@@ -249,7 +249,7 @@ void LaserOdometryBase::posePlusIncrement(const bool processed)
 {
   if (processed)
   {
-    if (!utils::isRotationProper(increment_), 1e-10)
+    if (!utils::isRotationProper(increment_, 1e-10))
     {
       ROS_DEBUG_STREAM("increment_'s rotation matrix is not proper.");
       utils::makeOrthogonal(increment_);
