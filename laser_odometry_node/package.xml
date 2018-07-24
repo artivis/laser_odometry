@@ -28,6 +28,9 @@
   <depend>tf2_ros</depend>
   <depend>topic_tools</depend>
 
+  <build_depend>message_generation</build_depend>
+  <exec_depend>message_runtime</exec_depend>
+
 <!--  <test_depend>roslib</test_depend>-->
 <!--  <test_depend>rostest</test_depend>-->
 

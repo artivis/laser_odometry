@@ -19,13 +19,25 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_eigen
   tf2_ros
   topic_tools
+  message_generation
+)
+
+add_message_files(
+  FILES
+  RMSE.msg
+  RMSEs.msg
+)
+
+generate_messages(
+  DEPENDENCIES
+  std_msgs
 )
 
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES ${PROJECT_NAME}
+  LIBRARIES ${PROJECT_NAME} comparison_node
   CATKIN_DEPENDS eigen_conversions laser_odometry_core nav_msgs pluginlib
-                 roscpp sensor_msgs tf2_eigen tf2_ros topic_tools
+                 roscpp sensor_msgs tf2_eigen tf2_ros topic_tools message_runtime
 )
 
 include_directories(include)
@@ -38,7 +50,29 @@ include_directories(SYSTEM ${catkin_INCLUDE_DIRS})
 add_executable(${PROJECT_NAME} src/laser_odometry_node.cpp)
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 
+add_executable(comparison_node src/comparison_node.cpp)
+target_link_libraries(comparison_node ${catkin_LIBRARIES})
+
+add_executable(ground_truth_node src/ground_truth_node.cpp)
+target_link_libraries(ground_truth_node ${catkin_LIBRARIES})
+
 #Require C++11
+if(CMAKE_VERSION VERSION_LESS "3.1")
+  set_target_properties(comparison_node PROPERTIES COMPILE_FLAGS "-std=c++11")
+else()
+  set_property(TARGET comparison_node PROPERTY CXX_STANDARD 11)
+  set_property(TARGET comparison_node PROPERTY CXX_STANDARD_REQUIRED ON)
+  set_property(TARGET comparison_node PROPERTY CXX_EXTENSIONS OFF)
+endif()
+
+if(CMAKE_VERSION VERSION_LESS "3.1")
+  set_target_properties(ground_truth_node PROPERTIES COMPILE_FLAGS "-std=c++11")
+else()
+  set_property(TARGET ground_truth_node PROPERTY CXX_STANDARD 11)
+  set_property(TARGET ground_truth_node PROPERTY CXX_STANDARD_REQUIRED ON)
+  set_property(TARGET ground_truth_node PROPERTY CXX_EXTENSIONS OFF)
+endif()
+
 if(CMAKE_VERSION VERSION_LESS "3.1")
   set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "-std=c++11")
 else()
