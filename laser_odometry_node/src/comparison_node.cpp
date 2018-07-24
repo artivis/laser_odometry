@@ -82,7 +82,7 @@ void comparisonNode::initialize()
 
   for (unsigned int i = 0; i < laser_odom_vec_ptr_.size(); ++i)
   {
-    if (laser_odom_vec_ptr_[0] != nullptr)
+    if (laser_odom_vec_ptr_[i] != nullptr)
       configured_ = true;
     else
     {
@@ -195,7 +195,7 @@ void comparisonNode::process()
       odom_inc_vec_ptr.push_back(boost::make_shared<nav_msgs::Odometry>());
       if (new_scan_)
       {
-        if (i == 3)
+        if (i == static_cast<int>(laser_odom_vec_ptr_.size())-1)
           new_scan_ = false;
         laser_odom_vec_ptr_[i]->process(latest_scan_, odom_vec_ptr[i], odom_inc_vec_ptr[i]);
 
@@ -214,7 +214,7 @@ void comparisonNode::process()
       }
       else if (new_cloud_)
       {
-        if (i == 3)
+        if (i == static_cast<int>(laser_odom_vec_ptr_.size())-1)
           new_cloud_ = false;
         laser_odom_vec_ptr_[i]->process(latest_cloud_, odom_vec_ptr[i], odom_inc_vec_ptr[i]);
 
