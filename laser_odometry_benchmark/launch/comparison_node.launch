@@ -31,13 +31,13 @@
 
   <!-- Node which publish the ground_truth pose of the robot in Gazebo -->
   <group if="$(arg gazebo)">
-    <node pkg="laser_odometry_node" type="ground_truth_node" name="ground_truth_node"
+    <node pkg="laser_odometry_benchmark" type="ground_truth_node" name="ground_truth_node"
           output="screen" >
       <param name="robot" value="$(arg robot)"/>
     </node>
   </group>
 
-  <node pkg="laser_odometry_node" type="comparison_node" name="comparison_node"
+  <node pkg="laser_odometry_benchmark" type="comparison_node" name="comparison_node"
         output="screen" launch-prefix="$(arg launch_prefix)">
     <!-- <param name="laser_odometry_type" value="$(arg laser_odometry_type)" /> -->
     <rosparam file="$(arg node_config_file)" command="load" />

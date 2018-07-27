@@ -8,7 +8,6 @@
 #ifndef COMPARISON_NODE_H
 #define COMPARISON_NODE_H
 
-//#include <laser_odometry_node/laser_odometry_node.h>
 #include <laser_odometry_core/laser_odometry_core.h>
 
 // The input ROS messages supported

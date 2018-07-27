@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>laser_odometry_benchmark</name>
+  <version>0.1.0</version>
+  <description>
+  Comparison of the laser_odometry plugins with a ground_truth
+  pose
+  </description>
+
+  <author email="daniele93d@gmail.com">danielecillis</author>
+  <maintainer email="jeremie.deray@pal-robotics.com">Jeremie Deray</maintainer>
+
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>eigen_conversions</depend>
+  <depend>laser_odometry_core</depend>
+  <depend>nav_msgs</depend>
+  <depend>pluginlib</depend>
+  <depend>roscpp</depend>
+  <depend>sensor_msgs</depend>
+  <depend>tf2_eigen</depend>
+  <depend>tf2_ros</depend>
+  <depend>topic_tools</depend>
+
+  <build_depend>message_generation</build_depend>
+  <exec_depend>message_runtime</exec_depend>
+
+
+  <!-- The export tag contains other, unspecified, tags -->
+  <export>
+    <!-- Other tools can request additional information be placed here -->
+  </export>
+</package>

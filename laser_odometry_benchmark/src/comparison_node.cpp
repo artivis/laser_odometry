@@ -5,7 +5,7 @@
 
   @copyright (c) 2018 PAL Robotics SL. All Rights Reserved
 */
-#include "laser_odometry_node/comparison_node.h"
+#include "laser_odometry_benchmark/comparison_node.h"
 #include <laser_odometry_core/laser_odometry_instantiater.h>
 #include <laser_odometry_core/laser_odometry_utils.h>
 
@@ -17,8 +17,8 @@
 #include <tf/tf.h>
 
 #include <math.h>
-#include <laser_odometry_node/RMSE.h>
-#include <laser_odometry_node/RMSEs.h>
+#include <laser_odometry_benchmark/RMSE.h>
+#include <laser_odometry_benchmark/RMSEs.h>
 
 namespace sm = sensor_msgs;
 
@@ -73,12 +73,20 @@ void comparisonNode::initialize()
   ground_truth_sub_ =
       private_nh_.subscribe(ground_truth_topic_, 1, &comparisonNode::updateGroundTruth, this);
   std::string string;
-  private_nh_.param<std::string>("plugins", string, "LibPointMatcher,Polar,Rf2o,Csm");
-  boost::split(names_, string, boost::is_any_of(","));
+//  std::vector<std::string> strings;
+//  private_nh_.param<std::string>(
+//      "plugins", string,
+//      "laser_odometry::LaserOdometryLibPointMatcher,laser_odometry::LaserOdometryPolar,laser_odometry::LaserOdometryRf2o,laser_odometry::LaserOdometryCsm");
+  private_nh_.getParam("plugins", string);
   std::string prefix = "laser_odometry::LaserOdometry";
+  boost::split(names_, string, boost::is_any_of(","));
 
   for (std::string s : names_)
-    laser_odom_vec_ptr_.push_back(make_laser_odometry(prefix + s));
+  {
+    laser_odom_vec_ptr_.push_back(make_laser_odometry(prefix+s));
+//    names_.push_back(s.substr(29));
+//    ROS_INFO_STREAM(s);
+  }
 
   for (unsigned int i = 0; i < laser_odom_vec_ptr_.size(); ++i)
   {
@@ -132,7 +140,7 @@ void comparisonNode::initialize()
   }
   new_origins_.push_back(ground_truth_pose_.pose);
 
-  pub_rmse_ = private_nh_.advertise<laser_odometry_node::RMSEs>("rmse", 1);
+  pub_rmse_ = private_nh_.advertise<laser_odometry_benchmark::RMSEs>("rmse", 1);
 }
 
 void comparisonNode::LaserCallback(const sensor_msgs::LaserScanConstPtr& new_scan)
@@ -327,9 +335,10 @@ void comparisonNode::error(nav_msgs::OdometryPtr odom_ptr, int i)
   std::vector<tf::Transform> tfs{ tf::Transform(), tf::Transform(), tf::Transform() };
   std::vector<int> vec{ i, static_cast<int>(new_origins_.size() - 1) };
 
-  //  ROS_ERROR_STREAM("Ground_truth  " << ros::Time(ground_truth_pose_.header.stamp.sec,
-  //  ground_truth_pose_.header.stamp.nsec)); ROS_ERROR_STREAM(names_[i] + "  " <<
-  //  ros::Time(odom_ptr->header.stamp.sec, odom_ptr->header.stamp.nsec));
+//    ROS_INFO_STREAM("**Ground_truth  " << ros::Time(ground_truth_pose_.header.stamp.sec,
+//    ground_truth_pose_.header.stamp.nsec));
+//    ROS_INFO_STREAM(names_[i] + "  " <<
+//    ros::Time(odom_ptr->header.stamp.sec, odom_ptr->header.stamp.nsec) << "**");
 
   for (int j = 0; j < 2; ++j)
   {
@@ -351,8 +360,8 @@ void comparisonNode::rmse()
   std::string s = "RMSE\n";
   double sum1 = 0.0;
   double sum2 = 0.0;
-  laser_odometry_node::RMSE rmse_msg;
-  laser_odometry_node::RMSEs rmse_list;
+  laser_odometry_benchmark::RMSE rmse_msg;
+  laser_odometry_benchmark::RMSEs rmse_list;
 
   std::map<std::string, std::string> spaces;
   spaces["LibPointMatcher"] = "";

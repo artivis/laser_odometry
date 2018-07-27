@@ -15,6 +15,7 @@
 
   <exec_depend>laser_odometry_node</exec_depend>
   <exec_depend>laser_odometry_core</exec_depend>
+  <exec_depend>laser_odometry_benchmark</exec_depend>
 
   <export>
     <metapackage/>
