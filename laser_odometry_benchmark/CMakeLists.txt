@@ -90,7 +90,7 @@ install(TARGETS benchmark_node
     RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
-foreach(dir launch config)
+foreach(dir launch)
     install(DIRECTORY ${dir}/
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/${dir}
         PATTERN *.example EXCLUDE)
