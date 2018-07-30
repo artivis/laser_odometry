@@ -24,6 +24,7 @@
   <depend>tf2_ros</depend>
   <depend>topic_tools</depend>
   <depend>gazebo_msgs</depend>
+  <depend>geometry_msgs</depend>
 
   <build_depend>message_generation</build_depend>
   <exec_depend>message_runtime</exec_depend>

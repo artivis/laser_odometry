@@ -21,6 +21,7 @@ find_package(catkin REQUIRED COMPONENTS
   topic_tools
   message_generation
   gazebo_msgs
+  geometry_msgs
 )
 
 ################################################
