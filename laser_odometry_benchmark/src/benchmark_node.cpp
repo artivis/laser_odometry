@@ -5,7 +5,7 @@
 
   @copyright (c) 2018 PAL Robotics SL. All Rights Reserved
 */
-#include "laser_odometry_benchmark/comparison_node.h"
+#include "laser_odometry_benchmark/benchmark_node.h"
 #include <laser_odometry_core/laser_odometry_instantiater.h>
 #include <laser_odometry_core/laser_odometry_utils.h>
 
@@ -52,12 +52,12 @@ bool getTf(const std::string& source_frame, const std::string& target_frame,
 
 namespace laser_odometry
 {
-comparisonNode::comparisonNode() : private_nh_("~")
+BenchmarkNode::BenchmarkNode() : private_nh_("~")
 {
   initialize();
 }
 
-void comparisonNode::initialize()
+void BenchmarkNode::initialize()
 {
   private_nh_.param("broadcast_tf", broadcast_tf_, broadcast_tf_);
   private_nh_.param("init_origin", init_origin_, init_origin_);
@@ -71,7 +71,7 @@ void comparisonNode::initialize()
   timeout_ = ros::Duration(timeout);
   private_nh_.param<std::string>("ground_truth_topic", ground_truth_topic_, "/ground_truth_pose");
   ground_truth_sub_ =
-      private_nh_.subscribe(ground_truth_topic_, 1, &comparisonNode::updateGroundTruth, this);
+      private_nh_.subscribe(ground_truth_topic_, 1, &BenchmarkNode::updateGroundTruth, this);
   std::string string;
 //  std::vector<std::string> strings;
 //  private_nh_.param<std::string>(
@@ -114,7 +114,7 @@ void comparisonNode::initialize()
     }
   }
 
-  sub_ = private_nh_.subscribe("topic_in", 1, &comparisonNode::resetListenerWithType, this);
+  sub_ = private_nh_.subscribe("topic_in", 1, &BenchmarkNode::resetListenerWithType, this);
 
   ROS_INFO("Subscribed to %s", sub_.getTopic().c_str());
 
@@ -143,7 +143,7 @@ void comparisonNode::initialize()
   pub_rmse_ = private_nh_.advertise<laser_odometry_benchmark::RMSEs>("rmse", 1);
 }
 
-void comparisonNode::LaserCallback(const sensor_msgs::LaserScanConstPtr& new_scan)
+void BenchmarkNode::LaserCallback(const sensor_msgs::LaserScanConstPtr& new_scan)
 {
   if (new_scan->header.seq % throttle_ != 0)
     return;
@@ -153,7 +153,7 @@ void comparisonNode::LaserCallback(const sensor_msgs::LaserScanConstPtr& new_sca
   new_scan_ = true;
 }
 
-void comparisonNode::CloudCallback(const sensor_msgs::PointCloud2ConstPtr& new_cloud)
+void BenchmarkNode::CloudCallback(const sensor_msgs::PointCloud2ConstPtr& new_cloud)
 {
   if (new_cloud->header.seq % throttle_ != 0)
     return;
@@ -163,7 +163,7 @@ void comparisonNode::CloudCallback(const sensor_msgs::PointCloud2ConstPtr& new_c
   new_cloud_ = true;
 }
 
-void comparisonNode::setLaserFromTf(const ros::Time& t, const ros::Duration& d)
+void BenchmarkNode::setLaserFromTf(const ros::Time& t, const ros::Duration& d)
 {
   for (unsigned int i = 0; i < laser_odom_vec_ptr_.size(); ++i)
   {
@@ -184,7 +184,7 @@ void comparisonNode::setLaserFromTf(const ros::Time& t, const ros::Duration& d)
   }
 }
 
-void comparisonNode::process()
+void BenchmarkNode::process()
 {
   if (!(new_scan_ || new_cloud_) || !configured_)
     return;
@@ -280,7 +280,7 @@ void comparisonNode::process()
   }
 }
 
-void comparisonNode::resetListenerWithType(const topic_tools::ShapeShifter::Ptr& new_s)
+void BenchmarkNode::resetListenerWithType(const topic_tools::ShapeShifter::Ptr& new_s)
 {
   sub_.shutdown();
 
@@ -288,14 +288,14 @@ void comparisonNode::resetListenerWithType(const topic_tools::ShapeShifter::Ptr&
   {
     if (new_s->getDataType() == "sensor_msgs/LaserScan")
     {
-      sub_ = private_nh_.subscribe("topic_in", 1, &comparisonNode::LaserCallback, this);
+      sub_ = private_nh_.subscribe("topic_in", 1, &BenchmarkNode::LaserCallback, this);
 
       pub_kframe_vec_.push_back(
           private_nh_.advertise<sensor_msgs::LaserScan>("key_frame_" + names_[i], 1));
     }
     else if (new_s->getDataType() == "sensor_msgs/PointCloud2")
     {
-      sub_ = private_nh_.subscribe("topic_in", 1, &comparisonNode::CloudCallback, this);
+      sub_ = private_nh_.subscribe("topic_in", 1, &BenchmarkNode::CloudCallback, this);
 
       pub_kframe_vec_.push_back(
           private_nh_.advertise<sensor_msgs::PointCloud2>("key_frame_" + names_[i], 1));
@@ -308,12 +308,12 @@ void comparisonNode::resetListenerWithType(const topic_tools::ShapeShifter::Ptr&
 }
 
 template <typename Vector3Type>
-double comparisonNode::pointDistance(const Vector3Type& a, const Vector3Type& b)
+double BenchmarkNode::pointDistance(const Vector3Type& a, const Vector3Type& b)
 {
   return (Eigen::Vector3d(a.x, a.y, a.z) - Eigen::Vector3d(b.x, b.y, b.z)).norm();
 }
 
-double comparisonNode::quaternionDistance(const geometry_msgs::Quaternion& a,
+double BenchmarkNode::quaternionDistance(const geometry_msgs::Quaternion& a,
                                           const geometry_msgs::Quaternion& b)
 {
   Eigen::Quaterniond expected_e, actual_e;
@@ -329,7 +329,7 @@ double comparisonNode::quaternionDistance(const geometry_msgs::Quaternion& a,
   return expected_e.angularDistance(actual_e);
 }
 
-void comparisonNode::error(nav_msgs::OdometryPtr odom_ptr, int i)
+void BenchmarkNode::error(nav_msgs::OdometryPtr odom_ptr, int i)
 {
   std::vector<geometry_msgs::Pose> poses{ odom_ptr->pose.pose, ground_truth_pose_.pose };
   std::vector<tf::Transform> tfs{ tf::Transform(), tf::Transform(), tf::Transform() };
@@ -355,7 +355,7 @@ void comparisonNode::error(nav_msgs::OdometryPtr odom_ptr, int i)
   errors_[i].push_back(e);
 }
 
-void comparisonNode::rmse()
+void BenchmarkNode::rmse()
 {
   std::string s = "RMSE\n";
   double sum1 = 0.0;
@@ -392,7 +392,7 @@ void comparisonNode::rmse()
   pub_rmse_.publish(rmse_list);
 }
 
-void comparisonNode::setNewOrigin(std::vector<nav_msgs::OdometryPtr> odom_vec_ptr)
+void BenchmarkNode::setNewOrigin(std::vector<nav_msgs::OdometryPtr> odom_vec_ptr)
 {
   last_update_ =
       ros::Time(odom_vec_ptr[0]->header.stamp.sec, odom_vec_ptr[0]->header.stamp.nsec);
@@ -405,12 +405,12 @@ void comparisonNode::setNewOrigin(std::vector<nav_msgs::OdometryPtr> odom_vec_pt
   rmse();
 }
 
-void comparisonNode::updateGroundTruth(const geometry_msgs::PoseStampedPtr& p)
+void BenchmarkNode::updateGroundTruth(const geometry_msgs::PoseStampedPtr& p)
 {
   ground_truth_pose_ = *p;
 }
 
-bool comparisonNode::shouldUpdate(ros::Time t)
+bool BenchmarkNode::shouldUpdate(ros::Time t)
 {
   if (t - last_update_ >= timeout_)
     return true;
@@ -422,9 +422,9 @@ bool comparisonNode::shouldUpdate(ros::Time t)
 
 int main(int argc, char** argv)
 {
-  ros::init(argc, argv, "comparison_node");
+  ros::init(argc, argv, "benchmark_node");
 
-  laser_odometry::comparisonNode node;
+  laser_odometry::BenchmarkNode node;
 
   ros::Rate rate(100);
 

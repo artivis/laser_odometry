@@ -37,7 +37,7 @@
     </node>
   </group>
 
-  <node pkg="laser_odometry_benchmark" type="comparison_node" name="comparison_node"
+  <node pkg="laser_odometry_benchmark" type="benchmark_node" name="benchmark_node"
         output="screen" launch-prefix="$(arg launch_prefix)">
     <!-- <param name="laser_odometry_type" value="$(arg laser_odometry_type)" /> -->
     <rosparam file="$(arg node_config_file)" command="load" />

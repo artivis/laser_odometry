@@ -20,6 +20,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_ros
   topic_tools
   message_generation
+  gazebo_msgs
 )
 
 ################################################
@@ -43,7 +44,7 @@ generate_messages(
 
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES comparison_node
+  LIBRARIES benchmark_node
   CATKIN_DEPENDS eigen_conversions laser_odometry_core nav_msgs pluginlib
                  roscpp sensor_msgs tf2_eigen tf2_ros topic_tools message_runtime
 )
@@ -55,19 +56,19 @@ catkin_package(
 include_directories(include)
 include_directories(SYSTEM ${catkin_INCLUDE_DIRS})
 
-add_executable(comparison_node src/comparison_node.cpp)
-target_link_libraries(comparison_node ${catkin_LIBRARIES})
+add_executable(benchmark_node src/benchmark_node.cpp)
+target_link_libraries(benchmark_node ${catkin_LIBRARIES})
 
 add_executable(ground_truth_node src/ground_truth_node.cpp)
 target_link_libraries(ground_truth_node ${catkin_LIBRARIES})
 
 #Require C++11
 if(CMAKE_VERSION VERSION_LESS "3.1")
-  set_target_properties(comparison_node PROPERTIES COMPILE_FLAGS "-std=c++11")
+  set_target_properties(benchmark_node PROPERTIES COMPILE_FLAGS "-std=c++11")
 else()
-  set_property(TARGET comparison_node PROPERTY CXX_STANDARD 11)
-  set_property(TARGET comparison_node PROPERTY CXX_STANDARD_REQUIRED ON)
-  set_property(TARGET comparison_node PROPERTY CXX_EXTENSIONS OFF)
+  set_property(TARGET benchmark_node PROPERTY CXX_STANDARD 11)
+  set_property(TARGET benchmark_node PROPERTY CXX_STANDARD_REQUIRED ON)
+  set_property(TARGET benchmark_node PROPERTY CXX_EXTENSIONS OFF)
 endif()
 
 if(CMAKE_VERSION VERSION_LESS "3.1")
@@ -82,7 +83,7 @@ endif()
 ## Install ##
 #############
 
-install(TARGETS comparison_node
+install(TARGETS benchmark_node
 #    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
     RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

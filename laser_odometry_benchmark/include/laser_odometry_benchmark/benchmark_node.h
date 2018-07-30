@@ -5,8 +5,8 @@
 
   @copyright (c) 2018 PAL Robotics SL. All Rights Reserved
 */
-#ifndef COMPARISON_NODE_H
-#define COMPARISON_NODE_H
+#ifndef BENCHMARK_NODE_H
+#define BENCHMARK_NODE_H
 
 #include <laser_odometry_core/laser_odometry_core.h>
 
@@ -46,14 +46,14 @@ Enum to_enum(const T& e) { return static_cast<Enum>(e); }
 
 }
 
-class comparisonNode
+class BenchmarkNode
 {
 public:
   /// @brief Default constructor.
-  comparisonNode();
+  BenchmarkNode();
 
   /// @brief Default destructor.
-  virtual ~comparisonNode() = default;
+  virtual ~BenchmarkNode() = default;
 
   /**
    * @brief Set the laser pose wrt the robot
@@ -236,7 +236,7 @@ protected:
 };
 
 template <typename T>
-void comparisonNode::publish(std::vector<T> msgs) const
+void BenchmarkNode::publish(std::vector<T> msgs) const
 {
   for (unsigned int i = 0; i < pub_odom_vec_.size(); ++i)
   {
@@ -246,7 +246,7 @@ void comparisonNode::publish(std::vector<T> msgs) const
 }
 
 template <typename T>
-void comparisonNode::publish_inc(std::vector<T> msgs) const
+void BenchmarkNode::publish_inc(std::vector<T> msgs) const
 {
   for (unsigned int i = 0; i < pub_odom_inc_vec_.size(); ++i)
   {
@@ -258,7 +258,7 @@ void comparisonNode::publish_inc(std::vector<T> msgs) const
 }
 
 template <typename T>
-void comparisonNode::publish(const T& msg, int i) const
+void BenchmarkNode::publish(const T& msg, int i) const
 {
   if (msg == nullptr)
     return;
@@ -268,4 +268,4 @@ void comparisonNode::publish(const T& msg, int i) const
 }
 
 } // namespace laser_odometry
-#endif  // COMPARISON_NODE_H
+#endif  // BENCHMARK_NODE_H
