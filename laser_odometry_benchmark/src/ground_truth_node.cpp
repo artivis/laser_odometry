@@ -33,6 +33,7 @@ bool getModelState(const std::string &name, geometry_msgs::PoseStamped &pose, ro
 
   pose.pose = srv.response.pose;
   pose.header.stamp = srv.response.header.stamp;
+//  ROS_WARN_STREAM(srv.response.header.stamp.sec << "." << srv.response.header.stamp.nsec);
   return result;
 }
 
