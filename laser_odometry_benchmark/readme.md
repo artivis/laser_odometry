@@ -7,7 +7,7 @@ The laser_odometry package uses laser scans in order to find out which is the po
 4. RF2O Scan Mathcer.
 The differences among such methods reside in how the algorithms compute the robot pose. We can see an example of trajectories after a simple navigation task:
 
-![traj](/images/traj-crop.png)
+![traj](/laser_odometry_benchmark/images/traj-crop.png)
 
 From this picture seems like RF2O is quite good and also CSM has a good but not perfect performance. 
 A bunch of pictures is not enough to estimate the accuracy of the laser odometry implementations, therefore, in order to establish which is the best, we need to define a proper evaluation method:
@@ -29,8 +29,8 @@ Initially, from the launch file it is possible to set these set of variables:
 The launch file in the package laser_odometry_benchmark launches the comparison_node, where all the requested odometries and the support variables are properly initialized. 
 Thanks to the time-stamps of the odometry messages (every time a new scan is published on the topic_in topic, the robot pose is updated and published) is possible to determine when timeout is over and measure the offsets from the last saved poses contained in the variable new_origins_. Subsequently, the obtained value is published and the new_origins_ variable is updated with the current poses. In the following image, it’s possible to see a graph of the RMSE error after the navigation executed above, plotted on PlotJuggler:
 
-![rmse plot](/images/plot-rmse.png)
+![rmse plot](/laser_odometry_benchmark/images/plot-rmse.png)
 
 We can see now another example of trajectories after a slighlty more complex navigation: 
 
-![other trajs](/images/other-traj-crop.png)
+![other trajs](/laser_odometry_benchmark/images/other-traj-crop.png)
