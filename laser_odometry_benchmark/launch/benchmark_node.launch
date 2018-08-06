@@ -1,13 +1,13 @@
 <launch>
 
   <!-- Launch node through valgrind/gdb. -->
-  <arg name="debug" default="false"/>
+  <arg name="debug" default="false" doc="Launch node through valgrind/gdb"/>
 
   <!-- Whether to use Gazebo or not -->
-  <arg name="gazebo" default="true"/>
+  <arg name="gazebo" default="true" doc="Whether to use Gazebo or not"/>
 
   <!-- Name of the robot in simulation -->
-  <arg name="robot" default="tiago_steel"/>
+  <arg name="robot" default="tiago_steel" doc="Name of the robot in simulation"/>
 
   <!--  <arg name="launch_prefix" value="gdb -ex run - -args"     if="$(arg debug)"/>-->
   <arg name="launch_prefix" value="valgrind"           if="$(arg debug)"/>
@@ -18,16 +18,17 @@
   <arg name="plugin_config_file" default="$(find laser_odometry_node)/config/plugin_config_file_empty.yaml"/>
 
   <!-- The input topic. -->
-  <arg name="topic_in" default="~topic_in"/>
+  <arg name="topic_in" default="~topic_in" doc="the input topic"/>
 
   <!-- The name of the topic which publishes the ground truth -->
-  <arg name="ground_truth_topic" default="/ground_truth_pose"/>
+  <arg name="ground_truth_topic" default="/ground_truth_pose"
+  doc="The name of the topic which publishes the ground truth"/>
 
   <!-- Time between RMSE calculation -->
-  <arg name="timeout" default="1.0"/>
+  <arg name="timeout" default="1.0" doc="Time between RMSE calculation"/>
 
-  <!--<arg name="plugins" default="[LibPointMatcher,Polar,Rf2o,Csm]"/>-->
-  <arg name="plugins" default="LibPointMatcher,Polar,Rf2o,Csm"/>
+  <arg name="plugins" default="LibPointMatcher,Polar,Rf2o,Csm,Ndt2d"
+  doc="The plugins you want to use (the order is not important)"/>
 
   <!-- Node which publish the ground_truth pose of the robot in Gazebo -->
   <group if="$(arg gazebo)">

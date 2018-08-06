@@ -114,6 +114,7 @@ protected:
   /// 1: laser_odometry::LaserOdometryPolar
   /// 2: laser_odometry::LaserOdometryCsm
   /// 3: laser_odometry::LaserOdometryRf2o
+  /// 4: laser_odometry::LaserOdometryNdt2d
   std::vector<LaserOdometryPtr> laser_odom_vec_ptr_;
 
   /// @brief A vector for containing errors with respect to the ground truth

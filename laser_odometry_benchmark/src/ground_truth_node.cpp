@@ -10,7 +10,17 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <gazebo_msgs/GetModelState.h>
 
+
 template <typename Service>
+/**
+ * @brief getModelState Retrieves the model state position of "name"
+ * @param name Name of the Gazebo model
+ * @param pose Pose of the Gazebo model
+ * @param nh
+ * @param srv ROS GetModelState Service
+ * @param relative_entity_name
+ * @return True if the pose is retrieved correctly
+ */
 bool getModelState(const std::string &name, geometry_msgs::PoseStamped &pose, ros::NodeHandle& nh,
                    Service &srv, const std::string &relative_entity_name = "")
 {
@@ -37,6 +47,12 @@ bool getModelState(const std::string &name, geometry_msgs::PoseStamped &pose, ro
   return result;
 }
 
+/**
+ * @brief publishPose Publish the Model State position of the model "robot"
+ * @param robot Name of the model
+ * @param pub Publisher element
+ * @param nh
+ */
 void publishPose(const std::string &robot, ros::Publisher &pub, ros::NodeHandle &nh)
 {
   geometry_msgs::PoseStamped p;

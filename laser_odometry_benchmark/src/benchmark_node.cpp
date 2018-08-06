@@ -73,20 +73,12 @@ void BenchmarkNode::initialize()
   ground_truth_sub_ =
       private_nh_.subscribe(ground_truth_topic_, 1, &BenchmarkNode::updateGroundTruth, this);
   std::string string;
-//  std::vector<std::string> strings;
-//  private_nh_.param<std::string>(
-//      "plugins", string,
-//      "laser_odometry::LaserOdometryLibPointMatcher,laser_odometry::LaserOdometryPolar,laser_odometry::LaserOdometryRf2o,laser_odometry::LaserOdometryCsm");
   private_nh_.getParam("plugins", string);
   std::string prefix = "laser_odometry::LaserOdometry";
   boost::split(names_, string, boost::is_any_of(","));
 
   for (std::string s : names_)
-  {
     laser_odom_vec_ptr_.push_back(make_laser_odometry(prefix+s));
-//    names_.push_back(s.substr(29));
-//    ROS_INFO_STREAM(s);
-  }
 
   for (unsigned int i = 0; i < laser_odom_vec_ptr_.size(); ++i)
   {
@@ -335,11 +327,6 @@ void BenchmarkNode::error(nav_msgs::OdometryPtr odom_ptr, int i)
   std::vector<tf::Transform> tfs{ tf::Transform(), tf::Transform(), tf::Transform() };
   std::vector<int> vec{ i, static_cast<int>(new_origins_.size() - 1) };
 
-//    ROS_INFO_STREAM("**Ground_truth  " << ros::Time(ground_truth_pose_.header.stamp.sec,
-//    ground_truth_pose_.header.stamp.nsec));
-//    ROS_INFO_STREAM(names_[i] + "  " <<
-//    ros::Time(odom_ptr->header.stamp.sec, odom_ptr->header.stamp.nsec) << "**");
-
   for (int j = 0; j < 2; ++j)
   {
     tf::poseMsgToTF(poses[j], tfs[1]);
@@ -368,6 +355,7 @@ void BenchmarkNode::rmse()
   spaces["Polar"] = "          ";
   spaces["Rf2o"] = "           ";
   spaces["Csm"] = "            ";
+  spaces["Ndt2d"] = "          ";
 
   for (unsigned int i = 0; i < errors_.size(); ++i)
   {
