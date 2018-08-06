@@ -59,6 +59,7 @@ include_directories(SYSTEM ${catkin_INCLUDE_DIRS})
 
 add_executable(benchmark_node src/benchmark_node.cpp)
 target_link_libraries(benchmark_node ${catkin_LIBRARIES})
+add_dependencies(benchmark_node ${${PROJECT_NAME}_EXPORTED_TARGETS})
 
 add_executable(ground_truth_node src/ground_truth_node.cpp)
 target_link_libraries(ground_truth_node ${catkin_LIBRARIES})
