@@ -83,7 +83,7 @@ namespace laser_odometry
    *
    *       - getIncrementPrior
    *
-   *                    increment_in_base_prior_ *IF*
+   *                    hat_increment_ *IF*
    *                 /  set using setIncrementPrior
    *          return |
    *                 \  predict()  otherwise        [O]
@@ -212,20 +212,6 @@ namespace laser_odometry
      */
     void getEstimatedPose(Transform& estimated_pose,
                           Covariance& estimated_pose_covariance) const noexcept;
-
-    /**
-     * @brief Return the last key-frame estimated pose.
-     * @return A const-reference Transform.
-     */
-    const Transform& getKeyFrameEstimatedPose() const noexcept;
-
-    /**
-     * @brief Get the last key-frame estimated pose together with it's covariance matrix.
-     * @param kf_estimated_pose The last key-frame pose.
-     * @param kf_estimated_pose_covariance The last key-frame pose's covariance.
-     */
-    void getKeyFrameEstimatedPose(Transform& kf_estimated_pose,
-                                  Covariance& kf_estimated_pose_covariance) const noexcept;
 
     /**
      * @brief Reset the matcher.
@@ -446,6 +432,11 @@ namespace laser_odometry
      */
     void assertIncrementCovariance();
 
+    /**
+     * @brief defaultCovariance. Return the default covariance matrix
+     * associated to the odom increment.
+     * @return Default covariance of increment.
+     */
     inline Covariance defaultCovariance() const noexcept;
 
   protected:
@@ -470,90 +461,111 @@ namespace laser_odometry
     /// This frame name is only used in the published message.
     std::string laser_odom_frame_ = "laser_odom";
 
+    /// @brief The referent LaserScan.
+    sensor_msgs::LaserScanConstPtr   reference_scan_;
+
+    /// @brief The referent PointCloud2.
+    sensor_msgs::PointCloud2ConstPtr reference_cloud_;
+
     /// @brief Tranform from base_frame to laser_frame
-    Transform base_to_laser_ = Transform::Identity();
+    Transform b_T_l_ = Transform::Identity();
 
     /// @brief Tranform from laser_frame to base_frame
-    /// == base_to_laser_^-1
-    Transform laser_to_base_ = Transform::Identity();
+    /// == b_T_l_^-1
+    Transform l_T_b_ = Transform::Identity();
 
-    /// @brief The relative transform in the laser_frame.
+    /// @brief The laser odom increment in the laser_frame.
     /// @note This is the transform the derived class should fills.
+    /// @note l_T_i
     Transform increment_ = Transform::Identity();
 
-    /// @brief The increment in the base_frame.
-    Transform increment_in_base_ = Transform::Identity();
+    /// @brief The laser odom increment in the base_frame.
+    Transform b_T_i_ = Transform::Identity();
 
     /// @brief Guessed/predicted tranform
     /// from reference_'reading' to
     /// current_'reading' in the base_frame.
-    Transform increment_in_base_prior_ = Transform::Identity();
+    Transform hat_increment_ = Transform::Identity();
 
-    /// @brief Tranform from fixed_frame
-    /// to base_frame, where fixed_frame
+    /// @brief Tranform from origin frame
+    /// to base frame, where origin frame
     /// is the origin of the integration.
-    /// == fixed_to_base_kf_ * increment_in_base_.
-    Transform fixed_to_base_ = Transform::Identity();
+    /// == o_T_kf * b_T_i_.
+    Transform o_T_b_ = Transform::Identity();
 
-    /// @brief Tranform from fixed_frame to
+    /// @brief Tranform from origin frame to
     /// the last keyfame frame.
-    /// == fixed_to_base * increment_in_base_.
-    Transform fixed_to_base_kf_ = Transform::Identity();
+    Transform o_T_kf_ = Transform::Identity();
 
     /// @brief An optional user defined
-    /// transform from that maps the
-    /// integration origin to another
-    /// reference than Identity
+    /// transform from a world frame to the
+    /// integration origin
     /// Default: Identity
-    Transform fixed_origin_ = Transform::Identity();
+    Transform w_T_o_ = Transform::Identity();
 
-    /// @brief Tranform from the fixed_origin frame
-    /// to the base_frame.
-    /// It is the integrated robot odometry.
-    /// == fixed_origin_ * fixed_to_base_.
-    Transform fixed_origin_to_base_ = Transform::Identity();
+    /// @brief Tranform from the world origin frame
+    /// to the key frame.
+    /// It is the fully integrated robot odometry in world frame,
+    /// and the one to be published.
+    /// == w_T_o_ * o_T_kf_.
+    Transform w_T_kf_ = Transform::Identity();
 
     /// @brief The default increment covariance diagonal.
     std::vector<Scalar> default_cov_diag_
       = std::vector<Scalar>(6, default_cov_diag_val);
 
     /// @brief The base to laser transform's covariance.
-    Covariance base_to_laser_covariance_;
+    Covariance b_T_l_cov_;
 
     /// @brief The laser to base transform's covariance.
-    Covariance laser_to_base_covariance_;
+    Covariance l_T_b_cov_;
 
-    /// @brief The estimated pose increment covariance.
+    /// @brief The estimated laser odom increment covariance.
     Covariance increment_covariance_ = Covariance::Zero();
 
-    /// @brief The estimated pose increment covariance in base frame.
-    Covariance increment_covariance_in_base_ = Covariance::Zero();
+    /// @brief The estimated laser odom increment
+    /// covariance in base frame.
+    Covariance b_T_i_cov_ = Covariance::Zero();
 
-    /// @brief The integrated covariance.
-    Covariance fixed_to_base_covariance_ = Covariance::Zero();
+    /// @brief The laser odom integrated covariance
+    /// up to base frame.
+    Covariance o_T_b_cov_ = Covariance::Zero();
 
-    /// @brief The integrated covariance up to
-    /// the last key-frame.
-    Covariance fixed_to_base_kf_covariance_ = Covariance::Zero();
+    /// @brief The integrated laser odom covariance
+    /// up to the last key-frame.
+    Covariance o_T_kf_cov_ = Covariance::Zero();
 
     /// @brief The optional covariance associated
-    /// to the fixed_origin.
-    /// @see fixed_origin
-    Covariance fixed_origin_covariance_ = Covariance::Zero();
+    /// to the world origin.
+    /// @see world origin
+    /// @note default : Zero
+    Covariance w_T_o_cov_ = Covariance::Zero();
 
-    /// @brief The full integrated pose covariance.
-    Covariance fixed_origin_to_base_covariance_ = Covariance::Zero();
+    /// @brief The fully integrated laser odom covariance
+    /// in world frame, and the one to be published.
+    Covariance w_T_kf_cov_ = Covariance::Zero();
 
     /// @brief some little noise to avoid singular matrix
     /// when passing from 2D to 3D. It is only added when filling-up
     /// the output messages/variables.
     Covariance noise_2d_3d_ = Covariance::Constant(1e-8);
 
-    /// @brief The referent LaserScan.
-    sensor_msgs::LaserScanConstPtr   reference_scan_;
+    /// Some pre-allocated temporary variables
+    Covariance kf_T_o_cov_;
 
-    /// @brief The referent PointCloud2.
-    sensor_msgs::PointCloud2ConstPtr reference_cloud_;
+    /// Some pre-allocated Jacobians.
+    Jacobian wTb_J_wTo_   = Jacobian::Identity(),
+             wTb_J_oTkf_  = Jacobian::Identity(),
+             wTb_J_oTb_   = Jacobian::Identity(),
+             kfTo_J_oTkf_ = Jacobian::Identity(),
+             kfTi_J_kfTo_ = Jacobian::Identity(),
+             kfTi_J_oTb_  = Jacobian::Identity(),
+             bTit_J_bTl_  = Jacobian::Identity(),
+             bTit_J_i_    = Jacobian::Identity(),
+             bTi_J_lTb_   = Jacobian::Identity(),
+             bTi_J_bTit_  = Jacobian::Identity(),
+             oTb_J_oTkf_  = Jacobian::Identity(),
+             oTb_J_bTi_   = Jacobian::Identity();
 
     /// @brief Current ros::Time accordingly
     /// to the last processed message.
@@ -612,7 +624,7 @@ namespace laser_odometry
 
     /**
      * @brief getIncrementPriorInKeyFrame. Return the increment prior
-     * in the last key-frame frame by using either the increment_in_base_prior_
+     * in the last key-frame frame by using either the hat_increment_
      * set by user (if set) (default) or using predict().
      * @return The increment prior in the last key-frame frame.
      *
@@ -631,6 +643,22 @@ namespace laser_odometry
      * @see predict
      */
     Transform getIncrementPriorInLaserFrame();
+
+    /**
+     * @brief getIncrementSinceKeyFrame. Return the odom increment
+     * since the last keyframe.
+     * @return The odom increment since the last keyframe.
+     */
+    Transform getIncrementSinceKeyFrame() const;
+
+    /**
+     * @brief getIncrementSinceKeyFrame. Return the odom increment
+     * since the last keyframe and its associated covariance.
+     * @param[out] increment. The odom increment since the last keyframe.
+     * @param[out] increment_cov. The odom increment covariance since the last keyframe.
+     */
+    void getIncrementSinceKeyFrame(Transform& increment,
+                                   Covariance& increment_cov);
 
     /**
      * @brief C = A \oplus B
