@@ -61,7 +61,7 @@ LaserOdometryBase::process(Msg&& msg)
 
   posePlusIncrement(processed);
 
-  has_new_kf_ = isKeyFrame(increment_in_base_);
+  has_new_kf_ = isKeyFrame(getIncrementSinceKeyFrame());
 
   if (has_new_kf_)
   {
