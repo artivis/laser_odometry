@@ -177,7 +177,8 @@ protected:
 template <typename T>
 void LaserOdometryNode::publish(const T& msg) const
 {
-  if (pub_odom_.getNumSubscribers() > 0)
+  if (pub_odom_.getNumSubscribers() > 0 &&
+      laser_odom_ptr_->hasNewKeyFrame())
     pub_odom_.publish(msg);
 }
 
