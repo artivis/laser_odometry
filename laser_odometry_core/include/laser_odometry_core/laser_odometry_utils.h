@@ -3,6 +3,7 @@
 
 #include "laser_odometry_core/laser_odometry_transform.h"
 
+#include <vector>
 #include <Eigen/Eigenvalues>
 
 namespace laser_odometry

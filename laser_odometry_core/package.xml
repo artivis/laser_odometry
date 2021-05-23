@@ -8,8 +8,8 @@
     should inherit from.
   </description>
 
-  <author email="jeremie.deray@pal-robotics.com">Jeremie Deray</author>
-  <maintainer email="jeremie.deray@pal-robotics.com">Jeremie Deray</maintainer>
+  <author email="deray.jeremie@gmail.com">Jeremie Deray</author>
+  <maintainer email="deray.jeremie@gmail.com">Jeremie Deray</maintainer>
 
   <license>Apache-2.0</license>
 
@@ -24,7 +24,10 @@
   <depend>sensor_msgs</depend>
   <depend>tf</depend>
   <depend>tf_conversions</depend>
-  <!--<depend version_gte="1.11.8">tf_conversions</depend>-->
+
+  <build_depend>eigen</build_depend>
+
+  <build_export_depend>eigen</build_export_depend>
 
   <!--<test_depend>roslib</test_depend>-->
   <!--<test_depend>rostest</test_depend>-->
