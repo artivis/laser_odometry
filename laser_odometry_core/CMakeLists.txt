@@ -21,20 +21,29 @@ find_package(catkin REQUIRED COMPONENTS
   tf_conversions
 )
 
-#find_package(tf_conversions 1.11.8 REQUIRED)
+find_package(Eigen3 QUIET)
+if(NOT EIGEN3_FOUND)
+  find_package(cmake_modules REQUIRED)
+  find_package(Eigen REQUIRED)
+  set(EIGEN3_INCLUDE_DIRS ${EIGEN_INCLUDE_DIRS})
+endif()
 
-find_package(Eigen REQUIRED)
+if(NOT EIGEN3_INCLUDE_DIRS)
+  set(EIGEN3_INCLUDE_DIRS ${EIGEN3_INCLUDE_DIR})
+endif()
+
+include_directories(include)
+include_directories(
+  SYSTEM ${EIGEN3_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS}
+)
 
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ${PROJECT_NAME}
   CATKIN_DEPENDS cmake_modules geometry_msgs nav_msgs pluginlib
                  roscpp sensor_msgs tf tf_conversions
-  DEPENDS Eigen
+  DEPENDS EIGEN3
 )
-
-include_directories(include)
-include_directories(SYSTEM ${catkin_INCLUDE_DIRS})
 
 ###############
 ##   Build   ##

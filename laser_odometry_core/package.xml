@@ -24,7 +24,10 @@
   <depend>sensor_msgs</depend>
   <depend>tf</depend>
   <depend>tf_conversions</depend>
-  <!--<depend version_gte="1.11.8">tf_conversions</depend>-->
+
+  <build_depend>eigen</build_depend>
+
+  <build_export_depend>eigen</build_export_depend>
 
   <!--<test_depend>roslib</test_depend>-->
   <!--<test_depend>rostest</test_depend>-->
