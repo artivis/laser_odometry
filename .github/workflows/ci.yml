@@ -1,0 +1,27 @@
+name: ci
+
+on:
+  push:
+    branches:
+     - master
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
+  schedule:
+    - cron: '0 4 1,15 * *' # twice a month
+
+jobs:
+  industrial_ci:
+    strategy:
+      matrix:
+        env:
+          - {ROS_DISTRO: melodic, ROS_REPO: testing}
+          - {ROS_DISTRO: melodic, ROS_REPO: main}
+          - {ROS_DISTRO: noetic, ROS_REPO: testing}
+          - {ROS_DISTRO: noetic, ROS_REPO: main}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: 'ros-industrial/industrial_ci@master'
+        env: ${{matrix.env}}
