@@ -19,13 +19,14 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_eigen
   tf2_ros
   topic_tools
+  message_generation
 )
 
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES ${PROJECT_NAME}
+  LIBRARIES ${PROJECT_NAME} comparison_node
   CATKIN_DEPENDS eigen_conversions laser_odometry_core nav_msgs pluginlib
-                 roscpp sensor_msgs tf2_eigen tf2_ros topic_tools
+                 roscpp sensor_msgs tf2_eigen tf2_ros topic_tools message_runtime
 )
 
 include_directories(include)

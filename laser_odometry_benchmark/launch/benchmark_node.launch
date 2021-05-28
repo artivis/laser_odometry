@@ -1,0 +1,52 @@
+<launch>
+
+  <!-- Launch node through valgrind/gdb. -->
+  <arg name="debug" default="false" doc="Launch node through valgrind/gdb"/>
+
+  <!-- Whether to use Gazebo or not -->
+  <arg name="gazebo" default="true" doc="Whether to use Gazebo or not"/>
+
+  <!-- Name of the robot in simulation -->
+  <arg name="robot" default="tiago_steel" doc="Name of the robot in simulation"/>
+
+  <!--  <arg name="launch_prefix" value="gdb -ex run - -args"     if="$(arg debug)"/>-->
+  <arg name="launch_prefix" value="valgrind"           if="$(arg debug)"/>
+  <arg name="launch_prefix" value=""                   unless="$(arg debug)"/>
+
+  <!-- A config file for the laser odometry plugin. -->
+  <arg name="node_config_file" default="$(find laser_odometry_node)/config/laser_odometry_node_default.yaml"/>
+  <arg name="plugin_config_file" default="$(find laser_odometry_node)/config/plugin_config_file_empty.yaml"/>
+
+  <!-- The input topic. -->
+  <arg name="topic_in" default="~topic_in" doc="the input topic"/>
+
+  <!-- The name of the topic which publishes the ground truth -->
+  <arg name="ground_truth_topic" default="/ground_truth_pose"
+  doc="The name of the topic which publishes the ground truth"/>
+
+  <!-- Time between RMSE calculation -->
+  <arg name="timeout" default="1.0" doc="Time between RMSE calculation"/>
+
+  <arg name="plugins" default="LibPointMatcher,Polar,Rf2o,Csm,Ndt2d"
+  doc="The plugins you want to use (the order is not important)"/>
+
+  <!-- Node which publish the ground_truth pose of the robot in Gazebo -->
+  <group if="$(arg gazebo)">
+    <node pkg="laser_odometry_benchmark" type="ground_truth_node" name="ground_truth_node"
+          output="screen" >
+      <param name="robot" value="$(arg robot)"/>
+    </node>
+  </group>
+
+  <node pkg="laser_odometry_benchmark" type="benchmark_node" name="benchmark_node"
+        output="screen" launch-prefix="$(arg launch_prefix)">
+    <!-- <param name="laser_odometry_type" value="$(arg laser_odometry_type)" /> -->
+    <rosparam file="$(arg node_config_file)" command="load" />
+    <rosparam file="$(arg plugin_config_file)" command="load" />
+    <param name="timeout" value="$(arg timeout)"/>
+    <param name="plugins" value="$(arg plugins)"/>
+    <!--<rosparam param="plugins" subst_value="True">$(arg plugins)</rosparam>-->
+    <remap from="~topic_in" to="$(arg topic_in)" />
+  </node>
+
+</launch>

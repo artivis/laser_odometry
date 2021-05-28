@@ -1,18 +1,14 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>laser_odometry_node</name>
+  <name>laser_odometry_benchmark</name>
   <version>0.1.0</version>
   <description>
-    Node package of the laser_odometry project.
-    It contains the ROS node that instantiate the
-    laser scan matcher plugin.
-    It also defines and centralizes some of the common
-    steps to aggregate a consecutive laser scan displacement
-    estimates to a proper odometry.
+  Comparison of the laser_odometry plugins with a ground_truth
+  pose
   </description>
 
-  <author email="deray.jeremie@gmail.com">Jeremie Deray</author>
-  <maintainer email="deray.jeremie@gmail.com">Jeremie Deray</maintainer>
+  <author email="daniele93d@gmail.com">danielecillis</author>
+  <maintainer email="jeremie.deray@pal-robotics.com">Jeremie Deray</maintainer>
 
   <license>Apache-2.0</license>
 
@@ -27,14 +23,15 @@
   <depend>tf2_eigen</depend>
   <depend>tf2_ros</depend>
   <depend>topic_tools</depend>
+  <depend>gazebo_msgs</depend>
+  <depend>geometry_msgs</depend>
 
   <build_depend>message_generation</build_depend>
   <exec_depend>message_runtime</exec_depend>
 
-<!--  <test_depend>roslib</test_depend>-->
-<!--  <test_depend>rostest</test_depend>-->
 
+  <!-- The export tag contains other, unspecified, tags -->
   <export>
-    <!-- -->
+    <!-- Other tools can request additional information be placed here -->
   </export>
 </package>
