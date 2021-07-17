@@ -1,0 +1,10 @@
+- git: {local-name: rosparam_handler, uri: 'https://github.com/cbandera/rosparam_handler.git', version: master}
+- git: {local-name: laser_odometry_csm, uri: 'https://github.com/artivis/laser_odometry_csm', version: master}
+- git: {local-name: libnabo, uri: 'https://github.com/ethz-asl/libnabo', version: master}
+- git: {local-name: libpointmatcher, uri: 'https://github.com/ethz-asl/libpointmatcher', version: master}
+- git: {local-name: laser_odometry_libpointmatcher, uri: 'https://github.com/artivis/laser_odometry_libpointmatcher', version: master}
+- git: {local-name: laser_odometry_polar, uri: 'https://github.com/artivis/laser_odometry_polar', version: master}
+- git: {local-name: rf2o_laser_odometry, uri: 'https://github.com/artivis/rf2o_laser_odometry.git', version: devel}
+- git: {local-name: laser_odometry_rf2o, uri: 'https://github.com/artivis/laser_odometry_rf2o', version: master}
+- git: {local-name: srf_laser_odometry, uri: 'https://github.com/artivis/srf_laser_odometry.git', version: devel}
+- git: {local-name: laser_odometry_srf, uri: 'https://github.com/artivis/laser_odometry_srf', version: master}
